@@ -8,14 +8,14 @@
 #include <asm/bug.h>
 #include <asm/memory.h>
 
-inline unsigned long __phy(unsigned long addr)
+unsigned long __phy(unsigned long addr)
 {
     if (addr >= __KERNEL_OFFSET)
         return addr - __KERNEL_OFFSET;
     return addr + __USER_OFFSET;
 }
 
-inline unsigned long __vir(unsigned long addr)
+unsigned long __vir(unsigned long addr)
 {
     if (addr <= __USER_OFFSET)
         return addr + __KERNEL_OFFSET;

@@ -10,6 +10,6 @@ extern unsigned long    _end;
 #define PAGE_PDE        ((unsigned long)&_end)
 
 unsigned long reset_page_table(unsigned long memsize);
-inline unsigned long __phy(unsigned long);
-inline unsigned long __vir(unsigned long);
+unsigned long __phy(unsigned long);
+unsigned long __vir(unsigned long);
 #endif

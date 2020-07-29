@@ -1,5 +1,6 @@
 #include <alphaz/mm.h>
 #include <alphaz/config.h>
+#include <alphaz/console.h>
 #include <asm/string.h>
 #include <asm/console.h>
 #include <asm/irq.h>
@@ -16,7 +17,7 @@
  *      Cursor Start Register   0x0a
  *      Cursor End   Register   0x0b
  */
-inline unsigned short get_cursor(void)
+unsigned short get_cursor(void)
 {
     unsigned short cur;
 
@@ -32,7 +33,7 @@ inline unsigned short get_cursor(void)
  * 设置屏幕当前光标
  * @cur: 要设置的当前光标位置
  */
-inline void set_cursor(unsigned short cur)
+void set_cursor(unsigned short cur)
 {
     outb(0x3d4,0x0e);
     outb(0x3d5, (cur >> 8) & 0xff);
@@ -44,7 +45,7 @@ inline void set_cursor(unsigned short cur)
  * 屏幕向上卷动指定的行数
  * @line: 卷动的行数
  */
-inline int console_curl(int line)
+int console_curl(int line)
 {
     unsigned long b0, b1;
 
@@ -66,7 +67,7 @@ inline int console_curl(int line)
  * @type: 字符的颜色属性
  * @cur: 要写的位置
  */
-inline void write_char(char c, unsigned char type, unsigned short cur)
+void write_char(char c, unsigned char type, unsigned short cur)
 {
     unsigned short val = (unsigned short)c | ((unsigned short)type << 8);
     unsigned long pos = cur * 2 + DEFAULT_VIDEO_BASE;

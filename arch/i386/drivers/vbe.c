@@ -10,7 +10,7 @@ static unsigned int __cur = 0;
 #define ROW     (console.height / font_8x16.height)
 #define COL     (console.width / font_8x16.width)
 
-inline unsigned short get_cursor(void)
+unsigned short get_cursor(void)
 {
     return __cur;
 }
@@ -20,7 +20,7 @@ inline unsigned short get_cursor(void)
  * 设置屏幕当前光标
  * @cur: 要设置的当前光标位置
  */
-inline void set_cursor(unsigned short cur)
+void set_cursor(unsigned short cur)
 {
     __cur = cur;
 }
@@ -29,7 +29,7 @@ inline void set_cursor(unsigned short cur)
  * 屏幕向上卷动指定的行数
  * @line: 卷动的行数
  */
-inline int console_curl(int line)
+int console_curl(int line)
 {
     unsigned long b0, b1;
     unsigned long each_line;        // 每一行占用内存数
@@ -53,7 +53,7 @@ inline int console_curl(int line)
  * @type: 字符的颜色属性
  * @cur: 要写的位置
  */
-inline void write_char(char c, unsigned char type, unsigned short cur)
+void write_char(char c, unsigned char type, unsigned short cur)
 {
     int i, j;
     unsigned long x, y;

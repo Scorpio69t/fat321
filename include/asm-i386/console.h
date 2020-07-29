@@ -9,6 +9,6 @@
 unsigned short get_cursor(void);
 void set_cursor(unsigned short cur);
 int console_curl(int line);
-inline void write_char(char c, unsigned char type, unsigned short cur);
+void write_char(char c, unsigned char type, unsigned short cur);
 
 #endif
