@@ -9,6 +9,7 @@
 *.vhd.lock
 *.iso
 /.vscode
+/.idea
 build
 target
 

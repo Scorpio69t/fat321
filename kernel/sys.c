@@ -1,7 +1,6 @@
 #include <alphaz/bugs.h>
 #include <alphaz/unistd.h>
 #include <alphaz/sched.h>
-#include <alphaz/tty.h>
 #include <alphaz/kernel.h>
 #include <alphaz/keyboard.h>
 #include <alphaz/malloc.h>

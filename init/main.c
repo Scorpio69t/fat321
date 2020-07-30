@@ -12,7 +12,6 @@
 #include <alphaz/mm.h>
 #include <alphaz/sched.h>
 #include <alphaz/stdio.h>
-#include <alphaz/tty.h>
 #include <alphaz/gfp.h>
 #include <alphaz/slab.h>
 #include <alphaz/console.h>
@@ -25,44 +24,44 @@
 #include <asm/irq.h>
 #include <asm/system.h>
 
-static void test(void)
-{
-    char buf[10];
-    int i;
-    int fd = open("/abc/b.txt", O_RDONLY);
-    if (fd != -1) {
-        while(read(fd, buf, 3)) {
-            for (i = 0; i < 3; i++)
-                printf("%c", buf[i]);
-        }
-    } else {
-        printf("error\n");
-    }
-    printf("end\n");
-    if (close(fd))
-        printf("close error\n");
-}
+//static void test(void)
+//{
+//    char buf[10];
+//    int i;
+//    int fd = open("/abc/b.txt", O_RDONLY);
+//    if (fd != -1) {
+//        while(read(fd, buf, 3)) {
+//            for (i = 0; i < 3; i++)
+//                printf("%c", buf[i]);
+//        }
+//    } else {
+//        printf("error\n");
+//    }
+//    printf("end\n");
+//    if (close(fd))
+//        printf("close error\n");
+//}
 
-int init(void)
-{
+//int init(void)
+//{
+//
+//    disk_init();
+//    fat32_init();
+//
+//    move_to_user_mode();
+//
+//    if (!fork()) {
+//        tty_task();
+//    }
+//
+//    while (1) {
+//        sleep(1);
+//    }
+//
+//    return 0;
+//}
 
-    disk_init();
-    fat32_init();
-
-    move_to_user_mode();
-
-    if (!fork()) {
-        tty_task();
-    }
-
-    while (1) {
-        sleep(1);
-    }
-
-    return 0;
-}
-
-void kernel_main()
+_Noreturn void kernel_main()
 {
     cpu_init();
     irq_init();
@@ -78,7 +77,7 @@ void kernel_main()
     clear_screen();
 
     sti();
-    kernel_thread(init, NULL, 0);
+//    kernel_thread(init, NULL, 0);
     while (1) {
         hlt();
     }

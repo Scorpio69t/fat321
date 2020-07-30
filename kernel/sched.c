@@ -11,7 +11,6 @@
 #include <alphaz/kernel.h>
 #include <alphaz/unistd.h>
 #include <alphaz/linkage.h>
-#include <alphaz/tty.h>
 #include <alphaz/mm.h>
 
 #include <asm/system.h>
