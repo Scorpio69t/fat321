@@ -5,9 +5,9 @@ HEADER := ../include
 SOURCE := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, $(SOURCE))
 
--include Makefile.dep
-
 default: $(OBJS)
+
+-include Makefile.dep
 
 %.o: %.c
 	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<

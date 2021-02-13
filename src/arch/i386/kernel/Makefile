@@ -6,9 +6,9 @@ SOURCE := $(wildcard *.c) $(wildcard *.S)
 OBJS := $(patsubst %.c, %.o, $(SOURCE))
 OBJS := $(patsubst %.S, %.o, $(OBJS))
 
--include Makefile.dep
-
 default: $(OBJS)
+
+-include Makefile.dep
 
 %.o: %.S
 	$(CC) -I$(HEADER) $(CFLAGS) -D__ASSEMBLY__ -o $@ $<

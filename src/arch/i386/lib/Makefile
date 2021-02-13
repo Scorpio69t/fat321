@@ -5,15 +5,15 @@ HEADER := ../../../include
 SOURCE := $(wildcard *.c) $(wildcard *.S)
 OBJS := $(patsubst %.c, %.o, $(SOURCE))
 
--include Makefile.dep
-
 default: $(OBJS)
 
+-include Makefile.dep
+
 %.o: %.S
-	$(CC) -I$(include) $(CFLAGS) -D__ASSEMBLY__ -o $@ $<
+	$(CC) -I$(HEADER) $(CFLAGS) -D__ASSEMBLY__ -o $@ $<
 
 %.o: %.c
-	$(CC) -I$(include) $(CFLAGS) -o $@ $<
+	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
 
 Makefile.dep: $(SOURCE)
-	$(CC) -I$(include) -MM $^ > Makefile.dep
+	$(CC) -I$(HEADER) -MM $^ > Makefile.dep
