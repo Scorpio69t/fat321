@@ -1,4 +1,5 @@
 *.o
+*.a
 *.out
 *.txt
 !docs/*.txt
@@ -12,5 +13,6 @@
 /.idea
 build
 target
-
-include/asm
+*.dep
+src/include/asm
+.DS_Store
