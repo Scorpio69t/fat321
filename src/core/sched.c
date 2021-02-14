@@ -74,8 +74,7 @@ struct pt_regs * get_pt_regs(struct task_struct *task)
 }
 
 
-static struct task_struct * __sched
-context_switch(struct task_struct *prev, struct task_struct *next)
+static struct task_struct * context_switch(struct task_struct *prev, struct task_struct *next)
 {
     switch_to(prev, next, prev);
     return prev;
@@ -87,7 +86,7 @@ context_switch(struct task_struct *prev, struct task_struct *next)
  * 当前进程的调度并不涉及优先级和运行时间的一系列复杂因素，仅仅是将时间片消耗完的进程
  * 移到队尾，然后选出进程状态为TASK_RUNNING的进程作为下一个的进程
  */
-void __sched schedule(void)
+void schedule(void)
 {
     struct task_struct *prev, *next, *p;
 
@@ -127,7 +126,7 @@ void do_timer(struct pt_regs *reg, unsigned nr)
  * 该进程实现了秒级睡眠和毫秒级睡眠的中断处理，对应sleep和msleep两个系统调用的用户态接口，根
  * 据第一个参数的类型，来确定使用哪种类型的睡眠, 时间精度位10ms
  */
-asmlinkage long __sched sys_sleep(unsigned long type, unsigned long t)
+long __sched sys_sleep(unsigned long type, unsigned long t)
 {
     if (type == 0) {
         current->alarm = t * HZ;
@@ -142,14 +141,14 @@ asmlinkage long __sched sys_sleep(unsigned long type, unsigned long t)
     return 0;
 }
 
-asmlinkage int sys_pause(void)
+int sys_pause(void)
 {
     current->state = TASK_INTERRUPTIBLE;
     schedule();
     return 0;
 }
 
-asmlinkage int sys_exit(int status)
+int sys_exit(int status)
 {
     return status;
 }

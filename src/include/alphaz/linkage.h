@@ -18,6 +18,4 @@ name:
   .size name, .-name
 #endif
 
-#define asmlinkage __attribute__((regparm(0)))
-
 #endif

@@ -11,12 +11,12 @@
 
 #include <asm/unistd.h>
 
-asmlinkage unsigned long sys_get_ticks(void)
+unsigned long sys_get_ticks(void)
 {
     return ticks;
 }
 
-asmlinkage ssize_t sys_write(int fd, const void *buf, size_t nbytes)
+ssize_t sys_write(int fd, const void *buf, size_t nbytes)
 {
     struct file *filp;
     int ret = -1;
@@ -33,7 +33,7 @@ asmlinkage ssize_t sys_write(int fd, const void *buf, size_t nbytes)
     return ret;
 }
 
-asmlinkage ssize_t sys_read(int fd, void *buf, size_t nbytes)
+ssize_t sys_read(int fd, void *buf, size_t nbytes)
 {
     struct file *filp;
     int ret = -1;
@@ -50,7 +50,7 @@ asmlinkage ssize_t sys_read(int fd, void *buf, size_t nbytes)
     return ret;
 }
 
-asmlinkage int sys_open(const char *path, int oflag)
+int sys_open(const char *path, int oflag)
 {
     struct dentry *de = NULL;
     struct file *filp = NULL;
@@ -85,7 +85,7 @@ open_faild:
     return -1;
 }
 
-asmlinkage int sys_close(int fd)
+int sys_close(int fd)
 {
     struct file *filp;
 
@@ -101,7 +101,7 @@ asmlinkage int sys_close(int fd)
     return 0;
 }
 
-asmlinkage int sys_chdir(const char *path)
+int sys_chdir(const char *path)
 {
     struct dentry *de;
 
@@ -120,7 +120,7 @@ asmlinkage int sys_chdir(const char *path)
     return 0;
 }
 
-asmlinkage int sys_getcwd(char *buf, size_t n)
+int sys_getcwd(char *buf, size_t n)
 {
     struct dentry *cur;
     struct dentry *tmp[16];
@@ -156,7 +156,7 @@ asmlinkage int sys_getcwd(char *buf, size_t n)
     return ret;
 }
 
-asmlinkage int sys_getdents(int fd, void *dirent, int count)
+int sys_getdents(int fd, void *dirent, int count)
 {
     struct file *filp;
     int ret = -1;
@@ -172,18 +172,18 @@ asmlinkage int sys_getdents(int fd, void *dirent, int count)
     return ret;
 }
 
-asmlinkage unsigned long sys_getpid(void)
+unsigned long sys_getpid(void)
 {
     return current->pid;
 }
 
-asmlinkage long sys_reboot(void)
+long sys_reboot(void)
 {
     __sys_reboot();
     return 0;
 }
 
-asmlinkage long sys_debug(void)
+long sys_debug(void)
 {
     struct task_struct *p = current;
     struct pt_regs *regs = get_pt_regs(p);

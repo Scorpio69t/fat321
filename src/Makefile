@@ -39,8 +39,6 @@ $(subdir):
 iso: all
 	grub-mkrescue -o alphaz.iso iso/
 
-# 编译前对整个项目的配置。包括相关目录的生成以及创建目录链接等工作。所有子目录的Makefile的导入
-# 工作必须在此前完成。
 config:
 	@ln -fsn $(srctree)/include/asm-$(ARCH) include/asm
 

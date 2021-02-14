@@ -20,6 +20,6 @@ extern void kernel_thread_ret(void);
 
 pid_t kernel_thread(int (*fn)(void), void *, unsigned long);
 
-asmlinkage pid_t sys_fork(void);
+pid_t sys_fork(void);
 
 #endif

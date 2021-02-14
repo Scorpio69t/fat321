@@ -61,7 +61,7 @@
 //    return 0;
 //}
 
-_Noreturn void kernel_main()
+void kernel_main()
 {
     cpu_init();
     irq_init();

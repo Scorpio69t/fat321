@@ -163,7 +163,7 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs,
     return p->pid;
 }
 
-asmlinkage int sys_fork(void)
+int sys_fork(void)
 {
 	struct pt_regs *regs = (struct pt_regs *)current->thread.esp0 - 1;
 	return do_fork(0, 0, regs, 0);

@@ -69,7 +69,7 @@ int unregister_irq(unsigned vector)
     return 0;
 }
 
-asmlinkage void do_IRQ(struct pt_regs *regs)
+void do_IRQ(struct pt_regs *regs)
 {
     unsigned vector = regs->orig_eax;
     if (irq_array[vector].state & IRQ_STATE_INUSE)
