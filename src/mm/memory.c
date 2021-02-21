@@ -11,10 +11,10 @@
 #include <alphaz/bugs.h>
 #include <alphaz/console.h>
 
-#include <asm/memory.h>
-#include <asm/bug.h>
-#include <asm/div64.h>
-#include <asm/io.h>
+#include <boot/memory.h>
+#include <boot/bug.h>
+#include <boot/div64.h>
+#include <boot/io.h>
 
 struct zone mm_zones[MAX_NR_ZONES] = {
     [ZONE_KERNEL] = { .name = "KERNEL", },

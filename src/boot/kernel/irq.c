@@ -1,9 +1,9 @@
 #include <alphaz/kernel.h>
 #include <alphaz/linkage.h>
-#include <asm/cpu.h>
-#include <asm/irq.h>
-#include <asm/cpu.h>
-#include <asm/i8259.h>
+#include <boot/cpu.h>
+#include <boot/irq.h>
+#include <boot/cpu.h>
+#include <boot/i8259.h>
 
 struct gate_struct idt[NR_IRQ];
 

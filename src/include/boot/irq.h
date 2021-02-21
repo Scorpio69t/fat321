@@ -2,8 +2,8 @@
 #define _ASM_INT_H_
 
 #ifndef __ASSEMBLY__
-#include <asm/cpu.h>
-#include <asm/i8259.h>
+#include <boot/cpu.h>
+#include <boot/i8259.h>
 
 typedef void (*irq_entry) ();
 typedef void (*irq_handler) (struct pt_regs *, unsigned);

@@ -1,7 +1,7 @@
 #include <alphaz/bugs.h>
 #include <alphaz/kernel.h>
 #include <alphaz/stdio.h>
-#include <asm/bug.h>
+#include <boot/bug.h>
 #include <stdarg.h>
 
 void __panic(char *fmt, char *file, int line, ...)

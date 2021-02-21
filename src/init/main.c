@@ -17,12 +17,12 @@
 #include <alphaz/console.h>
 #include <alphaz/unistd.h>
 
-#include <asm/bug.h>
-#include <asm/cpu.h>
-#include <asm/disk.h>
-#include <asm/io.h>
-#include <asm/irq.h>
-#include <asm/system.h>
+#include <boot/bug.h>
+#include <boot/cpu.h>
+#include <boot/disk.h>
+#include <boot/io.h>
+#include <boot/irq.h>
+#include <boot/system.h>
 
 //static void test(void)
 //{

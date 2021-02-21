@@ -8,7 +8,7 @@
 #ifndef _ALPHAZ_SPINLOCK_H_
 #define _ALPHAZ_SPINLOCK_H_
 
-#include <asm/spinlock.h>
+#include <boot/spinlock.h>
 
 static inline void spin_init(spinlock_t *lock)
 {

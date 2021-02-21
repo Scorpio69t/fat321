@@ -1,6 +1,6 @@
 #include <alphaz/keyboard.h>
-#include <asm/bug.h>
-#include <asm/io.h>
+#include <boot/bug.h>
+#include <boot/io.h>
 
 /**
  * read_scancode - 从键盘控制器缓冲区读取扫描码

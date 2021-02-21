@@ -13,11 +13,11 @@
 #include <alphaz/linkage.h>
 #include <alphaz/mm.h>
 
-#include <asm/system.h>
-#include <asm/sched.h>
-#include <asm/irq.h>
-#include <asm/cpu.h>
-#include <asm/memory.h>
+#include <boot/system.h>
+#include <boot/sched.h>
+#include <boot/irq.h>
+#include <boot/cpu.h>
+#include <boot/memory.h>
 
 
 /**

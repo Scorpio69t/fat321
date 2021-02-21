@@ -3,9 +3,9 @@
 #include <alphaz/unistd.h>
 #include <alphaz/fcntl.h>
 #include <alphaz/dirent.h>
-#include <asm/unistd.h>
-#include <asm/cpu.h>
-#include <asm/io.h>
+#include <boot/unistd.h>
+#include <boot/cpu.h>
+#include <boot/io.h>
 
 /**
  * __syscall - 用户态系统调用的总入口

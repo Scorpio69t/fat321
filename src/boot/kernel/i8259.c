@@ -1,7 +1,7 @@
 /* 初始化8259 */
-#include <asm/io.h>
-#include <asm/irq.h>
-#include <asm/i8259.h>
+#include <boot/io.h>
+#include <boot/irq.h>
+#include <boot/i8259.h>
 
 void init_8259A()
 {

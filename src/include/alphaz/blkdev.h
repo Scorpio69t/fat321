@@ -1,7 +1,7 @@
 #ifndef _ALPHAZ_BLKDEV_H_
 #define _ALPHAZ_BLKDEV_H_
 
-#include <asm/disk.h>
+#include <boot/disk.h>
 
 #define __packed __attribute__((packed))
 

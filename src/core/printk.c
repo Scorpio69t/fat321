@@ -4,7 +4,7 @@
 #include <alphaz/kernel.h>
 #include <alphaz/console.h>
 
-#include <asm/console.h>
+#include <boot/console.h>
 
 
 /**

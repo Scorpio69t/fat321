@@ -9,7 +9,7 @@
 #include <alphaz/dirent.h>
 #include <alphaz/slab.h>
 
-#include <asm/unistd.h>
+#include <boot/unistd.h>
 
 unsigned long sys_get_ticks(void)
 {

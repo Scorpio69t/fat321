@@ -3,7 +3,7 @@
  */
 
 #include <alphaz/type.h>
-#include <asm/cpu.h>
+#include <boot/cpu.h>
 
 struct tss_struct tss;
 struct desc_struct gdt[GDT_SIZE];

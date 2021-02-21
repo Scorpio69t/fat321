@@ -1,5 +1,5 @@
 
-HEADER := ../../../include
+HEADER := ../../include
 OBJS := console.o i8042.o vbe.o
 
 default: $(OBJS)

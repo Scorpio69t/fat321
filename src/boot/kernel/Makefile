@@ -1,7 +1,7 @@
 
 .PHONY: default dep
 
-HEADER := ../../../include
+HEADER := ../../include
 SOURCE := $(wildcard *.c) $(wildcard *.S)
 OBJS := $(patsubst %.c, %.o, $(SOURCE))
 OBJS := $(patsubst %.S, %.o, $(OBJS))

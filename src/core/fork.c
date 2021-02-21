@@ -8,8 +8,8 @@
 #include <alphaz/type.h>
 #include <alphaz/unistd.h>
 #include <alphaz/mm.h>
-#include <asm/process.h>
-#include <asm/irq.h>
+#include <boot/process.h>
+#include <boot/irq.h>
 
 volatile pid_t global_pid = 0;
 

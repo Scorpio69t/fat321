@@ -4,9 +4,9 @@
 #include <alphaz/kernel.h>
 #include <alphaz/string.h>
 #include <alphaz/page.h>
-#include <asm/sched.h>
-#include <asm/bug.h>
-#include <asm/memory.h>
+#include <boot/sched.h>
+#include <boot/bug.h>
+#include <boot/memory.h>
 
 unsigned long __phy(unsigned long addr)
 {

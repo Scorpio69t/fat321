@@ -12,8 +12,8 @@
 #include <alphaz/malloc.h>
 #include <alphaz/string.h>
 
-#include <asm/bug.h>
-#include <asm/div64.h>
+#include <boot/bug.h>
+#include <boot/div64.h>
 
 /*
  * 为了简单起见，不再兼容windows对目录项的创建方式，并且，对于每一个短目录项，都要有其对应的

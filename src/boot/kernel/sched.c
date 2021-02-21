@@ -2,11 +2,11 @@
 #include <alphaz/sched.h>
 #include <alphaz/compiler.h>
 #include <alphaz/kernel.h>
-#include <asm/io.h>
-#include <asm/irq.h>
-#include <asm/cpu.h>
-#include <asm/sched.h>
-#include <asm/memory.h>
+#include <boot/io.h>
+#include <boot/irq.h>
+#include <boot/cpu.h>
+#include <boot/sched.h>
+#include <boot/memory.h>
 
 
 /**
@@ -40,7 +40,7 @@ inline struct task_struct * __current(void)
  * @prev: 当前进程的进程控制块指针 in eax
  * @next: 下一个进程的进程控制块指针 in edx
  */
-#include <asm/bug.h>
+#include <boot/bug.h>
 struct task_struct * __regparm3
 __switch_to(struct task_struct *prev, struct task_struct *next)
 {

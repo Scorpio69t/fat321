@@ -10,9 +10,9 @@
 #include <alphaz/fontdata.h>
 #include <alphaz/config.h>
 
-#include <asm/console.h>
-#include <asm/div64.h>
-#include <asm/io.h>
+#include <boot/console.h>
+#include <boot/div64.h>
+#include <boot/io.h>
 
 struct console_desc console;
 

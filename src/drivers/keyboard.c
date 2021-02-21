@@ -7,8 +7,8 @@
 #include <alphaz/malloc.h>
 #include <alphaz/spinlock.h>
 
-#include <asm/irq.h>
-#include <asm/io.h>
+#include <boot/irq.h>
+#include <boot/io.h>
 
 struct file *stdin;
 

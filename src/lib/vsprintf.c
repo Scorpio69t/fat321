@@ -4,7 +4,7 @@
 #include <alphaz/string.h>
 #include <alphaz/ctype.h>
 
-#include <asm/div64.h>
+#include <boot/div64.h>
 
 /* from Linux */
 #define ZEROPAD 1       /* 使用0填充 */

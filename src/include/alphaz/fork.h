@@ -3,7 +3,7 @@
 
 #include <alphaz/sched.h>
 #include <alphaz/linkage.h>
-#include <asm/cpu.h>
+#include <boot/cpu.h>
 
 #define CLONE_VM        (1UL << 8)
 #define CLONE_FS        (1UL << 9)

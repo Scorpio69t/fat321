@@ -1,5 +1,5 @@
 
-#include <asm/multiboot.h>
+#include <boot/multiboot.h>
 
 .section ".multiboot_header"
 

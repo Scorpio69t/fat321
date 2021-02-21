@@ -1,11 +1,11 @@
 #include <alphaz/mm.h>
 #include <alphaz/config.h>
 #include <alphaz/console.h>
-#include <asm/string.h>
-#include <asm/console.h>
-#include <asm/irq.h>
-#include <asm/io.h>
-#include <asm/bug.h>
+#include <boot/string.h>
+#include <boot/console.h>
+#include <boot/irq.h>
+#include <boot/io.h>
+#include <boot/bug.h>
 
 #ifndef __VBE
 

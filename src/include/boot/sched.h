@@ -3,7 +3,7 @@
 
 #include <alphaz/type.h>
 #include <alphaz/compiler.h>
-#include <asm/cpu.h>
+#include <boot/cpu.h>
 
 void setup_counter(void);
 

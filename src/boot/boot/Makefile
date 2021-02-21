@@ -1,5 +1,5 @@
 
-HEADER := ../../../include
+HEADER := ../../include
 
 -include Makefile.dep
 

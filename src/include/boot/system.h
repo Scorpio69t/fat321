@@ -1,7 +1,7 @@
 #ifndef _ASM_SYSTEM_H_
 #define _ASM_SYSTEM_H_
 
-#include <asm/cpu.h>
+#include <boot/cpu.h>
 #include <alphaz/sched.h>
 
 /* 只有内核级进程才可调用此功能, 并且调用后，进程便丢失了原来的栈信息，不能再进行函数返回 */

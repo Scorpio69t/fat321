@@ -23,9 +23,9 @@
 #include <alphaz/list.h>
 #include <alphaz/string.h>
 
-#include <asm/atomic.h>
-#include <asm/sched.h>
-#include <asm/cpu.h>
+#include <boot/atomic.h>
+#include <boot/sched.h>
+#include <boot/cpu.h>
 
 #define __ticks_data __attribute__((section(".data")))
 #define __pid_data  __attribute__((section(".data")))

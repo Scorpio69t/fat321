@@ -9,11 +9,11 @@
 #include <alphaz/spinlock.h>
 #include <alphaz/wait.h>
 
-#include <asm/atomic.h>
-#include <asm/disk.h>
-#include <asm/bug.h>
-#include <asm/irq.h>
-#include <asm/io.h>
+#include <boot/atomic.h>
+#include <boot/disk.h>
+#include <boot/bug.h>
+#include <boot/irq.h>
+#include <boot/io.h>
 
 
 static request_queue_head_t disk_request_head;  /* IO请求队列 */

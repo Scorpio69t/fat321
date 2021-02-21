@@ -5,7 +5,7 @@
 #include <alphaz/fs.h>
 #include <alphaz/slab.h>
 #include <alphaz/bugs.h>
-#include <asm/irq.h>
+#include <boot/irq.h>
 
 struct super_block *root_sb = NULL;
 struct dentry *root_dentry = NULL;

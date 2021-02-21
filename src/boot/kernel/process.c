@@ -7,9 +7,9 @@
 #include <alphaz/malloc.h>
 #include <alphaz/sched.h>
 #include <alphaz/type.h>
-#include <asm/cpu.h>
-#include <asm/irq.h>
-#include <asm/process.h>
+#include <boot/cpu.h>
+#include <boot/irq.h>
+#include <boot/process.h>
 
 /**
  * 获取用户栈的esp

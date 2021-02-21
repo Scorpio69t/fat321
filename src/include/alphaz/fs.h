@@ -5,7 +5,7 @@
 #include <alphaz/list.h>
 #include <alphaz/dirent.h>
 #include <alphaz/spinlock.h>
-#include <asm/atomic.h>
+#include <boot/atomic.h>
 
 /* lseek调用选项 */
 #define  SEEK_SET       (1 << 0)

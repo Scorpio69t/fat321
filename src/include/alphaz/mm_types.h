@@ -3,7 +3,7 @@
 
 #include <alphaz/list.h>
 #include <alphaz/slab.h>
-#include <asm/atomic.h>
+#include <boot/atomic.h>
 
 struct minfo {
     unsigned int base_addr_low;

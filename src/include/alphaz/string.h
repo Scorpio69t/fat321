@@ -1,7 +1,7 @@
 #ifndef  _ALPHAZ_STRING_H_
 #define _ALPHAZ_STRING_H_
 
-#include <asm/string.h>
+#include <boot/string.h>
 
 #ifndef __HAVE_ARCH_MEMCPY
 extern void * memcpy(void *, void *, size_t);
