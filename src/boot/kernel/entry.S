@@ -2,8 +2,8 @@
  * 中断入口
  */
 
-#include <alphaz/linkage.h>
-#include <alphaz/sched.h>
+#include <feng/linkage.h>
+#include <feng/sched.h>
 
 .section .text
 

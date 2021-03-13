@@ -1,15 +1,15 @@
-#include <alphaz/fork.h>
-#include <alphaz/bugs.h>
-#include <alphaz/gfp.h>
-#include <alphaz/kernel.h>
-#include <alphaz/linkage.h>
-#include <alphaz/malloc.h>
-#include <alphaz/sched.h>
-#include <alphaz/type.h>
-#include <alphaz/unistd.h>
-#include <alphaz/mm.h>
-#include <boot/process.h>
 #include <boot/irq.h>
+#include <boot/process.h>
+#include <feng/bugs.h>
+#include <feng/fork.h>
+#include <feng/gfp.h>
+#include <feng/kernel.h>
+#include <feng/linkage.h>
+#include <feng/malloc.h>
+#include <feng/mm.h>
+#include <feng/sched.h>
+#include <feng/type.h>
+#include <feng/unistd.h>
 
 volatile pid_t global_pid = 0;
 
@@ -49,7 +49,7 @@ static unsigned long *dup_page_table(void)
     return pt;
 }
 
-static struct mm_struct * dup_mm(void)
+static struct mm_struct *dup_mm(void)
 {
     struct mm_struct *mm, *oldmm;
 
@@ -79,7 +79,7 @@ static int copy_mm(struct task_struct *p, int clone_flags)
     if (!p->stack)
         return -1;
     if (!(p->flags & PF_KTHREAD))
-		memcpy(p->stack, current->stack, USER_STACK_SIZE);
+        memcpy(p->stack, current->stack, USER_STACK_SIZE);
 
     if (clone_flags & CLONE_VM) {
         mm = current->mm;
@@ -113,9 +113,10 @@ _ret:
     return 0;
 }
 
-static struct task_struct * copy_process(int clone_flags, unsigned long stack_start, struct pt_regs *regs, unsigned long stack_size)
+static struct task_struct *copy_process(int clone_flags, unsigned long stack_start, struct pt_regs *regs,
+                                        unsigned long stack_size)
 {
-	struct task_struct *p;
+    struct task_struct *p;
 
     p = (struct task_struct *)get_zeroed_page(GFP_KERNEL);
     if (!p)
@@ -123,7 +124,7 @@ static struct task_struct * copy_process(int clone_flags, unsigned long stack_st
     p->state = TASK_UNINTERRUPTIBLE;
     p->prio = 1;
     p->counter = 1;
-    p->alarm  = 0;
+    p->alarm = 0;
     p->parent = current;
 
     list_head_init(&p->children);
@@ -131,7 +132,7 @@ static struct task_struct * copy_process(int clone_flags, unsigned long stack_st
     copy_signal(p, clone_flags);
     copy_fs(p, clone_flags);
 
-    if(copy_files(p, clone_flags))
+    if (copy_files(p, clone_flags))
         goto copy_failed;
     if (copy_mm(p, clone_flags))
         goto copy_failed;
@@ -144,12 +145,11 @@ copy_failed:
     return 0;
 }
 
-long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs,
-			unsigned long stack_size)
+long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, unsigned long stack_size)
 {
-	struct task_struct *p;
+    struct task_struct *p;
 
-	p = copy_process(clone_flags, stack_start, regs, stack_size);
+    p = copy_process(clone_flags, stack_start, regs, stack_size);
     if (!p)
         return -1;
 
@@ -157,20 +157,20 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs,
 
     cli();
     list_add(&p->sibling, &current->children);
-	list_add_tail(&p->task, &task_head);
+    list_add_tail(&p->task, &task_head);
     sti();
-	p->state = TASK_RUNNING;
+    p->state = TASK_RUNNING;
     return p->pid;
 }
 
 int sys_fork(void)
 {
-	struct pt_regs *regs = (struct pt_regs *)current->thread.esp0 - 1;
-	return do_fork(0, 0, regs, 0);
+    struct pt_regs *regs = (struct pt_regs *)current->thread.esp0 - 1;
+    return do_fork(0, 0, regs, 0);
 }
 
 int kernel_thread(int (*fn)(void), void *args, unsigned long flags)
 {
-	struct pt_regs regs;
-	return _kernel_thread(&regs, fn, args, flags);
+    struct pt_regs regs;
+    return _kernel_thread(&regs, fn, args, flags);
 }

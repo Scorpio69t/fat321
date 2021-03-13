@@ -1,4 +1,4 @@
-#include <alphaz/ctype.h>
+#include <feng/ctype.h>
 
 inline int isalpha(int c)
 {
@@ -18,8 +18,7 @@ inline int isblank(int c)
 
 inline int isspace(int c)
 {
-    if (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' ||
-        c == '\r')
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r')
         return 1;
     return 0;
 }

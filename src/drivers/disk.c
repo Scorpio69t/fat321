@@ -3,22 +3,21 @@
  * 进行调整。
  */
 
-#include <alphaz/kernel.h>
-#include <alphaz/list.h>
-#include <alphaz/slab.h>
-#include <alphaz/spinlock.h>
-#include <alphaz/wait.h>
-
 #include <boot/atomic.h>
-#include <boot/disk.h>
 #include <boot/bug.h>
-#include <boot/irq.h>
+#include <boot/disk.h>
 #include <boot/io.h>
+#include <boot/irq.h>
+#include <feng/kernel.h>
+#include <feng/list.h>
+#include <feng/slab.h>
+#include <feng/spinlock.h>
+#include <feng/wait.h>
 
-
-static request_queue_head_t disk_request_head;  /* IO请求队列 */
+static request_queue_head_t disk_request_head; /* IO请求队列 */
 wait_queue_head_t disk_wait_queue_head;
 void disk_handler(struct pt_regs *, unsigned);
+
 /**
  * disk_init - ATA硬盘初始化
  * 为了简单起见，这里使用基于IDT的I/O端口编程模式对ATA硬盘进行访问，而不使用SATA控制器和PCI
@@ -30,12 +29,12 @@ void disk_init(void)
     init_wait_queue_head(&disk_wait_queue_head);
     register_irq(0x2e, disk_handler);
     outb(PORT_DISK0_ALT_STA_CTL, 0);
-    outb(PORT_DISK0_ERR_FEATURE , 0);
+    outb(PORT_DISK0_ERR_FEATURE, 0);
     outb(PORT_DISK0_SECTOR_CNT, 0);
     outb(PORT_DISK0_SECTOR_LOW, 0);
     outb(PORT_DISK0_SECTOR_MID, 0);
     outb(PORT_DISK0_SECTOR_HIGH, 0);
-    outb(PORT_DISK0_DEVICE, 0xe0);      /* sector模式 */
+    outb(PORT_DISK0_DEVICE, 0xe0); /* sector模式 */
 }
 
 void disk_exit(void)
@@ -52,7 +51,6 @@ void disk_handler(struct pt_regs *regs, unsigned nr)
     disk_request_head.use->end_handler();
 }
 
-
 static void do_request(void)
 {
     /*
@@ -66,8 +64,7 @@ static void do_request(void)
 
     while (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_BUSY) nop();
 
-    switch (r->cmd)
-    {
+    switch (r->cmd) {
     case ATA_WRITE_CMD:
         outb(PORT_DISK0_DEVICE, 0xe0 | ((r->sector >> 24) & 0x0f));
         outb(PORT_DISK0_ERR_FEATURE, 0);
@@ -171,13 +168,11 @@ static void identify_handler(void)
     do_request();
 }
 
-static request_queue_t * make_request(long cmd, unsigned long sector,
-                                        unsigned long nsect, void *buf)
+static request_queue_t *make_request(long cmd, unsigned long sector, unsigned long nsect, void *buf)
 {
     request_queue_t *r = (request_queue_t *)kmalloc(sizeof(request_queue_t), 0);
 
-    switch (cmd)
-    {
+    switch (cmd) {
     case ATA_READ_CMD:
         r->end_handler = read_handler;
         r->cmd = ATA_READ_CMD;

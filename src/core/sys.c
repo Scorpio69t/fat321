@@ -1,15 +1,14 @@
-#include <alphaz/bugs.h>
-#include <alphaz/unistd.h>
-#include <alphaz/sched.h>
-#include <alphaz/kernel.h>
-#include <alphaz/keyboard.h>
-#include <alphaz/malloc.h>
-#include <alphaz/linkage.h>
-#include <alphaz/fcntl.h>
-#include <alphaz/dirent.h>
-#include <alphaz/slab.h>
-
 #include <boot/unistd.h>
+#include <feng/bugs.h>
+#include <feng/dirent.h>
+#include <feng/fcntl.h>
+#include <feng/kernel.h>
+#include <feng/keyboard.h>
+#include <feng/linkage.h>
+#include <feng/malloc.h>
+#include <feng/sched.h>
+#include <feng/slab.h>
+#include <feng/unistd.h>
 
 unsigned long sys_get_ticks(void)
 {
@@ -28,7 +27,7 @@ ssize_t sys_write(int fd, const void *buf, size_t nbytes)
     filp = current->files->files[fd];
     if (filp && filp->f_op && filp->f_op->write)
         ret = filp->f_op->write(filp, buf, nbytes, filp->f_pos);
-    if(ret != -1)
+    if (ret != -1)
         filp->f_pos += ret;
     return ret;
 }
@@ -80,8 +79,10 @@ int sys_open(const char *path, int oflag)
     return fd;
 
 open_faild:
-    if (de) kfree(de);
-    if (filp) kfree(filp);
+    if (de)
+        kfree(de);
+    if (filp)
+        kfree(filp);
     return -1;
 }
 
@@ -107,7 +108,7 @@ int sys_chdir(const char *path)
 
     if (!strcmp(path, ".."))
         de = current->cwd->d_parent;
-    else if(!strcmp(path, "."))
+    else if (!strcmp(path, "."))
         return 0;
     else
         de = path_walk(path, 0);
@@ -132,7 +133,7 @@ int sys_getcwd(char *buf, size_t n)
 
     while (cur) {
         tmp[i++] = cur;
-        if (cur != cur->d_parent)  /* 根目录的父目录可能是自己也可能为空 */
+        if (cur != cur->d_parent) /* 根目录的父目录可能是自己也可能为空 */
             cur = cur->d_parent;
         else
             cur = NULL;

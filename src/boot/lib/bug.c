@@ -1,7 +1,7 @@
-#include <alphaz/type.h>
-#include <alphaz/stdio.h>
-#include <alphaz/unistd.h>
 #include <boot/bug.h>
+#include <feng/stdio.h>
+#include <feng/type.h>
+#include <feng/unistd.h>
 
 int disp_pos = 0;
 
@@ -14,10 +14,7 @@ static inline void disp_char(char c, u8 color, u32 pos)
 {
     u16 res = color;
     res = (res << 8) | c;
-    asm volatile(
-        "movw %%ax, %%gs:(%%edi)\n\t"
-        :
-        :"a"(res), "D"(pos));
+    asm volatile("movw %%ax, %%gs:(%%edi)\n\t" : : "a"(res), "D"(pos));
 }
 
 static void itoa(int num, char *buf)
@@ -29,8 +26,10 @@ static void itoa(int num, char *buf)
 
     for (i = 28; i >= 0; i -= 4) {
         ch = (num >> i) & 0xf;
-        if(ch <= 9) ch = ch + '0';
-        else ch = ch - 10 + 'A';
+        if (ch <= 9)
+            ch = ch + '0';
+        else
+            ch = ch - 10 + 'A';
         *buf++ = ch;
     }
     *buf = 0;
@@ -41,8 +40,8 @@ void disp_str(char *buf)
     u32 pos = disp_pos;
     char *cp;
 
-    for(cp = buf; *cp != 0; cp++) {
-        if(*cp == '\n') {
+    for (cp = buf; *cp != 0; cp++) {
+        if (*cp == '\n') {
             pos = (pos / 160 + 1) * 160;
             continue;
         }
@@ -65,7 +64,7 @@ void __noinline delay(int t)
     volatile int i, j, k;
     for (i = 0; i < t; i++) {
         for (j = 0; j < 1000; j++) {
-            for(k = 0; k < 1000; k++) {
+            for (k = 0; k < 1000; k++) {
                 ;
             }
         }

@@ -5,11 +5,11 @@
  * stdarg.h是GCC的一部分，其中的va_list也是GCC的内建类型，且定义了一组宏用于处理具有可变参
  * 数的函数。该头文件可以直接使用，无需特别处理编译和链接
  */
+#include <feng/fs.h>
+#include <feng/type.h>
 #include <stdarg.h>
-#include <alphaz/type.h>
-#include <alphaz/fs.h>
 
-#define EOF         0
+#define EOF 0
 
 extern struct file *stdin;
 extern struct file *stdout;

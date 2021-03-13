@@ -2,35 +2,31 @@
  * 进程调度相关
  */
 
-#include <alphaz/bugs.h>
-#include <alphaz/sched.h>
-#include <alphaz/list.h>
-#include <alphaz/slab.h>
-#include <alphaz/malloc.h>
-#include <alphaz/string.h>
-#include <alphaz/kernel.h>
-#include <alphaz/unistd.h>
-#include <alphaz/linkage.h>
-#include <alphaz/mm.h>
-
-#include <boot/system.h>
-#include <boot/sched.h>
-#include <boot/irq.h>
 #include <boot/cpu.h>
+#include <boot/irq.h>
 #include <boot/memory.h>
-
+#include <boot/sched.h>
+#include <boot/system.h>
+#include <feng/bugs.h>
+#include <feng/kernel.h>
+#include <feng/linkage.h>
+#include <feng/list.h>
+#include <feng/malloc.h>
+#include <feng/mm.h>
+#include <feng/sched.h>
+#include <feng/slab.h>
+#include <feng/string.h>
+#include <feng/unistd.h>
 
 /**
  * 任务链表的头结点
  */
 struct list_head task_head;
 
-
 /**
  * idle进程的task_struct地址
  */
 struct task_struct *idle;
-
 
 /**
  * 时钟中断计数器
@@ -51,7 +47,8 @@ static inline void update_alarm(void)
 {
     struct task_struct *p;
 
-    list_for_each_entry(p, &task_head, task) {
+    list_for_each_entry(p, &task_head, task)
+    {
         if (p->alarm == 0) {
             continue;
         }
@@ -65,7 +62,7 @@ static inline void update_alarm(void)
 /**
  * 获取当前进程的cpu上下文
  */
-struct pt_regs * get_pt_regs(struct task_struct *task)
+struct pt_regs *get_pt_regs(struct task_struct *task)
 {
     struct pt_regs *regs;
     regs = (struct pt_regs *)kernel_stack_top(task);
@@ -73,13 +70,11 @@ struct pt_regs * get_pt_regs(struct task_struct *task)
     return regs;
 }
 
-
-static struct task_struct * context_switch(struct task_struct *prev, struct task_struct *next)
+static struct task_struct *context_switch(struct task_struct *prev, struct task_struct *next)
 {
     switch_to(prev, next, prev);
     return prev;
 }
-
 
 /**
  * schedule是进程的调度器，该方法在就绪进程队列中选出一个进程进行切换
@@ -97,18 +92,19 @@ void schedule(void)
     cli();
     list_del(&prev->task);
     list_add_tail(&prev->task, &task_head);
-    list_for_each_entry(p, &task_head, task) {
+    list_for_each_entry(p, &task_head, task)
+    {
         if (p->state == TASK_RUNNING) {
             next = p;
             break;
         }
     }
-    if (!next) next = idle;
+    if (!next)
+        next = idle;
     next->counter = 1;
     prev = context_switch(prev, next);
     sti();
 }
-
 
 /**
  * 时钟中断处理函数
@@ -119,7 +115,6 @@ void do_timer(struct pt_regs *reg, unsigned nr)
     update_alarm();
     current->flags |= NEED_SCHEDULE;
 }
-
 
 /**
  * sys_sleep - 进程睡眠
@@ -162,26 +157,26 @@ extern unsigned long _end;
  */
 static void setup_idle_process(void)
 {
-	/* 其中包括内核栈 */
-	struct task_struct *ts = current;
+    /* 其中包括内核栈 */
+    struct task_struct *ts = current;
 
-	ts->state = TASK_RUNNING;
-	ts->flags |= PF_KTHREAD;
+    ts->state = TASK_RUNNING;
+    ts->flags |= PF_KTHREAD;
 
-	ts->stack = NULL;           /* 无用户栈 */
-	ts->pid = 0;
-	ts->prio = LOWEST_PRIO;
-	ts->counter = 1;
-	ts->alarm = 0;
+    ts->stack = NULL; /* 无用户栈 */
+    ts->pid = 0;
+    ts->prio = LOWEST_PRIO;
+    ts->counter = 1;
+    ts->alarm = 0;
 
-	strcpy(ts->comm, "idle");
+    strcpy(ts->comm, "idle");
 
-	ts->parent = NULL;
-	list_head_init(&ts->children);
+    ts->parent = NULL;
+    list_head_init(&ts->children);
 
-	ts->thread.esp0 = NULL_STACK_MAGIC;
-	ts->thread.esp = NULL_STACK_MAGIC;
-	ts->signal = 0;
+    ts->thread.esp0 = NULL_STACK_MAGIC;
+    ts->thread.esp = NULL_STACK_MAGIC;
+    ts->signal = 0;
 
     ts->files = (struct files_struct *)kmalloc(sizeof(struct files_struct), 0);
     assert(ts->files != NULL);
@@ -199,11 +194,11 @@ static void setup_idle_process(void)
     ts->mm->end_data = (unsigned long)&_edata;
     ts->mm->pgd = (unsigned long *)get_pgd();
 
-	idle = ts;
+    idle = ts;
 
-	tss.esp0 = ts->thread.esp0;
+    tss.esp0 = ts->thread.esp0;
 
-	list_add(&ts->task, &task_head);
+    list_add(&ts->task, &task_head);
 }
 
 /**

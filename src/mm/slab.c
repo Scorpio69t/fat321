@@ -2,12 +2,12 @@
  * slab高速缓存
  */
 
-#include <alphaz/type.h>
-#include <alphaz/slab.h>
-#include <alphaz/gfp.h>
-#include <alphaz/bugs.h>
-#include <alphaz/mm.h>
-#include <alphaz/kernel.h>
+#include <feng/bugs.h>
+#include <feng/gfp.h>
+#include <feng/kernel.h>
+#include <feng/mm.h>
+#include <feng/slab.h>
+#include <feng/type.h>
 
 static inline unsigned int kmem_align(unsigned int size)
 {
@@ -17,7 +17,7 @@ static inline unsigned int kmem_align(unsigned int size)
     return ret;
 }
 
-static inline void * kmem_getpages(struct kmem_cache *cachep, unsigned int flags)
+static inline void *kmem_getpages(struct kmem_cache *cachep, unsigned int flags)
 {
     int i;
     struct page *page;
@@ -28,8 +28,7 @@ static inline void * kmem_getpages(struct kmem_cache *cachep, unsigned int flags
     if (!page)
         return 0;
 
-    for (i = 0; i < (1 << cachep->gfporder); i++)
-        page[i].slab = cachep;
+    for (i = 0; i < (1 << cachep->gfporder); i++) page[i].slab = cachep;
 
     return page->virtual;
 }
@@ -41,7 +40,8 @@ static int cache_grow(struct kmem_cache *cachep)
     struct slab *slabp;
 
     slabp = (struct slab *)kmem_getpages(cachep, 0);
-    if (!slabp) return -1;
+    if (!slabp)
+        return -1;
 
     slabp->inuse = 0;
     slabp->free = 0;
@@ -50,8 +50,7 @@ static int cache_grow(struct kmem_cache *cachep)
     slabp->s_mem = (void *)slabp + head;
 
     array = (unsigned short *)((void *)slabp + sizeof(struct slab));
-    for (i = 0; i < cachep->num; i++)
-        array[i] = i;
+    for (i = 0; i < cachep->num; i++) array[i] = i;
     array[cachep->num] = BUFCTL_END;
 
     cachep->total_slab++;
@@ -70,7 +69,7 @@ static int cache_grow(struct kmem_cache *cachep)
  * 当前的高速缓冲分配方式非常简单，我们的kmem_cache结构体会单独占用一个页，每个slab的头部信
  * 息都会放在一个每个slab里，不使用外部的空间
  */
-struct kmem_cache * kmem_cache_create(const char *name, size_t size, unsigned int flags)
+struct kmem_cache *kmem_cache_create(const char *name, size_t size, unsigned int flags)
 {
     unsigned int tnum, head, i;
     struct kmem_cache *cachep = NULL;
@@ -95,9 +94,8 @@ struct kmem_cache * kmem_cache_create(const char *name, size_t size, unsigned in
 
     /* 计算每个slab至少需要几个页 */
     i = 0;
-    while (cachep->size * SLAB_MIN_NUM > PAGE_SIZE * (1 << i) && i < MAX_ORDER)
-        i++;
-    if (i >= MAX_ORDER) {    /* 对象太大，无法获取足够的空间 */
+    while (cachep->size * SLAB_MIN_NUM > PAGE_SIZE * (1 << i) && i < MAX_ORDER) i++;
+    if (i >= MAX_ORDER) { /* 对象太大，无法获取足够的空间 */
         free_page((unsigned long)cachep);
         return 0;
     }
@@ -109,7 +107,7 @@ struct kmem_cache * kmem_cache_create(const char *name, size_t size, unsigned in
     head = kmem_align(head);
     cachep->num = ((1 << cachep->gfporder) * PAGE_SIZE - head) / cachep->size;
 
-    if(cache_grow(cachep)) {
+    if (cache_grow(cachep)) {
         free_page((unsigned long)cachep);
         return 0;
     }
@@ -125,17 +123,20 @@ int kmem_cache_destroy(struct kmem_cache *cachep)
     struct list_head *pos, *n;
     struct slab *slabp;
 
-    list_for_each_safe(pos, n, &cachep->slabs_partial) {
+    list_for_each_safe(pos, n, &cachep->slabs_partial)
+    {
         slabp = list_entry(pos, struct slab, list);
         free_pages((unsigned long)slabp, cachep->gfporder);
     }
 
-    list_for_each_safe(pos, n, &cachep->slabs_full) {
+    list_for_each_safe(pos, n, &cachep->slabs_full)
+    {
         slabp = list_entry(pos, struct slab, list);
         free_pages((unsigned long)slabp, cachep->gfporder);
     }
 
-    list_for_each_safe(pos, n, &cachep->slabs_free) {
+    list_for_each_safe(pos, n, &cachep->slabs_free)
+    {
         slabp = list_entry(pos, struct slab, list);
         free_pages((unsigned long)slabp, cachep->gfporder);
     }
@@ -144,7 +145,7 @@ int kmem_cache_destroy(struct kmem_cache *cachep)
     return 0;
 }
 
-static void * ____cache_alloc(struct kmem_cache *cachep, struct slab *slabp)
+static void *____cache_alloc(struct kmem_cache *cachep, struct slab *slabp)
 {
     void *ret = NULL;
     unsigned short *array;
@@ -157,31 +158,35 @@ static void * ____cache_alloc(struct kmem_cache *cachep, struct slab *slabp)
         slabp->inuse++;
     }
 
-    if (array[slabp->free] == BUFCTL_END) {     // 当前slab已满
+    if (array[slabp->free] == BUFCTL_END) {  // 当前slab已满
         list_del(&slabp->list);
         list_add(&slabp->list, &cachep->slabs_full);
     }
     return ret;
 }
 
-static void * __cache_alloc(struct kmem_cache *cachep)
+static void *__cache_alloc(struct kmem_cache *cachep)
 {
     struct list_head *pos, *n;
     struct slab *slabp;
     void *ret = NULL;
     int infree = 0;
 
-    list_for_each_safe(pos, n, &cachep->slabs_partial) {
+    list_for_each_safe(pos, n, &cachep->slabs_partial)
+    {
         slabp = list_entry(pos, struct slab, list);
         ret = ____cache_alloc(cachep, slabp);
-        if (ret) goto _ret;
+        if (ret)
+            goto _ret;
     }
 
-    list_for_each_safe(pos, n, &cachep->slabs_free) {
+    list_for_each_safe(pos, n, &cachep->slabs_free)
+    {
         slabp = list_entry(pos, struct slab, list);
         ret = ____cache_alloc(cachep, slabp);
         infree = 1;
-        if (ret) goto _ret;
+        if (ret)
+            goto _ret;
     }
 
     return 0;
@@ -199,7 +204,7 @@ _ret:
  * @cachep: 高速缓存指针
  * @flags: 分配时的标示，传送给__get_free_pages
  */
-void * kmem_cache_alloc(struct kmem_cache *cachep, unsigned int flags)
+void *kmem_cache_alloc(struct kmem_cache *cachep, unsigned int flags)
 {
     void *ret;
 
@@ -226,14 +231,16 @@ static void __cache_free(struct kmem_cache *cachep, void *objp)
     struct list_head *pos, *n;
     struct slab *slabp = NULL;
 
-    list_for_each_safe(pos, n, &cachep->slabs_full) {
+    list_for_each_safe(pos, n, &cachep->slabs_full)
+    {
         slabp = list_entry(pos, struct slab, list);
         ind = slab_index(cachep, slabp, objp);
         if (ind != -1)
             goto _free;
     }
 
-    list_for_each_safe(pos, n, &cachep->slabs_partial) {
+    list_for_each_safe(pos, n, &cachep->slabs_partial)
+    {
         slabp = list_entry(pos, struct slab, list);
         ind = slab_index(cachep, slabp, objp);
         if (ind != -1)
@@ -242,7 +249,7 @@ static void __cache_free(struct kmem_cache *cachep, void *objp)
 
 _free:
     array = (unsigned short *)((void *)slabp + sizeof(struct slab));
-    if (slabp->free) {          // slabp->free不能为0，否则会溢出slab的管理数组
+    if (slabp->free) {  // slabp->free不能为0，否则会溢出slab的管理数组
         array[--slabp->free] = ind;
         slabp->inuse--;
     }

@@ -1,5 +1,5 @@
-#include <alphaz/linkage.h>
-#include <alphaz/mm.h>
+#include <feng/linkage.h>
+#include <feng/mm.h>
 
 .global boot_info_addr
 

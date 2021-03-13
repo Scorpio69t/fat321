@@ -1,7 +1,7 @@
 /* 初始化8259 */
+#include <boot/i8259.h>
 #include <boot/io.h>
 #include <boot/irq.h>
-#include <boot/i8259.h>
 
 void init_8259A()
 {
@@ -27,7 +27,6 @@ void init_8259A()
     outb(INT_S_CTLMASK, 0xff);
 }
 
-
 /**
  * enable - 开启8259a的某个引脚
  * @irq: 要开启的8259a的引脚的编号
@@ -36,7 +35,7 @@ void enable_irq(unsigned short irq)
 {
     u8 val;
 
-    if(irq < 0 || irq > 15)
+    if (irq < 0 || irq > 15)
         return;
     val = ~(1 << (irq % 8));
     if (irq <= 7) {
@@ -45,11 +44,10 @@ void enable_irq(unsigned short irq)
     } else {
         val = val & inb(INT_S_CTLMASK);
         outb(INT_S_CTLMASK, val);
-        val = (~(1 << 2)) & inb(INT_M_CTLMASK);     /* 开启主片级联 */
+        val = (~(1 << 2)) & inb(INT_M_CTLMASK); /* 开启主片级联 */
         outb(INT_M_CTLMASK, val);
     }
 }
-
 
 /**
  * disable - 关闭8259a的某个引脚
@@ -59,7 +57,7 @@ void disable_irq(unsigned short irq)
 {
     u8 val;
 
-    if(irq < 0 || irq > 15)
+    if (irq < 0 || irq > 15)
         return;
     val = 1 << (irq % 8);
     if (irq <= 7) {

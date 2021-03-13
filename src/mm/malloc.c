@@ -1,8 +1,8 @@
-#include <alphaz/type.h>
-#include <alphaz/slab.h>
-#include <alphaz/malloc.h>
+#include <feng/malloc.h>
+#include <feng/slab.h>
+#include <feng/type.h>
 
-void * malloc(size_t size)
+void *malloc(size_t size)
 {
     return kmalloc(size, 0);
 }

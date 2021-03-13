@@ -1,15 +1,14 @@
-#include <alphaz/dirent.h>
-#include <alphaz/fs.h>
-#include <alphaz/type.h>
-#include <alphaz/stdio.h>
-#include <alphaz/unistd.h>
-#include <alphaz/malloc.h>
-#include <alphaz/bugs.h>
-#include <alphaz/stdio.h>
-#include <alphaz/string.h>
-#include <alphaz/fcntl.h>
+#include <feng/bugs.h>
+#include <feng/dirent.h>
+#include <feng/fcntl.h>
+#include <feng/fs.h>
+#include <feng/malloc.h>
+#include <feng/stdio.h>
+#include <feng/string.h>
+#include <feng/type.h>
+#include <feng/unistd.h>
 
-struct DIR * opendir(const char *path)
+struct DIR *opendir(const char *path)
 {
     int fd;
     struct DIR *dir;
@@ -26,14 +25,14 @@ struct DIR * opendir(const char *path)
     return dir;
 }
 
-struct DIR * closedir(struct DIR *dir)
+struct DIR *closedir(struct DIR *dir)
 {
     close(dir->fd);
     free(dir);
     return 0;
 }
 
-struct dirent * readdir(struct DIR *dir)
+struct dirent *readdir(struct DIR *dir)
 {
     int len;
 
@@ -51,7 +50,7 @@ int default_filldir(void *dirent, const char *name, int len, loff_t size, u64 ti
     d->size = size;
     d->type = type;
     d->wdata = (time >> 32) & 0xffffffff;
-    d->wtime = time &0xffffffff;
+    d->wtime = time & 0xffffffff;
     strncpy(d->name, name, len);
     return 1;
 }

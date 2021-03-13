@@ -2,12 +2,11 @@
  * 伙伴系统
  */
 
-#include <alphaz/mm.h>
-#include <alphaz/mm.h>
-#include <alphaz/mmzone.h>
-#include <alphaz/kernel.h>
-#include <alphaz/gfp.h>
-#include <alphaz/string.h>
+#include <feng/gfp.h>
+#include <feng/kernel.h>
+#include <feng/mm.h>
+#include <feng/mmzone.h>
+#include <feng/string.h>
 
 static int block_append(struct zone *zone, struct page *page, unsigned int count)
 {
@@ -29,8 +28,10 @@ static void block_insert(struct free_area *free, struct page *page)
     struct page *p;
 
     /* pages都是按照地址由小到大排序的 */
-    list_for_each_entry(p, &free->free_list, list) {
-        if (p < page) continue;
+    list_for_each_entry(p, &free->free_list, list)
+    {
+        if (p < page)
+            continue;
         break;
     }
     __list_add(&page->list, p->list.prev, &p->list);
@@ -38,8 +39,7 @@ static void block_insert(struct free_area *free, struct page *page)
 }
 
 /* 首先插入大块 */
-static int block_insert_big_first(struct zone *zone, struct page *page,
-                          unsigned int count)
+static int block_insert_big_first(struct zone *zone, struct page *page, unsigned int count)
 {
     int i, ret = 0;
 
@@ -82,8 +82,7 @@ static int init_each_pages_block(unsigned int zone)
 
     /* 滑动窗口 */
     while (ep != tail) {
-        if ((ep->flags & PF_RESERVE) || (ep + 1) == tail ||
-            count >= (1 << (MAX_ORDER - 1))) {
+        if ((ep->flags & PF_RESERVE) || (ep + 1) == tail || count >= (1 << (MAX_ORDER - 1))) {
             if (count)
                 ret += block_append(&mm_zones[zone], bp, count);
             bp = ++ep;
@@ -96,7 +95,7 @@ static int init_each_pages_block(unsigned int zone)
     return ret;
 }
 
-static struct page * alloc_page_zone(struct zone *zone, unsigned int order)
+static struct page *alloc_page_zone(struct zone *zone, unsigned int order)
 {
     unsigned int i;
     struct page *ret = NULL;
@@ -126,7 +125,7 @@ static struct page * alloc_page_zone(struct zone *zone, unsigned int order)
     return ret;
 }
 
-struct page * alloc_pages(unsigned int gfp_mask, unsigned int order)
+struct page *alloc_pages(unsigned int gfp_mask, unsigned int order)
 {
     struct page *ret = NULL;
 
@@ -151,7 +150,7 @@ struct page * alloc_pages(unsigned int gfp_mask, unsigned int order)
     return ret;
 }
 
-struct page * alloc_page(unsigned int gfp_mask)
+struct page *alloc_page(unsigned int gfp_mask)
 {
     return alloc_pages(gfp_mask, 0);
 }
@@ -192,7 +191,8 @@ static void free_pages_zone(struct zone *zone, struct page *page, unsigned int o
 
     /* 检查是否有相邻的伙伴可进行合并, 最大的order即使相邻页不进行合并 */
     for (i = order; i <= order && i < MAX_ORDER - 1; i++) {
-        list_for_each_entry(p, &zone->free_area[i].free_list, list) {
+        list_for_each_entry(p, &zone->free_area[i].free_list, list)
+        {
             if ((p + (1 << order)) == page) {
                 list_del(&p->list);
                 zone->free_area[i].nr_free--;
@@ -233,11 +233,11 @@ void free_pages(unsigned long addr, unsigned int order)
 
     for (i = 0; i < MAX_NR_ZONES; i++) {
         spin_lock(&mm_zones[i].lock);
-        list_for_each_entry(p, &mm_zones[i].activate, list)
-            if (p->virtual == (void *)addr) {
-                ans = p;
-                break;
-            }
+        list_for_each_entry(p, &mm_zones[i].activate, list) if (p->virtual == (void *)addr)
+        {
+            ans = p;
+            break;
+        }
         spin_unlock(&mm_zones[i].lock);
         if (ans)
             break;
@@ -255,23 +255,22 @@ void buddy_system_init(void)
 {
     int i;
 
-    for (i = 0; i < MAX_NR_ZONES; i++)
-        init_each_pages_block(i);
+    for (i = 0; i < MAX_NR_ZONES; i++) init_each_pages_block(i);
 
-//     int j;
-//     for (i = 1; i < 2; i++)
-//         for (j = 0; j < MAX_ORDER; j++)
-//         printk("%s %d: %d\n", mm_zones[i].name, j, mm_zones[i].free_area[j].nr_free);
+    //     int j;
+    //     for (i = 1; i < 2; i++)
+    //         for (j = 0; j < MAX_ORDER; j++)
+    //         printk("%s %d: %d\n", mm_zones[i].name, j, mm_zones[i].free_area[j].nr_free);
 
-//     struct page *p;
-//     p = alloc_pages(GFP_KERNEL, 0);
-//     __free_pages(p, 0);
-//     p = alloc_pages(GFP_KERNEL, 1);
-//     __free_pages(p, 1);
-//     p = alloc_pages(GFP_KERNEL, 2);
-//     __free_pages(p, 2);
-// printk("=========================\n");
-//     for (i = 1; i < 2; i++)
-//         for (j = 0; j < MAX_ORDER; j++)
-//         printk("%s %d: %d\n", mm_zones[i].name, j, mm_zones[i].free_area[j].nr_free);
+    //     struct page *p;
+    //     p = alloc_pages(GFP_KERNEL, 0);
+    //     __free_pages(p, 0);
+    //     p = alloc_pages(GFP_KERNEL, 1);
+    //     __free_pages(p, 1);
+    //     p = alloc_pages(GFP_KERNEL, 2);
+    //     __free_pages(p, 2);
+    // printk("=========================\n");
+    //     for (i = 1; i < 2; i++)
+    //         for (j = 0; j < MAX_ORDER; j++)
+    //         printk("%s %d: %d\n", mm_zones[i].name, j, mm_zones[i].free_area[j].nr_free);
 }

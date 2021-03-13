@@ -1,7 +1,7 @@
 #ifndef _ASM_IO_H_
 #define _ASM_IO_H_
 
-#include <alphaz/type.h>
+#include <feng/type.h>
 
 static inline void outb(u16 port, u8 value)
 {
@@ -10,7 +10,7 @@ static inline void outb(u16 port, u8 value)
         "nop\n\t"
         "nop\n\t"
         : "=&a"(value), "=&d"(port)
-        :"0"(value), "1"(port));
+        : "0"(value), "1"(port));
 }
 
 static inline u8 inb(u16 port)
@@ -20,8 +20,8 @@ static inline u8 inb(u16 port)
         "inb %%dx, %%al\n\t"
         "nop\n\t"
         "nop\n\t"
-        :"=&a"(val), "=&d"(port)
-        :"1"(port));
+        : "=&a"(val), "=&d"(port)
+        : "1"(port));
     return val;
 }
 
@@ -35,8 +35,8 @@ static inline void innw(unsigned short port, const void *buf, size_t n)
         "rep; insw\n\t"
         "mfence\n\t"
         :
-        :"d"(port), "D"(buf), "c"(n)
-        :"memory");
+        : "d"(port), "D"(buf), "c"(n)
+        : "memory");
 }
 
 /**
@@ -49,29 +49,21 @@ static inline void outnw(unsigned short port, const void *buf, size_t n)
         "rep; outsw\n\t"
         "mfence\n\t"
         :
-        :"d"(port), "S"(buf), "c"(n)
-        :"memory");
+        : "d"(port), "S"(buf), "c"(n)
+        : "memory");
 }
 
 static inline u32 readl(u32 addr)
 {
     u32 d0;
-    asm volatile(
-        "movl (%%esi), %%eax\n\t"
-        :"=&a"(d0)
-        :"S"(addr)
-    );
+    asm volatile("movl (%%esi), %%eax\n\t" : "=&a"(d0) : "S"(addr));
     return d0;
 }
 
 static inline u8 readb(u32 addr)
 {
     u8 d0;
-    asm volatile(
-        "movb (%%esi), %%al\n\t"
-        :"=&a"(d0)
-        :"S"(addr)
-    );
+    asm volatile("movb (%%esi), %%al\n\t" : "=&a"(d0) : "S"(addr));
     return d0;
 }
 

@@ -1,13 +1,13 @@
 #ifndef _ALPHAZ_SYSCALL_H_
 #define _ALPHAZ_SYSCALL_H_
 
-#include <alphaz/type.h>
+#include <feng/type.h>
 
-#define STDIN_FILENO        0
-#define STDOUT_FILENO       1
-#define STDERR_FILENO       2
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
 
-#define NR_SYSCALL   32
+#define NR_SYSCALL 32
 
 extern unsigned int get_ticks(void);
 extern pid_t fork(void);

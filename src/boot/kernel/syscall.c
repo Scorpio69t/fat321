@@ -1,11 +1,11 @@
-#include <stdarg.h>
-#include <alphaz/type.h>
-#include <alphaz/unistd.h>
-#include <alphaz/fcntl.h>
-#include <alphaz/dirent.h>
-#include <boot/unistd.h>
 #include <boot/cpu.h>
 #include <boot/io.h>
+#include <boot/unistd.h>
+#include <feng/dirent.h>
+#include <feng/fcntl.h>
+#include <feng/type.h>
+#include <feng/unistd.h>
+#include <stdarg.h>
 
 /**
  * __syscall - 用户态系统调用的总入口
@@ -25,14 +25,9 @@ unsigned long __syscall(int no, int n, ...)
     }
     va_end(args);
 
-    asm volatile(
-        "int $0x80\n\t"
-        :"=a"(eax)
-        :"a"(eax), "b"(reg[0]), "c"(reg[1]), "d"(reg[2])
-        :"memory");
+    asm volatile("int $0x80\n\t" : "=a"(eax) : "a"(eax), "b"(reg[0]), "c"(reg[1]), "d"(reg[2]) : "memory");
     return eax;
 }
-
 
 /**
  * 获取时钟中断的总次数
@@ -42,24 +37,19 @@ unsigned int get_ticks(void)
     return __syscall(__NR_getticks, 0);
 }
 
-
 pid_t fork(void)
 {
     return __syscall(__NR_fork, 0);
 }
 
-
 ssize_t write(int fd, const void *buf, size_t n)
 {
-    return __syscall(__NR_write, 3, (unsigned long)fd,
-                        (unsigned long)buf, (unsigned long)n);
+    return __syscall(__NR_write, 3, (unsigned long)fd, (unsigned long)buf, (unsigned long)n);
 }
-
 
 ssize_t read(int fd, const void *buf, size_t n)
 {
-    return __syscall(__NR_read, 3, (unsigned long)fd,
-                        (unsigned long)buf, (unsigned long)n);
+    return __syscall(__NR_read, 3, (unsigned long)fd, (unsigned long)buf, (unsigned long)n);
 }
 
 int open(const char *path, int oflag)

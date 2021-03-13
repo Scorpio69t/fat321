@@ -1,11 +1,9 @@
-#include <stdarg.h>
-#include <alphaz/unistd.h>
-#include <alphaz/stdio.h>
-#include <alphaz/kernel.h>
-#include <alphaz/console.h>
-
 #include <boot/console.h>
-
+#include <feng/console.h>
+#include <feng/kernel.h>
+#include <feng/stdio.h>
+#include <feng/unistd.h>
+#include <stdarg.h>
 
 /**
  * printf - 用户态字符串格式化输出函数
@@ -25,7 +23,6 @@ int printf(const char *fmt, ...)
 
     return i;
 }
-
 
 static unsigned char printk_color[] = {
     0x0f, 0x0f, 0x0f, 0x0c, 0x0f, 0x0f, 0x0f, 0x0f,
@@ -51,9 +48,8 @@ int printk(const char *fmt, ...)
         level = p[1] - '0';
         p += 3;
         len -= 3;
-    }
-    else
-        level = 6;  /* infomation level */
+    } else
+        level = 6; /* infomation level */
 
     console_write(p, len, printk_color[level]);
 

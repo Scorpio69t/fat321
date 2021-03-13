@@ -1,17 +1,18 @@
-#include "../../include/alphaz/fat32.h"
-#include "../../include/alphaz/blkdev.h"
 #include <fcntl.h>
-#include <stdio.h>
 #include <malloc.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#define SECTOR_SIZE     512
+#include "../../include/alphaz/blkdev.h"
+#include "../../include/alphaz/fat32.h"
+
+#define SECTOR_SIZE 512
 
 disk_partition_table_t dpt;
 fat32_boot_sector_t boot_sector;
-fat32_fs_info_t     fs_info;
+fat32_fs_info_t fs_info;
 
 unsigned long first_data_sector;
 unsigned long bytes_per_clus;
@@ -55,20 +56,17 @@ static int get_dname(char *buf, fat32_directory_t *de, void *begin)
 
     j = 0;
     fat32_long_directory_t *lde = (fat32_long_directory_t *)de - 1;
-    while ((void *)de >= begin && lde->LDIR_Attr == ATTR_LONG_NAME &&
-           lde->LDIR_Ord != 0xe5) {
-        for (i = 0; i < 5; i++)
-            tmp[j++] = lde->LDIR_Name1[i];
-        for (i = 0; i < 6; i++)
-            tmp[j++] = lde->LDIR_Name2[i];
-        for (i = 0; i < 2; i++)
-            tmp[j++] = lde->LDIR_Name3[i];
+    while ((void *)de >= begin && lde->LDIR_Attr == ATTR_LONG_NAME && lde->LDIR_Ord != 0xe5) {
+        for (i = 0; i < 5; i++) tmp[j++] = lde->LDIR_Name1[i];
+        for (i = 0; i < 6; i++) tmp[j++] = lde->LDIR_Name2[i];
+        for (i = 0; i < 2; i++) tmp[j++] = lde->LDIR_Name3[i];
         lde--;
     }
-    for (len = 0; len < j; ) {
+    for (len = 0; len < j;) {
         buf[len] = (char)tmp[len];
         len++;
-        if (!buf[len - 1]) break;
+        if (!buf[len - 1])
+            break;
     }
     return len; /* 包含\0的长度 */
 }
@@ -86,7 +84,7 @@ static int match_dentry(const char *name, int nl, fat32_directory_t *de, void *b
     return 1;
 }
 
-fat32_directory_t * lookup(const char *name, int len, fat32_directory_t *dentry, int flags)
+fat32_directory_t *lookup(const char *name, int len, fat32_directory_t *dentry, int flags)
 {
     fat32_directory_t *next_dentry, *p;
     unsigned int cluster;
@@ -97,7 +95,7 @@ fat32_directory_t * lookup(const char *name, int len, fat32_directory_t *dentry,
 
     buf = (unsigned char *)malloc(bytes_per_clus);
     cluster = (dentry->DIR_FstClusHI << 16 | dentry->DIR_FstClusLO) & 0x0fffffff;
-    next_cluster:
+next_cluster:
     sector = first_data_sector + (cluster - 2) * boot_sector.BPB_SecPerClus;
     dev_read(sector, boot_sector.BPB_SecPerClus, buf);
 
@@ -122,15 +120,14 @@ fat32_directory_t * lookup(const char *name, int len, fat32_directory_t *dentry,
     return NULL;
 }
 
-fat32_directory_t * path_walk(char *path, int flags)
+fat32_directory_t *path_walk(char *path, int flags)
 {
     char *name, *p;
     int len;
     fat32_directory_t *parent, *next;
 
     p = path;
-    while (*p == '/')
-        p++;
+    while (*p == '/') p++;
     if (!*p)
         return NULL;
 
@@ -146,7 +143,7 @@ fat32_directory_t * path_walk(char *path, int flags)
             len++;
         }
 
-        next = lookup(name ,len, parent, flags);
+        next = lookup(name, len, parent, flags);
 
         if (next == NULL) {
             free(parent);
@@ -157,8 +154,7 @@ fat32_directory_t * path_walk(char *path, int flags)
             break;
         }
 
-        while (*p == '/')
-            p++;
+        while (*p == '/') p++;
         if (!*p)
             break;
 
@@ -177,14 +173,16 @@ void blkdev_init(void)
     dev_read(0, 1, &dpt);
     // printf("dpt0 start LBA: %d\n", dpt.DPTE[0].start_LBA);
     dev_read(dpt.DPTE[0].start_LBA, 1, &boot_sector);
-    //printf("%s %d %d ", boot_sector.BS_OEMName, (int)boot_sector.BPB_TotSec32, (int)boot_sector.BPB_SecPerClus);
+    // printf("%s %d %d ", boot_sector.BS_OEMName, (int)boot_sector.BPB_TotSec32, (int)boot_sector.BPB_SecPerClus);
     // for (p = (char *)boot_sector.BS_FilSysType, i = 0; i < 8; i++, p++)
-        // printf("%c", *p);
+    // printf("%c", *p);
     // printf("\n");
     dev_read(dpt.DPTE[0].start_LBA + boot_sector.BPB_FSInfo, 1, &fs_info);
-    // printf("0x%x 0x%x 0x%x 0x%x\n", fs_info.FSI_LeadSig, fs_info.FSI_StrucSig, fs_info.FSI_Free_Count, fs_info.FSI_Nxt_Free);
+    // printf("0x%x 0x%x 0x%x 0x%x\n", fs_info.FSI_LeadSig, fs_info.FSI_StrucSig, fs_info.FSI_Free_Count,
+    // fs_info.FSI_Nxt_Free);
 
-    first_data_sector = dpt.DPTE[0].start_LBA + boot_sector.BPB_RsvdSecCnt + boot_sector.BPB_FATSz32 * boot_sector.BPB_NumFATs;
+    first_data_sector =
+        dpt.DPTE[0].start_LBA + boot_sector.BPB_RsvdSecCnt + boot_sector.BPB_FATSz32 * boot_sector.BPB_NumFATs;
     first_fat1_sector = dpt.DPTE[0].start_LBA + boot_sector.BPB_RsvdSecCnt;
     first_fat2_sector = first_fat1_sector + boot_sector.BPB_FATSz32;
     bytes_per_clus = boot_sector.BPB_SecPerClus * boot_sector.BPB_BytesPerSec;
@@ -192,14 +190,12 @@ void blkdev_init(void)
 
     dentry = path_walk("/user/root", 0);
     if (dentry) {
-        for (i = 0; i < 11; i++)
-            printf("%c", dentry->DIR_Name[i]);
+        for (i = 0; i < 11; i++) printf("%c", dentry->DIR_Name[i]);
         printf("\n");
     } else {
         printf("error\n");
     }
 }
-
 
 int main(void)
 {

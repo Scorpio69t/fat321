@@ -1,27 +1,26 @@
-#include <alphaz/type.h>
-#include <alphaz/wait.h>
-#include <alphaz/stdio.h>
-#include <alphaz/string.h>
-#include <alphaz/fs.h>
-#include <alphaz/malloc.h>
-#include <alphaz/console.h>
-#include <alphaz/bugs.h>
-#include <alphaz/slab.h>
-#include <alphaz/fontdata.h>
-#include <alphaz/config.h>
-
 #include <boot/console.h>
 #include <boot/div64.h>
 #include <boot/io.h>
+#include <feng/bugs.h>
+#include <feng/config.h>
+#include <feng/console.h>
+#include <feng/fontdata.h>
+#include <feng/fs.h>
+#include <feng/malloc.h>
+#include <feng/slab.h>
+#include <feng/stdio.h>
+#include <feng/string.h>
+#include <feng/type.h>
+#include <feng/wait.h>
 
 struct console_desc console;
 
 #ifndef __VBE
-#define ROW     25
-#define COL     80
+#define ROW 25
+#define COL 80
 #else
-#define ROW     (console.height / font_8x16.height)
-#define COL     (console.width / font_8x16.width)
+#define ROW (console.height / font_8x16.height)
+#define COL (console.width / font_8x16.width)
 #endif
 
 struct file *stdout;
@@ -101,7 +100,7 @@ static struct file_operations console_operations = {
     .release = NULL,
 };
 
-static struct file * make_dev_file(struct file_operations *fo)
+static struct file *make_dev_file(struct file_operations *fo)
 {
     struct file *filp;
 

@@ -1,20 +1,19 @@
-#include <alphaz/fontdata.h>
-#include <alphaz/config.h>
-#include <alphaz/console.h>
-#include <alphaz/string.h>
+#include <feng/config.h>
+#include <feng/console.h>
+#include <feng/fontdata.h>
+#include <feng/string.h>
 
 #ifdef __VBE
 
 static unsigned int __cur = 0;
 
-#define ROW     (console.height / font_8x16.height)
-#define COL     (console.width / font_8x16.width)
+#define ROW (console.height / font_8x16.height)
+#define COL (console.width / font_8x16.width)
 
 unsigned short get_cursor(void)
 {
     return __cur;
 }
-
 
 /**
  * 设置屏幕当前光标
@@ -32,7 +31,7 @@ void set_cursor(unsigned short cur)
 int console_curl(int line)
 {
     unsigned long b0, b1;
-    unsigned long each_line;        // 每一行占用内存数
+    unsigned long each_line;  // 每一行占用内存数
 
     if (line < 0 || line > ROW)
         return -1;
@@ -45,7 +44,6 @@ int console_curl(int line)
     memset((void *)b0, 0, each_line);
     return 0;
 }
-
 
 /**
  * 向屏幕上指定位置处写一个字符

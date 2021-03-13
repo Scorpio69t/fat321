@@ -2,29 +2,28 @@
  * 内核初始化入口
  */
 
-#include <alphaz/bugs.h>
-#include <alphaz/fat32.h>
-#include <alphaz/fcntl.h>
-#include <alphaz/fork.h>
-#include <alphaz/fs.h>
-#include <alphaz/kernel.h>
-#include <alphaz/keyboard.h>
-#include <alphaz/mm.h>
-#include <alphaz/sched.h>
-#include <alphaz/stdio.h>
-#include <alphaz/gfp.h>
-#include <alphaz/slab.h>
-#include <alphaz/console.h>
-#include <alphaz/unistd.h>
-
 #include <boot/bug.h>
 #include <boot/cpu.h>
 #include <boot/disk.h>
 #include <boot/io.h>
 #include <boot/irq.h>
 #include <boot/system.h>
+#include <feng/bugs.h>
+#include <feng/console.h>
+#include <feng/fat32.h>
+#include <feng/fcntl.h>
+#include <feng/fork.h>
+#include <feng/fs.h>
+#include <feng/gfp.h>
+#include <feng/kernel.h>
+#include <feng/keyboard.h>
+#include <feng/mm.h>
+#include <feng/sched.h>
+#include <feng/slab.h>
+#include <feng/stdio.h>
+#include <feng/unistd.h>
 
-//static void test(void)
+// static void test(void)
 //{
 //    char buf[10];
 //    int i;
@@ -42,7 +41,7 @@
 //        printf("close error\n");
 //}
 
-//int init(void)
+// int init(void)
 //{
 //
 //    disk_init();
@@ -77,7 +76,7 @@ void kernel_main()
     clear_screen();
 
     sti();
-//    kernel_thread(init, NULL, 0);
+    //    kernel_thread(init, NULL, 0);
     while (1) {
         hlt();
     }

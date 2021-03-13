@@ -5,32 +5,30 @@
 #include <boot/cpu.h>
 #include <boot/i8259.h>
 
-typedef void (*irq_entry) ();
-typedef void (*irq_handler) (struct pt_regs *, unsigned);
+typedef void (*irq_entry)();
+typedef void (*irq_handler)(struct pt_regs *, unsigned);
 
-struct irq_struct
-{
-    volatile long state;     /* 中断状态 */
-    irq_entry entry;         /* 中断入口 */
-    irq_handler handler;     /* 中断处理函数 */
-    unsigned long vector;    /* 中断向量 */
-    unsigned short ring;     /* 中断特权级 */
+struct irq_struct {
+    volatile long state;  /* 中断状态 */
+    irq_entry entry;      /* 中断入口 */
+    irq_handler handler;  /* 中断处理函数 */
+    unsigned long vector; /* 中断向量 */
+    unsigned short ring;  /* 中断特权级 */
 };
 
 int register_irq(unsigned, irq_handler);
 int unregister_irq(unsigned vector);
 
-#define IRQ_STATE_DEFINED   (1 << 0)
-#define IRQ_STATE_INUSE     (1 << 1)
+#define IRQ_STATE_DEFINED (1 << 0)
+#define IRQ_STATE_INUSE   (1 << 1)
 
-struct idtr_struct
-{
+struct idtr_struct {
     u16 len;
     u32 base;
 } __attribute__((packed));
 
 /* 中断向量数 */
-#define NR_IRQ    256
+#define NR_IRQ 256
 extern struct gate_struct idt[];
 extern struct irq_struct irq_array[];
 
@@ -46,7 +44,6 @@ static inline void sti(void)
     asm volatile("sti");
 }
 
-
 /*
  * 关中断 IF=0
  */
@@ -54,7 +51,6 @@ static inline void cli(void)
 {
     asm volatile("cli");
 }
-
 
 /**
  * 获取中断允许标志位
@@ -65,10 +61,9 @@ static inline int get_if(void)
     asm volatile(
         "pushf\n\t"
         "pop %%eax\n\t"
-        :"=&a"(d0));
-    return (d0 & 512);      // 1<<9 if在标志寄存器右起第十位
+        : "=&a"(d0));
+    return (d0 & 512);  // 1<<9 if在标志寄存器右起第十位
 }
-
 
 /* cpu异常处理函数，定义在arch/../kernel/entry.asm */
 extern void divide_error();
@@ -106,12 +101,11 @@ extern void hwint0x2d();
 extern void hwint0x2e();
 extern void hwint0x2f();
 
-
 /* 系统调用号 */
-#define INT_VECTOR_SYSCALL          0x80
+#define INT_VECTOR_SYSCALL 0x80
 /* defined in entry.asm */
 extern void system_call(void);
 
-#endif  /*__ASSEMBLY__*/
+#endif /*__ASSEMBLY__*/
 
 #endif

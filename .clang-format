@@ -1,0 +1,12 @@
+BasedOnStyle: Google
+ColumnLimit: 120
+PointerAlignment: Left
+IndentWidth: 4
+TabWidth: 4
+IndentCaseLabels: false
+AllowShortFunctionsOnASingleLine: Empty
+AlignConsecutiveMacros: true
+# AlignConsecutiveAssignments: true
+AlignTrailingComments: true
+BreakBeforeBraces: WebKit
+AllowShortIfStatementsOnASingleLine: false

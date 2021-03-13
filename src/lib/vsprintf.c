@@ -1,31 +1,28 @@
-#include <stdarg.h>
-#include <alphaz/type.h>
-#include <alphaz/stdio.h>
-#include <alphaz/string.h>
-#include <alphaz/ctype.h>
-
 #include <boot/div64.h>
+#include <feng/ctype.h>
+#include <feng/stdio.h>
+#include <feng/string.h>
+#include <feng/type.h>
+#include <stdarg.h>
 
 /* from Linux */
-#define ZEROPAD 1       /* 使用0填充 */
-#define SIGN	2		/* unsigned/signed long */
+#define ZEROPAD 1 /* 使用0填充 */
+#define SIGN    2 /* unsigned/signed long */
 #define LEFT    16
-#define SPECIAL	32		/* 0x */
-#define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
+#define SPECIAL 32 /* 0x */
+#define LARGE   64 /* use 'ABCDEF' instead of 'abcdef' */
 
-
-
-static char * number(char *str, char *end, unsigned long long num, int base, int size,
-                        int type)
+static char *number(char *str, char *end, unsigned long long num, int base, int size, int type)
 {
-	char sign, tmp[66], pad;
+    char sign, tmp[66], pad;
     const char *digits;
-	int i = 0;
-	static const char small_digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    int i = 0;
+    static const char small_digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     static const char large_digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     digits = (type & LARGE) ? large_digits : small_digits;
-	if (base < 2 || base > 36) return str;
+    if (base < 2 || base > 36)
+        return str;
 
     pad = (type & ZEROPAD) ? '0' : ' ';
 
@@ -33,7 +30,7 @@ static char * number(char *str, char *end, unsigned long long num, int base, int
         pad = ' ';
 
     sign = 0;
-    if(type & SIGN) {
+    if (type & SIGN) {
         if ((signed long)num < 0) {
             sign = '-';
             num = -(signed long)num;
@@ -41,9 +38,9 @@ static char * number(char *str, char *end, unsigned long long num, int base, int
     }
 
     if (num == 0)
-		tmp[i++] = '0';
-	else while (num != 0)
-		tmp[i++] = digits[do_div(num, base)];
+        tmp[i++] = '0';
+    else
+        while (num != 0) tmp[i++] = digits[do_div(num, base)];
 
     if (sign)
         tmp[i++] = sign;
@@ -65,18 +62,16 @@ static char * number(char *str, char *end, unsigned long long num, int base, int
         size--;
     }
 
-	while (str < end && i > 0 && size > 0) {
-		*str++ = tmp[--i];
+    while (str < end && i > 0 && size > 0) {
+        *str++ = tmp[--i];
         size--;
     }
 
-    while (size-- > 0 && str < end)
-        *str++ = pad;
+    while (size-- > 0 && str < end) *str++ = pad;
 
-	*str = 0;
-	return str;
+    *str = 0;
+    return str;
 }
-
 
 /**
  * vsprintf - 格式化字符串，将其放在指定缓冲区中
@@ -88,7 +83,6 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 {
     return vsnprintf(buf, INT_MAX, fmt, args);
 }
-
 
 /**
  * vsnprintf - 格式化字符串，将其放在指定缓冲区中
@@ -110,11 +104,10 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
             continue;
         }
 
-
         flags = 0;
 
     repeat:
-        ++fmt;              /* 第一次到这里为跳过% */
+        ++fmt; /* 第一次到这里为跳过% */
         switch (*fmt) {
         case '-':
             flags |= LEFT;
@@ -167,8 +160,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                 str++;
             }
 
-            while (field_width-- > 0 && str < end)
-                *str++ = ' ';
+            while (field_width-- > 0 && str < end) *str++ = ' ';
 
             continue;
 
@@ -217,7 +209,6 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
     return (str - buf);
 }
 
-
 /**
  * sprintf - 将格式化字符串输出到缓冲区
  * @buf: 格式化字符串输出的缓冲区
@@ -225,11 +216,11 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
  */
 int sprintf(char *buf, const char *fmt, ...)
 {
-	va_list args;
-	int i;
+    va_list args;
+    int i;
 
-	va_start(args, fmt);
-	i = vsnprintf(buf, INT_MAX, fmt, args);
-	va_end(args);
-	return i;
+    va_start(args, fmt);
+    i = vsnprintf(buf, INT_MAX, fmt, args);
+    va_end(args);
+    return i;
 }

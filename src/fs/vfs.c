@@ -1,11 +1,11 @@
-#include <alphaz/string.h>
-#include <alphaz/type.h>
-#include <alphaz/malloc.h>
-#include <alphaz/kernel.h>
-#include <alphaz/fs.h>
-#include <alphaz/slab.h>
-#include <alphaz/bugs.h>
 #include <boot/irq.h>
+#include <feng/bugs.h>
+#include <feng/fs.h>
+#include <feng/kernel.h>
+#include <feng/malloc.h>
+#include <feng/slab.h>
+#include <feng/string.h>
+#include <feng/type.h>
 
 struct super_block *root_sb = NULL;
 struct dentry *root_dentry = NULL;
@@ -34,14 +34,13 @@ int mount_fs(const char *name, struct super_block *sb)
     return 0;
 }
 
-
 /**
  * 创建一个file对象并进行必要的初始化
  * @dentry: file对应的dentry结构体
  * @flags: 文件的标识
  * @mode: 文件的读取方式
  */
-struct file * make_file(struct dentry *dentry, int flags, int mode)
+struct file *make_file(struct dentry *dentry, int flags, int mode)
 {
     struct file *filp;
 
@@ -61,12 +60,13 @@ struct file * make_file(struct dentry *dentry, int flags, int mode)
 /*
  * 在缓存中寻找是否存在名为name的子目录
  */
-static struct dentry * find_dcache(struct dentry *parent, const char *name, size_t len)
+static struct dentry *find_dcache(struct dentry *parent, const char *name, size_t len)
 {
     struct dentry *child;
     size_t n;
 
-    list_for_each_entry(child, &parent->d_subdirs, d_child) {
+    list_for_each_entry(child, &parent->d_subdirs, d_child)
+    {
         n = strlen(child->d_name);
         if (n != len)
             continue;
@@ -82,14 +82,14 @@ static struct dentry * find_dcache(struct dentry *parent, const char *name, size
  * @name: 要创建的dentry的文件名
  * @len: 文件名的长度
  */
-struct dentry * make_dentry(struct dentry *parent, char *name, size_t len)
+struct dentry *make_dentry(struct dentry *parent, char *name, size_t len)
 {
     struct dentry *entry;
 
     entry = (struct dentry *)kmalloc(sizeof(struct dentry), 0);
     assert(entry != NULL);
     atomic_set(1, &entry->d_count);
-    entry->d_flags= 0;
+    entry->d_flags = 0;
     spin_init(&entry->d_lock);
     entry->d_inode = NULL;
     entry->d_parent = parent;
@@ -103,7 +103,7 @@ struct dentry * make_dentry(struct dentry *parent, char *name, size_t len)
     return entry;
 }
 
-struct dentry * path_walk(const char *path, int flags)
+struct dentry *path_walk(const char *path, int flags)
 {
     char *name, *p;
     int len;
@@ -114,8 +114,7 @@ struct dentry * path_walk(const char *path, int flags)
         return root_sb->s_root;
 
     p = (char *)path;
-    while (*p == '/')
-        p++;
+    while (*p == '/') p++;
     if (!*p)
         return NULL;
 
@@ -138,8 +137,7 @@ struct dentry * path_walk(const char *path, int flags)
             break;
         }
 
-        while (*p == '/')
-            p++;
+        while (*p == '/') p++;
         if (!*p)
             break;
 

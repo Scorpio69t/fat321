@@ -2,7 +2,7 @@
 #define _ASM_PROCESS_H_
 
 #include <boot/cpu.h>
-#include <alphaz/sched.h>
+#include <feng/sched.h>
 
 pid_t _kernel_thread(struct pt_regs *, int (*fn)(void), void *, unsigned long);
 

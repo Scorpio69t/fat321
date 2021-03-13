@@ -1,11 +1,11 @@
-#include <alphaz/mm.h>
-#include <alphaz/config.h>
-#include <alphaz/console.h>
-#include <boot/string.h>
-#include <boot/console.h>
-#include <boot/irq.h>
-#include <boot/io.h>
 #include <boot/bug.h>
+#include <boot/console.h>
+#include <boot/io.h>
+#include <boot/irq.h>
+#include <boot/string.h>
+#include <feng/config.h>
+#include <feng/console.h>
+#include <feng/mm.h>
 
 #ifndef __VBE
 
@@ -24,10 +24,9 @@ unsigned short get_cursor(void)
     outb(0x3d4, 0x0e);
     cur = inb(0x3d5);
     outb(0x3d4, 0x0f);
-    cur = (cur<<8) | inb(0x3d5);
+    cur = (cur << 8) | inb(0x3d5);
     return cur;
 }
-
 
 /**
  * 设置屏幕当前光标
@@ -35,7 +34,7 @@ unsigned short get_cursor(void)
  */
 void set_cursor(unsigned short cur)
 {
-    outb(0x3d4,0x0e);
+    outb(0x3d4, 0x0e);
     outb(0x3d5, (cur >> 8) & 0xff);
     outb(0x3d4, 0x0f);
     outb(0x3d5, cur & 0xff);
@@ -60,7 +59,6 @@ int console_curl(int line)
     return 0;
 }
 
-
 /**
  * 向屏幕上指定位置处写一个字符
  * @c: 字符
@@ -72,7 +70,7 @@ void write_char(char c, unsigned char type, unsigned short cur)
     unsigned short val = (unsigned short)c | ((unsigned short)type << 8);
     unsigned long pos = cur * 2 + DEFAULT_VIDEO_BASE;
 
-    asm volatile("movw %%ax, (%%edi)"::"a"(val), "D"(pos));
+    asm volatile("movw %%ax, (%%edi)" ::"a"(val), "D"(pos));
 }
 
 #endif

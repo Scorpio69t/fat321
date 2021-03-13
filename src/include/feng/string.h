@@ -1,22 +1,22 @@
-#ifndef  _ALPHAZ_STRING_H_
+#ifndef _ALPHAZ_STRING_H_
 #define _ALPHAZ_STRING_H_
 
 #include <boot/string.h>
 
 #ifndef __HAVE_ARCH_MEMCPY
-extern void * memcpy(void *, void *, size_t);
+extern void *memcpy(void *, void *, size_t);
 #endif
 
 #ifndef __HAVE_ARCH_MEMSET
-extern void * memset(void *, u8, size_t);
+extern void *memset(void *, u8, size_t);
 #endif
 
 #ifndef __HAVE_ARCH_STRCPY
-extern void * strcpy(char *dest, const char *src);
+extern void *strcpy(char *dest, const char *src);
 #endif
 
 #ifndef __HAVE_ARCH_STRNCPY
-extern void * strncpy(char *dest, const char *src, size_t n);
+extern void *strncpy(char *dest, const char *src, size_t n);
 #endif
 
 #ifndef __HAVE_ARCH_STRLEN

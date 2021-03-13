@@ -1,9 +1,9 @@
 #ifndef _ALPHAZ_WAIT_H_
 #define _ALPHAZ_WAIT_H_
 
-#include <alphaz/list.h>
-#include <alphaz/sched.h>
-#include <alphaz/spinlock.h>
+#include <feng/list.h>
+#include <feng/sched.h>
+#include <feng/spinlock.h>
 
 struct __wait_queue_head {
     spinlock_t lock;
@@ -13,8 +13,8 @@ typedef struct __wait_queue_head wait_queue_head_t;
 
 struct __wait_queue {
     unsigned int flags;
-    struct task_struct *task;           /* 当前进程的task_struct地址 */
-    struct list_head task_list;         /* wait_queue_head挂载点 */
+    struct task_struct *task;   /* 当前进程的task_struct地址 */
+    struct list_head task_list; /* wait_queue_head挂载点 */
 };
 typedef struct __wait_queue wait_queue_t;
 
@@ -29,14 +29,12 @@ static inline void __add_wait_queue(wait_queue_head_t *head, wait_queue_t *new)
     list_add(&new->task_list, &head->task_list);
 }
 
-static inline void __add_wait_queue_tail(wait_queue_head_t *head,
-                                                            wait_queue_t *new)
+static inline void __add_wait_queue_tail(wait_queue_head_t *head, wait_queue_t *new)
 {
     list_add_tail(&new->task_list, &head->task_list);
 }
 
-static inline void __remove_wait_queue(wait_queue_head_t *head,
-                                            wait_queue_t *old)
+static inline void __remove_wait_queue(wait_queue_head_t *head, wait_queue_t *old)
 {
     list_del(&old->task_list);
 }

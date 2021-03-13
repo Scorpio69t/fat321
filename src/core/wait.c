@@ -1,7 +1,7 @@
-#include <alphaz/wait.h>
-#include <alphaz/list.h>
-#include <alphaz/sched.h>
-#include <alphaz/spinlock.h>
+#include <feng/list.h>
+#include <feng/sched.h>
+#include <feng/spinlock.h>
+#include <feng/wait.h>
 
 /**
  * init_waitqueue_head - 初始化等待队列头
@@ -74,7 +74,8 @@ void __wake_up(wait_queue_head_t *q, unsigned int mode, int nr)
     struct list_head *tmp;
     spin_lock(&q->lock);
     /* 使用list_for_each遍历线程安全吗？*/
-    list_for_each(tmp, &q->task_list) {
+    list_for_each(tmp, &q->task_list)
+    {
         wait_queue_t *curr = list_entry(tmp, wait_queue_t, task_list);
         if ((curr->task->state & mode) && nr--) {
             curr->task->state = TASK_RUNNING;

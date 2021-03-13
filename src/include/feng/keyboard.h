@@ -1,8 +1,8 @@
 #ifndef _ALPHAZ_KEYBOARD_H_
 #define _ALPHAZ_KEYBOARD_H_
 
-#include <alphaz/type.h>
-#include <alphaz/fs.h>
+#include <feng/fs.h>
+#include <feng/type.h>
 
 void keyboard_init(void);
 

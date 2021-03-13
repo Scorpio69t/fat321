@@ -1,8 +1,8 @@
 #ifndef _ALPHAZ_SYSCALLS_H_
 #define _ALPHAZ_SYSCALLS_H_
 
-#include <alphaz/linkage.h>
-#include <alphaz/type.h>
+#include <feng/linkage.h>
+#include <feng/type.h>
 
 asmlinkage unsigned long sys_get_ticks(void);
 
