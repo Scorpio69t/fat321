@@ -7,8 +7,9 @@
 *.bin
 *.img
 *.vhd
-*.vhd.lock
+*.lock
 *.iso
+*.tmp
 /.vscode
 /.idea
 build
