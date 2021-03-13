@@ -5,8 +5,8 @@
 
 void buddy_system_init(void);
 
-struct page *alloc_pages(unsigned int gfp_mask, unsigned int order);
-struct page *alloc_page(unsigned int gfp_mask);
+struct page * alloc_pages(unsigned int gfp_mask, unsigned int order);
+struct page * alloc_page(unsigned int gfp_mask);
 unsigned long __get_free_pages(unsigned int gfp_mask, unsigned int order);
 unsigned long __get_free_page(unsigned int gfp_mask);
 unsigned long get_zeroed_page(unsigned int gfp_mask);

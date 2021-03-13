@@ -6,7 +6,7 @@
  * 数的函数。该头文件可以直接使用，无需特别处理编译和链接
  */
 #include <feng/fs.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <stdarg.h>
 
 #define EOF 0

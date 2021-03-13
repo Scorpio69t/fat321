@@ -18,10 +18,10 @@
  * 为了简单起见，不再兼容windows对目录项的创建方式，并且，对于每一个短目录项，都要有其对应的
  * 长目录项
  */
-extern struct super_operations fat32_super_operations;
+extern struct super_operations  fat32_super_operations;
 extern struct dentry_operations fat32_dentry_operations;
-extern struct inode_operations fat32_inode_operations;
-extern struct file_operations fat32_file_operations;
+extern struct inode_operations  fat32_inode_operations;
+extern struct file_operations   fat32_file_operations;
 
 static struct block_device_operations blkdev;
 
@@ -43,7 +43,7 @@ static unsigned int get_next_cluster(struct fat32_private_info *info, unsigned i
  */
 static int get_dname(char *buf, fat32_directory_t *de, void *begin)
 {
-    int len, i, j;
+    int          len, i, j;
     static short tmp[512];
 
     j = 0;
@@ -66,7 +66,7 @@ static int get_dname(char *buf, fat32_directory_t *de, void *begin)
 static int match_dentry(const char *name, fat32_directory_t *de, void *begin)
 {
     static char tmp[512];
-    int len;
+    int         len;
 
     len = get_dname(tmp, de, begin);
     if (len <= 0)
@@ -130,10 +130,10 @@ static struct dentry *lookup(struct inode *dir, struct dentry *de)
 {
     fat32_directory_t *p;
     struct fat32_private_info *private;
-    unsigned int cluster;
-    unsigned long sector;
+    unsigned int   cluster;
+    unsigned long  sector;
     unsigned char *buf;
-    int i;
+    int            i;
 
    private
     = dir->i_sb->s_fs_info;
@@ -238,8 +238,8 @@ static ssize_t read(struct file *filp, char *buf, size_t size, loff_t pos)
 {
     struct fat32_private_info *private;
     unsigned long index, offset, clus, sector, size1, count;
-    char *buffer;
-    int i;
+    char *        buffer;
+    int           i;
 
     assert(filp != NULL);
     if (pos >= filp->f_dentry->d_inode->i_size) /* 大于文件的大小, 返回EOF */
@@ -292,12 +292,12 @@ static int fat32_readdir(struct file *filp, void *dirent, filldir_t filldir)
 {
     fat32_directory_t *p;
     struct fat32_private_info *private;
-    unsigned long sector, clus, index, offset;
-    loff_t pos, size;
+    unsigned long  sector, clus, index, offset;
+    loff_t         pos, size;
     unsigned char *buffer;
-    static char name[512];
-    int len, i, type;
-    u64 time;
+    static char    name[512];
+    int            len, i, type;
+    u64            time;
 
    private
     = filp->f_dentry->d_sb->s_fs_info;
@@ -356,14 +356,14 @@ struct file_operations fat32_file_operations = {
 
 static struct super_block *fat32_get_sb(struct file_system_type *fs, void *info)
 {
-    disk_partition_table_t *dpt;
+    disk_partition_table_t *      dpt;
     disk_partition_table_entry_t *dpte;
-    fat32_boot_sector_t *boot_sector;
-    fat32_fs_info_t *fs_info;
+    fat32_boot_sector_t *         boot_sector;
+    fat32_fs_info_t *             fs_info;
     struct fat32_private_info *private;
     struct super_block *sb;
-    struct dentry *s_root;
-    struct inode *d_inode;
+    struct dentry *     s_root;
+    struct inode *      d_inode;
 
     dpt = (disk_partition_table_t *)kmalloc(512, 0);
     boot_sector = (fat32_boot_sector_t *)kmalloc(sizeof(fat32_boot_sector_t), 0);

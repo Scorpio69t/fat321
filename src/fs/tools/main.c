@@ -11,8 +11,8 @@
 #define SECTOR_SIZE 512
 
 disk_partition_table_t dpt;
-fat32_boot_sector_t boot_sector;
-fat32_fs_info_t fs_info;
+fat32_boot_sector_t    boot_sector;
+fat32_fs_info_t        fs_info;
 
 unsigned long first_data_sector;
 unsigned long bytes_per_clus;
@@ -22,7 +22,7 @@ int fd;
 
 void dev_read(unsigned long sector, unsigned long nsect, void *buf)
 {
-    off_t offset;
+    off_t   offset;
     ssize_t st;
 
     offset = lseek(fd, sector * SECTOR_SIZE, SEEK_SET);
@@ -51,7 +51,7 @@ unsigned int get_next_cluster(unsigned int entry)
  */
 static int get_dname(char *buf, fat32_directory_t *de, void *begin)
 {
-    int len, i, j;
+    int          len, i, j;
     static short tmp[512];
 
     j = 0;
@@ -74,7 +74,7 @@ static int get_dname(char *buf, fat32_directory_t *de, void *begin)
 static int match_dentry(const char *name, int nl, fat32_directory_t *de, void *begin)
 {
     static char tmp[512];
-    int len;
+    int         len;
 
     len = get_dname(tmp, de, begin);
     if (len <= 0)
@@ -87,11 +87,11 @@ static int match_dentry(const char *name, int nl, fat32_directory_t *de, void *b
 fat32_directory_t *lookup(const char *name, int len, fat32_directory_t *dentry, int flags)
 {
     fat32_directory_t *next_dentry, *p;
-    unsigned int cluster;
-    unsigned long sector;
-    unsigned char *buf;
-    char dname[128];
-    int i, dlen;
+    unsigned int       cluster;
+    unsigned long      sector;
+    unsigned char *    buf;
+    char               dname[128];
+    int                i, dlen;
 
     buf = (unsigned char *)malloc(bytes_per_clus);
     cluster = (dentry->DIR_FstClusHI << 16 | dentry->DIR_FstClusLO) & 0x0fffffff;
@@ -122,8 +122,8 @@ next_cluster:
 
 fat32_directory_t *path_walk(char *path, int flags)
 {
-    char *name, *p;
-    int len;
+    char *             name, *p;
+    int                len;
     fat32_directory_t *parent, *next;
 
     p = path;
@@ -167,8 +167,8 @@ fat32_directory_t *path_walk(char *path, int flags)
 
 void blkdev_init(void)
 {
-    char *p;
-    int i;
+    char *             p;
+    int                i;
     fat32_directory_t *dentry = NULL;
     dev_read(0, 1, &dpt);
     // printf("dpt0 start LBA: %d\n", dpt.DPTE[0].start_LBA);

@@ -3,7 +3,7 @@
 #include <boot/unistd.h>
 #include <feng/dirent.h>
 #include <feng/fcntl.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <feng/unistd.h>
 #include <stdarg.h>
 
@@ -16,8 +16,8 @@
 unsigned long __syscall(int no, int n, ...)
 {
     unsigned long eax = no, reg[3] = {0, 0, 0};
-    va_list args;
-    int i;
+    va_list       args;
+    int           i;
 
     va_start(args, n);
     for (i = 0; i < n && i < 3; i++) {

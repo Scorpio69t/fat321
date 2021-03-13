@@ -14,11 +14,11 @@ struct minfo {
 } __attribute__((packed));
 
 struct page {
-    unsigned long flags;
-    atomic_t _count;         /* 使用计数 */
-    struct list_head list;   /* 页块列表 */
-    struct kmem_cache *slab; /* slab使用 */
-    void *virtual;           /* 内核虚拟地址，为NULL为高端内存 */
+    unsigned long      flags;
+    atomic_t           _count; /* 使用计数 */
+    struct list_head   list;   /* 页块列表 */
+    struct kmem_cache *slab;   /* slab使用 */
+    void *virtual;             /* 内核虚拟地址，为NULL为高端内存 */
 };
 
 #endif

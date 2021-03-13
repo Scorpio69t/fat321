@@ -24,7 +24,7 @@
 #include <feng/list.h>
 #include <feng/stdio.h>
 #include <feng/string.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 #define __ticks_data __attribute__((section(".data")))
 #define __pid_data   __attribute__((section(".data")))
@@ -34,10 +34,10 @@
 
 #define NULL_STACK_MAGIC 0x1234 /* 空栈魔数，便于识别错误 */
 
-void task_init(void);
-void schedule(void);
+void            task_init(void);
+void            schedule(void);
 struct pt_regs *get_pt_regs(struct task_struct *task);
-void copy_thread(struct thread_struct *, struct thread_struct *);
+void            copy_thread(struct thread_struct *, struct thread_struct *);
 
 /* 进程链表头 */
 extern struct list_head task_head;
@@ -79,7 +79,7 @@ struct mm_struct {
 };
 
 struct files_struct {
-    atomic_t count;
+    atomic_t     count;
     struct file *files[TASK_MAX_FILE];
 };
 
@@ -88,26 +88,26 @@ struct task_struct {
     volatile long state; /* 进程状态，-1不可运行，0可运行 */
     unsigned long flags; /* 状态标识 */
 
-    void *stack;           /* 用户栈 */
-    pid_t pid;             /* 进程id */
-    unsigned short prio;   /* 进程优先级 */
-    unsigned long counter; /* 进程可用时间片 */
-    unsigned long alarm;   /* 滴答数定时器 */
+    void *         stack;   /* 用户栈 */
+    pid_t          pid;     /* 进程id */
+    unsigned short prio;    /* 进程优先级 */
+    unsigned long  counter; /* 进程可用时间片 */
+    unsigned long  alarm;   /* 滴答数定时器 */
 
     char comm[TASK_COMM_LEN]; /* 进程名称 */
 
-    struct task_struct *parent; /* 父进程 */
-    struct list_head children;  /* 子进程链表 */
-    struct list_head sibling;   /* 连接到父进程的子进程链表 */
+    struct task_struct *parent;   /* 父进程 */
+    struct list_head    children; /* 子进程链表 */
+    struct list_head    sibling;  /* 连接到父进程的子进程链表 */
 
     struct thread_struct thread; /* cpu的上下文信息 */
-    struct mm_struct *mm;        /* 内存空间分布 */
+    struct mm_struct *   mm;     /* 内存空间分布 */
 
     long signal; /* 进程持有的信号 */
 
     struct list_head task;
 
-    struct dentry *cwd;
+    struct dentry *      cwd;
     struct files_struct *files;
 
     /*
@@ -123,7 +123,7 @@ extern struct task_struct *idle;
  */
 union task_union {
     struct task_struct task;
-    unsigned long stack[KERNEL_STACK_SIZE / sizeof(unsigned long)];
+    unsigned long      stack[KERNEL_STACK_SIZE / sizeof(unsigned long)];
 } __attribute__((aligned(8)));
 
 /**

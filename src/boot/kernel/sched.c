@@ -6,7 +6,7 @@
 #include <feng/compiler.h>
 #include <feng/kernel.h>
 #include <feng/sched.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 /**
  * setup_counter - 设置8253计数器

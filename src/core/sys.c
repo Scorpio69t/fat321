@@ -18,7 +18,7 @@ unsigned long sys_get_ticks(void)
 ssize_t sys_write(int fd, const void *buf, size_t nbytes)
 {
     struct file *filp;
-    int ret = -1;
+    int          ret = -1;
 
     if (fd < 0 || fd >= TASK_MAX_FILE)
         return -1;
@@ -35,7 +35,7 @@ ssize_t sys_write(int fd, const void *buf, size_t nbytes)
 ssize_t sys_read(int fd, void *buf, size_t nbytes)
 {
     struct file *filp;
-    int ret = -1;
+    int          ret = -1;
 
     if (fd < 0 || fd >= TASK_MAX_FILE)
         return -1;
@@ -52,8 +52,8 @@ ssize_t sys_read(int fd, void *buf, size_t nbytes)
 int sys_open(const char *path, int oflag)
 {
     struct dentry *de = NULL;
-    struct file *filp = NULL;
-    int fd;
+    struct file *  filp = NULL;
+    int            fd;
 
     if (atomic_read(&current->files->count) >= TASK_MAX_FILE)
         goto open_faild;
@@ -125,8 +125,8 @@ int sys_getcwd(char *buf, size_t n)
 {
     struct dentry *cur;
     struct dentry *tmp[16];
-    int i = 0, ret = 0, len, tn;
-    char *p = buf;
+    int            i = 0, ret = 0, len, tn;
+    char *         p = buf;
     cur = current->cwd;
     if (cur == NULL)
         return -1;
@@ -160,7 +160,7 @@ int sys_getcwd(char *buf, size_t n)
 int sys_getdents(int fd, void *dirent, int count)
 {
     struct file *filp;
-    int ret = -1;
+    int          ret = -1;
 
     if (fd < 0 || fd >= TASK_MAX_FILE)
         return -1;
@@ -187,7 +187,7 @@ long sys_reboot(void)
 long sys_debug(void)
 {
     struct task_struct *p = current;
-    struct pt_regs *regs = get_pt_regs(p);
+    struct pt_regs *    regs = get_pt_regs(p);
     printk("%x pid: %d esp0: %x esp: %x\n", (u32)p, p->pid, p->thread.esp0, regs->esp);
     return 0;
 }

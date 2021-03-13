@@ -3,9 +3,9 @@
  */
 
 #include <boot/cpu.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
-struct tss_struct tss;
+struct tss_struct  tss;
 struct desc_struct gdt[GDT_SIZE];
 struct desc_struct ldt[LDT_SIZE];
 

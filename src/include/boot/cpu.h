@@ -1,7 +1,7 @@
 #ifndef _ASM_CPU_H_
 #define _ASM_CPU_H_
 
-#include <feng/type.h>
+#include <feng/types.h>
 
 #define __packed __attribute__((packed))
 
@@ -44,20 +44,20 @@ struct tss_struct {
 /* 描述符 */
 struct desc_struct /* 共 8 个字节 */
 {
-    u16 limit_low;       /* Limit */
-    u16 base_low;        /* Base */
-    u8 base_mid;         /* Base */
-    u8 attr1;            /* P(1) DPL(2) DT(1) TYPE(4) */
-    u8 limit_high_attr2; /* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
-    u8 base_high;        /* Base */
+    u16 limit_low;        /* Limit */
+    u16 base_low;         /* Base */
+    u8  base_mid;         /* Base */
+    u8  attr1;            /* P(1) DPL(2) DT(1) TYPE(4) */
+    u8  limit_high_attr2; /* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
+    u8  base_high;        /* Base */
 } __packed;
 
 /* 门描述符 */
 struct gate_struct {
     u16 offset_low;  /* Offset Low */
     u16 selector;    /* Selector */
-    u8 dcount;       /* 栈切换时要复制的参数数量 */
-    u8 attr;         /* P(1) DPL(2) DT(1) TYPE(4) */
+    u8  dcount;      /* 栈切换时要复制的参数数量 */
+    u8  attr;        /* P(1) DPL(2) DT(1) TYPE(4) */
     u16 offset_high; /* Offset High */
 } __packed;
 
@@ -72,10 +72,10 @@ struct pt_regs {
     long edi;
     long ebp;
     long eax;
-    int ds;
-    int es;
-    int fs;
-    int gs;
+    int  ds;
+    int  es;
+    int  fs;
+    int  gs;
     long orig_eax;
     long eip;
     long cs;

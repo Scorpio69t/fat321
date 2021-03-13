@@ -182,7 +182,7 @@ unsigned long get_zeroed_page(unsigned int gfp_mask)
 
 static void free_pages_zone(struct zone *zone, struct page *page, unsigned int order)
 {
-    int i;
+    int          i;
     struct page *p;
 
     spin_lock(&zone->lock);
@@ -228,7 +228,7 @@ void __free_pages(struct page *page, unsigned int order)
 
 void free_pages(unsigned long addr, unsigned int order)
 {
-    int i;
+    int          i;
     struct page *p, *ans = NULL;
 
     for (i = 0; i < MAX_NR_ZONES; i++) {

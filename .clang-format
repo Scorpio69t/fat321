@@ -6,6 +6,7 @@ TabWidth: 4
 IndentCaseLabels: false
 AllowShortFunctionsOnASingleLine: Empty
 AlignConsecutiveMacros: true
+AlignConsecutiveDeclarations: true
 # AlignConsecutiveAssignments: true
 AlignTrailingComments: true
 BreakBeforeBraces: WebKit

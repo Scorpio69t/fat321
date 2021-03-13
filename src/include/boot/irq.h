@@ -9,11 +9,11 @@ typedef void (*irq_entry)();
 typedef void (*irq_handler)(struct pt_regs *, unsigned);
 
 struct irq_struct {
-    volatile long state;  /* 中断状态 */
-    irq_entry entry;      /* 中断入口 */
-    irq_handler handler;  /* 中断处理函数 */
-    unsigned long vector; /* 中断向量 */
-    unsigned short ring;  /* 中断特权级 */
+    volatile long  state;   /* 中断状态 */
+    irq_entry      entry;   /* 中断入口 */
+    irq_handler    handler; /* 中断处理函数 */
+    unsigned long  vector;  /* 中断向量 */
+    unsigned short ring;    /* 中断特权级 */
 };
 
 int register_irq(unsigned, irq_handler);
@@ -30,9 +30,9 @@ struct idtr_struct {
 /* 中断向量数 */
 #define NR_IRQ 256
 extern struct gate_struct idt[];
-extern struct irq_struct irq_array[];
+extern struct irq_struct  irq_array[];
 
-void irq_init();
+void        irq_init();
 extern void enable_irq(unsigned short);
 extern void disable_irq(unsigned short);
 

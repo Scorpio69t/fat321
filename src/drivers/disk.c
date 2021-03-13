@@ -15,8 +15,8 @@
 #include <feng/wait.h>
 
 static request_queue_head_t disk_request_head; /* IO请求队列 */
-wait_queue_head_t disk_wait_queue_head;
-void disk_handler(struct pt_regs *, unsigned);
+wait_queue_head_t           disk_wait_queue_head;
+void                        disk_handler(struct pt_regs *, unsigned);
 
 /**
  * disk_init - ATA硬盘初始化

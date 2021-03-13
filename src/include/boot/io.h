@@ -1,7 +1,7 @@
 #ifndef _ASM_IO_H_
 #define _ASM_IO_H_
 
-#include <feng/type.h>
+#include <feng/types.h>
 
 static inline void outb(u16 port, u8 value)
 {

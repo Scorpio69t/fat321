@@ -1,7 +1,7 @@
 #ifndef _ASM_STRING_H_
 #define _ASM_STRING_H_
 
-#include <feng/type.h>
+#include <feng/types.h>
 
 #define __HAVE_ARCH_MEMCPY
 static inline void *memcpy(void *to, void *from, size_t n)
@@ -22,7 +22,7 @@ static inline void *memcpy(void *to, void *from, size_t n)
 static inline void *memset(void *from, u8 value, size_t n)
 {
     u32 d0, d1;
-    u8 d2;
+    u8  d2;
     asm volatile(
         "1: movb %%al, (%%edi)\n\t"
         "dec %%ecx\n\t"

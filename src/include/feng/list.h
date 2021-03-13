@@ -1,7 +1,7 @@
 #ifndef _ALPHAZ_LIST_H_
 #define _ALPHAZ_LIST_H_
 
-#include <feng/type.h>
+#include <feng/types.h>
 
 /*
  * 通用双向链表

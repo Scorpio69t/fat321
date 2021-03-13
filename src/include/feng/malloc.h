@@ -1,7 +1,7 @@
 #ifndef _ALPHAZ_MALLOC_H_
 #define _ALPHAZ_MALLOC_H_
 
-#include <feng/type.h>
+#include <feng/types.h>
 
 void *malloc(size_t);
 

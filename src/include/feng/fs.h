@@ -18,11 +18,11 @@
 #define FS_ATTR_DEVICE (1 << 2)
 
 extern struct super_block *root_sb;
-extern struct dentry *root_entry;
+extern struct dentry *     root_entry;
 
 struct file_system_type {
     const char *name; /* 文件系统名称 */
-    int fs_flags;
+    int         fs_flags;
     struct super_block *(*get_sb)(struct file_system_type *, void *); /* 从磁盘中读取超级块 */
     void (*put_sb)(struct super_block *);                             /* 终止访问超级块并释放 */
     struct file_system_type *next;
@@ -31,13 +31,13 @@ struct file_system_type {
 extern struct file_system_type file_system;
 
 struct super_block {
-    unsigned long s_blocksize;       /* 以字节位单位的块大小 */
-    struct file_system_type *s_type; /* 文件系统类型 */
+    unsigned long            s_blocksize; /* 以字节位单位的块大小 */
+    struct file_system_type *s_type;      /* 文件系统类型 */
     struct super_operations *s_op;
-    struct dentry *s_root;     /* 根目录的挂载点   */
-    struct list_head s_inodes; /* 所有inode的链表  */
-    struct list_head s_dirty;  /* 脏inode链表 */
-    void *s_fs_info;           /* 文件系统的私有信息 */
+    struct dentry *          s_root;    /* 根目录的挂载点   */
+    struct list_head         s_inodes;  /* 所有inode的链表  */
+    struct list_head         s_dirty;   /* 脏inode链表 */
+    void *                   s_fs_info; /* 文件系统的私有信息 */
 };
 
 struct super_operations {
@@ -50,18 +50,18 @@ struct super_operations {
 };
 
 struct inode {
-    struct list_head i_sb_list; /* 超级块链表，挂载到super_block的s_inodes或s_dirty */
-    struct list_head i_denty;   /* 目录项链表 */
-    unsigned long i_ino;        /* inode号 */
-    atomic_t i_count;           /* 引用计数 */
+    struct list_head         i_sb_list; /* 超级块链表，挂载到super_block的s_inodes或s_dirty */
+    struct list_head         i_denty;   /* 目录项链表 */
+    unsigned long            i_ino;     /* inode号 */
+    atomic_t                 i_count;   /* 引用计数 */
     struct inode_operations *i_op;
-    struct file_operations *i_fop; /* 文件相关操作 */
-    spinlock_t i_lock;
-    unsigned long i_size;     /* 以字节为单位的文件大小 */
-    struct super_block *i_sb; /* 相关的超级块 */
-    unsigned long i_state;    /* 状态标志 */
-    unsigned int i_flags;     /* inode属性 */
-    void *i_private;          /* 文件系统私有信息 */
+    struct file_operations * i_fop; /* 文件相关操作 */
+    spinlock_t               i_lock;
+    unsigned long            i_size;    /* 以字节为单位的文件大小 */
+    struct super_block *     i_sb;      /* 相关的超级块 */
+    unsigned long            i_state;   /* 状态标志 */
+    unsigned int             i_flags;   /* inode属性 */
+    void *                   i_private; /* 文件系统私有信息 */
 };
 
 struct inode_operations {
@@ -77,17 +77,17 @@ struct inode_operations {
 };
 
 struct dentry {
-    atomic_t d_count; /* 使用计数 */
-    unsigned int d_flags;
-    spinlock_t d_lock;
-    struct inode *d_inode;      /* 与该目录项相关联的索引节点 */
-    struct dentry *d_parent;    /* 父目录项 */
-    char d_name[128];           /* 目录项名称 */
-    struct list_head d_child;   /* 挂载到父目录项的d_subdirs */
-    struct list_head d_subdirs; /* 子目录链表 */
+    atomic_t                  d_count; /* 使用计数 */
+    unsigned int              d_flags;
+    spinlock_t                d_lock;
+    struct inode *            d_inode;     /* 与该目录项相关联的索引节点 */
+    struct dentry *           d_parent;    /* 父目录项 */
+    char                      d_name[128]; /* 目录项名称 */
+    struct list_head          d_child;     /* 挂载到父目录项的d_subdirs */
+    struct list_head          d_subdirs;   /* 子目录链表 */
     struct dentry_operations *d_op;
-    struct super_block *d_sb; /* 文件的超级块 */
-    void *d_private;          /* 文件系统私有数据 */
+    struct super_block *      d_sb;      /* 文件的超级块 */
+    void *                    d_private; /* 文件系统私有数据 */
 };
 
 struct dentry_operations {
@@ -97,13 +97,13 @@ struct dentry_operations {
 };
 
 struct file {
-    struct dentry *f_dentry;
+    struct dentry *         f_dentry;
     struct file_operations *f_op;
-    spinlock_t f_lock;
-    atomic_t f_count;     /* 引用计数 */
-    unsigned int f_flags; /* 打开文件时指定的标志 */
-    unsigned int f_mode;  /* 文件访问模式 */
-    loff_t f_pos;         /* 当前文件位移量 */
+    spinlock_t              f_lock;
+    atomic_t                f_count; /* 引用计数 */
+    unsigned int            f_flags; /* 打开文件时指定的标志 */
+    unsigned int            f_mode;  /* 文件访问模式 */
+    loff_t                  f_pos;   /* 当前文件位移量 */
 };
 
 typedef int (*filldir_t)(void *, const char *, int, loff_t, u64, int);
@@ -120,7 +120,7 @@ struct file_operations {
 int register_filesystem(struct file_system_type *);
 int mount_fs(const char *, struct super_block *);
 
-struct file *make_file(struct dentry *, int, int);
+struct file *  make_file(struct dentry *, int, int);
 struct dentry *make_dentry(struct dentry *, char *, size_t);
 
 struct dentry *path_walk(const char *path, int flags);

@@ -7,7 +7,7 @@
 #include <feng/kernel.h>
 #include <feng/mm.h>
 #include <feng/slab.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 static inline unsigned int kmem_align(unsigned int size)
 {
@@ -19,7 +19,7 @@ static inline unsigned int kmem_align(unsigned int size)
 
 static inline void *kmem_getpages(struct kmem_cache *cachep, unsigned int flags)
 {
-    int i;
+    int          i;
     struct page *page;
 
     flags |= cachep->gfpflags;
@@ -35,9 +35,9 @@ static inline void *kmem_getpages(struct kmem_cache *cachep, unsigned int flags)
 
 static int cache_grow(struct kmem_cache *cachep)
 {
-    unsigned int head, i;
+    unsigned int    head, i;
     unsigned short *array;
-    struct slab *slabp;
+    struct slab *   slabp;
 
     slabp = (struct slab *)kmem_getpages(cachep, 0);
     if (!slabp)
@@ -71,7 +71,7 @@ static int cache_grow(struct kmem_cache *cachep)
  */
 struct kmem_cache *kmem_cache_create(const char *name, size_t size, unsigned int flags)
 {
-    unsigned int tnum, head, i;
+    unsigned int       tnum, head, i;
     struct kmem_cache *cachep = NULL;
 
     /* 如果对象的大小超过了可连续分配的页的大小的四分之一，则不使用缓存 */
@@ -121,7 +121,7 @@ struct kmem_cache *kmem_cache_create(const char *name, size_t size, unsigned int
 int kmem_cache_destroy(struct kmem_cache *cachep)
 {
     struct list_head *pos, *n;
-    struct slab *slabp;
+    struct slab *     slabp;
 
     list_for_each_safe(pos, n, &cachep->slabs_partial)
     {
@@ -147,7 +147,7 @@ int kmem_cache_destroy(struct kmem_cache *cachep)
 
 static void *____cache_alloc(struct kmem_cache *cachep, struct slab *slabp)
 {
-    void *ret = NULL;
+    void *          ret = NULL;
     unsigned short *array;
 
     array = (unsigned short *)((void *)slabp + sizeof(struct slab));
@@ -168,9 +168,9 @@ static void *____cache_alloc(struct kmem_cache *cachep, struct slab *slabp)
 static void *__cache_alloc(struct kmem_cache *cachep)
 {
     struct list_head *pos, *n;
-    struct slab *slabp;
-    void *ret = NULL;
-    int infree = 0;
+    struct slab *     slabp;
+    void *            ret = NULL;
+    int               infree = 0;
 
     list_for_each_safe(pos, n, &cachep->slabs_partial)
     {
@@ -226,10 +226,10 @@ static inline int slab_index(struct kmem_cache *cachep, struct slab *slabp, void
 
 static void __cache_free(struct kmem_cache *cachep, void *objp)
 {
-    int ind;
-    unsigned short *array;
+    int               ind;
+    unsigned short *  array;
     struct list_head *pos, *n;
-    struct slab *slabp = NULL;
+    struct slab *     slabp = NULL;
 
     list_for_each_safe(pos, n, &cachep->slabs_full)
     {
@@ -279,7 +279,7 @@ void kmem_cache_free(struct kmem_cache *cachep, void *objp)
 
 void kmem_cache_init(void)
 {
-    void *p;
+    void *             p;
     struct kmem_cache *cachep = kmem_cache_create("test", 500, 0);
     printk("++++++++++++++++\n");
     if (!cachep)

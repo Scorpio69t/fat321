@@ -13,7 +13,7 @@
 #include <feng/mmzone.h>
 #include <feng/page.h>
 #include <feng/string.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 struct zone mm_zones[MAX_NR_ZONES] = {
     [ZONE_KERNEL] =
@@ -35,7 +35,7 @@ static unsigned long zone_end_addr[MAX_NR_ZONES] = {
     ZONE_USER_END,
 };
 
-struct page *mem_map;
+struct page *       mem_map;
 const struct minfo *minfo_array = (struct minfo *)MEM_INFO_ADDR;
 
 /* 判断当前minfo是否结束 */
@@ -47,7 +47,7 @@ static int is_minfo_end(struct minfo *info)
 /* 计算内存总大小，包括内存空洞 */
 static unsigned long long calc_total_mem(void)
 {
-    struct minfo *info = (struct minfo *)minfo_array;
+    struct minfo *     info = (struct minfo *)minfo_array;
     unsigned long long total = 0;
 
     while (!is_minfo_end(info)) {
@@ -60,10 +60,10 @@ static unsigned long long calc_total_mem(void)
 /* 初始化pages数组, 返回pages数组的尾地址 */
 static unsigned long init_pages(unsigned long long mem_size, unsigned long mem_map_addr)
 {
-    int i;
+    int           i;
     unsigned long num, kn;
-    void *addr;
-    struct page *p;
+    void *        addr;
+    struct page * p;
 
     mem_map_addr = (mem_map_addr / PAGE_SIZE) * PAGE_SIZE + (mem_map_addr % PAGE_SIZE ? PAGE_SIZE : 0);
     mem_map = (struct page *)mem_map_addr;
@@ -100,7 +100,7 @@ static unsigned long init_pages(unsigned long long mem_size, unsigned long mem_m
 /* 设置页的属性 */
 static inline void setup_pages_flags(unsigned long bi, unsigned long ei, unsigned long flags)
 {
-    int i;
+    int          i;
     struct page *p = (struct page *)mem_map;
 
     for (i = bi; i < ei; ++i) {
@@ -112,8 +112,8 @@ static inline void setup_pages_flags(unsigned long bi, unsigned long ei, unsigne
 static int setup_pages_from_minfo(unsigned long num)
 {
     unsigned long long addr, limit;
-    unsigned long type, bi, ei;
-    struct minfo *info = (struct minfo *)minfo_array;
+    unsigned long      type, bi, ei;
+    struct minfo *     info = (struct minfo *)minfo_array;
 
     while (!is_minfo_end(info)) {
         addr = info->base_addr_low | ((unsigned long long)info->base_addr_high << 32);
@@ -137,7 +137,7 @@ static int setup_pages_from_minfo(unsigned long num)
 /* 在mem_map中标示当前已经使用的内存, 返回已使用的页数 */
 static int setup_pages_reserved(unsigned long tail_addr)
 {
-    int i;
+    int           i;
     unsigned long nr;
 
     nr = (tail_addr - __KERNEL_OFFSET) / PAGE_SIZE + 1;
@@ -168,7 +168,7 @@ static int init_zones(void)
 /* 设置mm_zones数组 */
 static int setup_zones(unsigned long num)
 {
-    int i;
+    int           i;
     unsigned long bi, ei; /* 起始下标和结束下标 */
 
     init_zones();
@@ -188,7 +188,7 @@ static int setup_zones(unsigned long num)
 
 static int setup_video_reserved(unsigned long num)
 {
-    int i;
+    int          i;
     unsigned int ind, nr;
 
     ind = __phy(VIDEO_MAP_ADDR) / PAGE_SIZE;
@@ -203,7 +203,7 @@ static int setup_video_reserved(unsigned long num)
 static int map_video_buf(void)
 {
     unsigned long phyaddr, *pgd, *pte;
-    unsigned int ind, nr, i, j;
+    unsigned int  ind, nr, i, j;
 
     phyaddr = *(int *)VIDEO_BASE_ADDR;
 
@@ -241,8 +241,8 @@ static void setup_console(void)
 void mm_init()
 {
     unsigned long long memsize;
-    unsigned long pagenum;
-    unsigned long tail_addr;
+    unsigned long      pagenum;
+    unsigned long      tail_addr;
 
     memsize = calc_total_mem();
 #ifdef __ARCH_I386

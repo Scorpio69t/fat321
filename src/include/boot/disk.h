@@ -33,7 +33,7 @@ struct request_queue {
     unsigned char nsect; /* 操作的扇区数量 */
     unsigned char cmd;
     unsigned long sector; /* 起始扇区，LBA28模式 */
-    void *buf;
+    void *        buf;
     void (*end_handler)(void);
     struct list_head list;
 };
@@ -41,8 +41,8 @@ typedef struct request_queue request_queue_t;
 
 struct request_queue_head {
     volatile unsigned long count; /* 请求数量 */
-    request_queue_t *use;         /* 记录当前的请求 */
-    struct list_head list;
+    request_queue_t *      use;   /* 记录当前的请求 */
+    struct list_head       list;
 };
 typedef struct request_queue_head request_queue_head_t;
 

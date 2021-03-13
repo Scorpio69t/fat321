@@ -6,7 +6,7 @@
 #include <feng/malloc.h>
 #include <feng/slab.h>
 #include <feng/spinlock.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <feng/wait.h>
 
 struct file *stdin;
@@ -17,8 +17,8 @@ struct file *stdin;
 
 struct {
     char buf[KEYBOARD_BUF_SIZE];
-    int count; /* 缓冲区扫描码数 */
-    int head, tail;
+    int  count; /* 缓冲区扫描码数 */
+    int  head, tail;
 } kb_buf;
 
 struct {
@@ -201,7 +201,7 @@ static char get_scancode(void)
 static char annlysis_scancode(void)
 {
     unsigned char code;
-    int i, key, make;
+    int           i, key, make;
 
 loop:
     key = make = 0;

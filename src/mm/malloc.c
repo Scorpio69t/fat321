@@ -1,6 +1,6 @@
 #include <feng/malloc.h>
 #include <feng/slab.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 void *malloc(size_t size)
 {

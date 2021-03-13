@@ -53,8 +53,8 @@ int console_curl(int line)
  */
 void write_char(char c, unsigned char type, unsigned short cur)
 {
-    int i, j;
-    unsigned long x, y;
+    int            i, j;
+    unsigned long  x, y;
     unsigned char *font;
 
     font = font_8x16.font + (int)c * font_8x16.height;

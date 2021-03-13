@@ -10,7 +10,7 @@
 #include <feng/slab.h>
 #include <feng/stdio.h>
 #include <feng/string.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <feng/wait.h>
 
 struct console_desc console;

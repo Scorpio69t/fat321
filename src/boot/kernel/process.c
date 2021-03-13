@@ -9,7 +9,7 @@
 #include <feng/malloc.h>
 #include <feng/sched.h>
 #include <feng/slab.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 /**
  * 获取用户栈的esp

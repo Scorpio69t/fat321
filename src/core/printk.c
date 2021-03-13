@@ -13,8 +13,8 @@
 int printf(const char *fmt, ...)
 {
     static char buf[1024];
-    va_list args;
-    int i;
+    va_list     args;
+    int         i;
 
     va_start(args, fmt);
     i = vsnprintf(buf, sizeof(buf), fmt, args);
@@ -36,9 +36,9 @@ static unsigned char printk_color[] = {
 int printk(const char *fmt, ...)
 {
     static char buf[1024];
-    va_list args;
-    char *p = buf;
-    int level, len;
+    va_list     args;
+    char *      p = buf;
+    int         level, len;
 
     va_start(args, fmt);
     len = vsnprintf(buf, sizeof(buf), fmt, args);

@@ -3,7 +3,7 @@
 
 #include <boot/cpu.h>
 #include <feng/compiler.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 void setup_counter(void);
 

@@ -5,10 +5,10 @@
 #include <feng/malloc.h>
 #include <feng/slab.h>
 #include <feng/string.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 struct super_block *root_sb = NULL;
-struct dentry *root_dentry = NULL;
+struct dentry *     root_dentry = NULL;
 
 /**
  * register_filesystem - 注册文件系统
@@ -63,7 +63,7 @@ struct file *make_file(struct dentry *dentry, int flags, int mode)
 static struct dentry *find_dcache(struct dentry *parent, const char *name, size_t len)
 {
     struct dentry *child;
-    size_t n;
+    size_t         n;
 
     list_for_each_entry(child, &parent->d_subdirs, d_child)
     {
@@ -105,8 +105,8 @@ struct dentry *make_dentry(struct dentry *parent, char *name, size_t len)
 
 struct dentry *path_walk(const char *path, int flags)
 {
-    char *name, *p;
-    int len;
+    char *         name, *p;
+    int            len;
     struct dentry *parent = root_sb->s_root;
     struct dentry *child;
 

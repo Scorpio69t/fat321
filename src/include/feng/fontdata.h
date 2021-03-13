@@ -2,8 +2,8 @@
 #define _ALPHAZ_FONTDATA_H_
 
 struct font_desc {
-    const char *name;
-    int width, height;
+    const char *         name;
+    int                  width, height;
     const unsigned char *font;
 };
 

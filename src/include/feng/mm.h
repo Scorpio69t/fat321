@@ -6,11 +6,11 @@
 
 #ifndef __ASSEMBLY__
 #include <feng/mmzone.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 #define __packed __attribute__((packed))
 
-extern struct zone mm_zones[MAX_NR_ZONES];
+extern struct zone  mm_zones[MAX_NR_ZONES];
 extern struct page *mem_map;
 
 /* 页目录物理地址 */

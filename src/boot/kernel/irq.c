@@ -9,7 +9,7 @@ struct gate_struct idt[NR_IRQ];
 static inline void init_idt_desc(u8 vector, u8 desc_type, irq_entry entry, u8 privilege)
 {
     struct gate_struct *p_gate = &idt[vector];
-    u32 base = (u32)entry;
+    u32                 base = (u32)entry;
     p_gate->offset_low = base & 0xffff;
     p_gate->selector = SELECTOR_FLAT_C;
     p_gate->dcount = 0;

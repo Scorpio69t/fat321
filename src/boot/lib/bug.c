@@ -1,6 +1,6 @@
 #include <boot/bug.h>
 #include <feng/stdio.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <feng/unistd.h>
 
 int disp_pos = 0;
@@ -20,7 +20,7 @@ static inline void disp_char(char c, u8 color, u32 pos)
 static void itoa(int num, char *buf)
 {
     char ch;
-    int i;
+    int  i;
     *buf++ = '0';
     *buf++ = 'x';
 
@@ -37,7 +37,7 @@ static void itoa(int num, char *buf)
 
 void disp_str(char *buf)
 {
-    u32 pos = disp_pos;
+    u32   pos = disp_pos;
     char *cp;
 
     for (cp = buf; *cp != 0; cp++) {

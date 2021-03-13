@@ -2,7 +2,7 @@
 #include <feng/gfp.h>
 #include <feng/mm.h>
 #include <feng/slab.h>
-#include <feng/type.h>
+#include <feng/types.h>
 
 #define KMALLOC_CACHE_SIZE 11
 
@@ -90,7 +90,7 @@ void kfree(void *addr)
 
 void kmalloc_cache_init(void)
 {
-    int i;
+    int                i;
     struct kmem_cache *cachep;
 
     for (i = 0; i < KMALLOC_CACHE_SIZE; ++i) {

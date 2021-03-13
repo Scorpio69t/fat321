@@ -13,7 +13,7 @@
 #define CLONE_SIGHAND (1UL << 13)
 #define CLOSE_THREAD  (1UL << 14)
 
-long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, unsigned long stack_size);
+long        do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, unsigned long stack_size);
 extern void ret_from_fork(void);
 extern void kernel_thread_ret(void);
 

@@ -24,9 +24,9 @@ unsigned long __vir(unsigned long addr)
 
 static void fill_pde(unsigned long pde, unsigned long pte, unsigned long nr)
 {
-    int i;
+    int            i;
     unsigned long *pd, phyaddr;
-    unsigned long ki, ui;  // kernel index, user index
+    unsigned long  ki, ui;  // kernel index, user index
 
     phyaddr = __phy(pte);
     nr = nr / NUM_PER_PAGE + (nr % NUM_PER_PAGE ? 1 : 0);
@@ -42,7 +42,7 @@ static void fill_pde(unsigned long pde, unsigned long pte, unsigned long nr)
 
 static void fill_pte(unsigned long pte, unsigned long nr)
 {
-    int i;
+    int            i;
     unsigned long *pt, phyaddr;
 
     pt = (unsigned long *)pte;

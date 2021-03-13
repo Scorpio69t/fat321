@@ -6,15 +6,15 @@
 #include <feng/spinlock.h>
 
 struct __wait_queue_head {
-    spinlock_t lock;
+    spinlock_t       lock;
     struct list_head task_list;
 };
 typedef struct __wait_queue_head wait_queue_head_t;
 
 struct __wait_queue {
-    unsigned int flags;
-    struct task_struct *task;   /* 当前进程的task_struct地址 */
-    struct list_head task_list; /* wait_queue_head挂载点 */
+    unsigned int        flags;
+    struct task_struct *task;      /* 当前进程的task_struct地址 */
+    struct list_head    task_list; /* wait_queue_head挂载点 */
 };
 typedef struct __wait_queue wait_queue_t;
 

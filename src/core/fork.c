@@ -8,7 +8,7 @@
 #include <feng/malloc.h>
 #include <feng/mm.h>
 #include <feng/sched.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <feng/unistd.h>
 
 volatile pid_t global_pid = 0;

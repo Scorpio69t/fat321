@@ -5,12 +5,12 @@
 #include <feng/malloc.h>
 #include <feng/stdio.h>
 #include <feng/string.h>
-#include <feng/type.h>
+#include <feng/types.h>
 #include <feng/unistd.h>
 
 struct DIR *opendir(const char *path)
 {
-    int fd;
+    int         fd;
     struct DIR *dir;
 
     fd = open(path, O_DIRECTORY);
