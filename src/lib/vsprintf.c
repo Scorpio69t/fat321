@@ -40,8 +40,10 @@ static char *number(char *str, char *end, unsigned long long num, int base, int 
     if (num == 0)
         tmp[i++] = '0';
     else
-        while (num != 0) tmp[i++] = digits[do_div(num, base)];
-
+        while (num != 0) {
+            tmp[i++] = digits[num % base];
+            num /= base;
+        }
     if (sign)
         tmp[i++] = sign;
 

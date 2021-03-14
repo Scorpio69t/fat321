@@ -4,14 +4,12 @@ DEBUG = 1
 
 CC			= gcc
 LD			= ld
-CFLAGS		= -c -O2 -Wall -fno-builtin -fno-common -fno-stack-protector -m32 -Wa,--32
-LDFLAGS		= -T ../scripts/kernel.lds --whole-archive -m elf_i386
+CFLAGS		= -c -Wall -fno-builtin -fno-common -fno-stack-protector -mcmodel=large
+LDFLAGS		= -T ../scripts/kernel.lds --whole-archive
 TARGET=kernel.bin
 srctree	:= $(CURDIR)
 
-# cpu platform
-ARCH		?= i386
-export ARCH CC LD CFLAGS
+export CC LD CFLAGS
 
 subdir := boot drivers fs init core lib mm
 

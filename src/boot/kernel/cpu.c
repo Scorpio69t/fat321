@@ -21,18 +21,18 @@ static inline void init_descriptor(struct desc_struct *p_desc, u32 base, u32 lim
 
 static inline void load_gdt(struct gdtr_struct gdtr)
 {
-    asm volatile(
-        "lgdt %0\n\t"
-        "jmp %1,$flash_label\n\t"
-        /* 刷新寄存器 */
-        "flash_label:"
-        "mov %%ax, %%ds\n\t"
-        "mov %%ax, %%es\n\t"
-        "mov %%ax, %%fs\n\t"
-        "mov %%ax, %%ss\n\t"
-        "mov %%bx, %%gs\n\t"
-        :
-        : "m"(gdtr), "i"(SELECTOR_FLAT_C), "a"(SELECTOR_FLAT_RW), "b"(SELECTOR_VIDEO));
+    // asm volatile(
+    //     "lgdt %0\n\t"
+    //     "jmp %1,$flash_label\n\t"
+    //     /* 刷新寄存器 */
+    //     "flash_label:"
+    //     "mov %%ax, %%ds\n\t"
+    //     "mov %%ax, %%es\n\t"
+    //     "mov %%ax, %%fs\n\t"
+    //     "mov %%ax, %%ss\n\t"
+    //     "mov %%bx, %%gs\n\t"
+    //     :
+    //     : "m"(gdtr), "i"(SELECTOR_FLAT_C), "a"(SELECTOR_FLAT_RW), "b"(SELECTOR_VIDEO));
 }
 
 static inline void load_ldt(u16 ldt_sel)

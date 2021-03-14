@@ -6,13 +6,13 @@
 #define __HAVE_ARCH_MEMCPY
 static inline void *memcpy(void *to, void *from, size_t n)
 {
-    u32 d0, d1, d2;
+    uint64 d0, d1, d2;
     asm volatile(
         "nop\n\t"
         "nop\n\t"
         "rep ; movsb\n\t"
         : "=&c"(d0), "=&D"(d1), "=&S"(d2)
-        : "0"(n), "1"((u32)to), "2"((u32)from)
+        : "0"(n), "1"((uint64)to), "2"((uint64)from)
         : "memory");
 
     return to;
@@ -21,17 +21,17 @@ static inline void *memcpy(void *to, void *from, size_t n)
 #define __HAVE_ARCH_MEMSET
 static inline void *memset(void *from, u8 value, size_t n)
 {
-    u32 d0, d1;
+    uint64 d0, d1;
     u8  d2;
     asm volatile(
-        "1: movb %%al, (%%edi)\n\t"
-        "dec %%ecx\n\t"
-        "inc %%edi\n\t"
-        "testl %%ecx, %%ecx\n\t"
+        "1: movb %%al, (%%rdi)\n\t"
+        "dec %%rcx\n\t"
+        "inc %%rdi\n\t"
+        "testq %%rcx, %%rcx\n\t"
         "jnz 1b\n\t"
         "2:"
         : "=&c"(d0), "=&D"(d1), "=&a"(d2)
-        : "0"(n), "1"((u32)from), "2"(value)
+        : "0"(n), "1"((uint64)from), "2"(value)
         : "memory");
 
     return from;
@@ -43,10 +43,10 @@ static inline void *strcpy(char *dest, const char *src)
     int d0, d1;
     asm volatile(
         "1:"
-        "movb (%%esi), %%al\n\t"
-        "movb %%al, (%%edi)\n\t"
-        "inc %%esi\n\t"
-        "inc %%edi\n\t"
+        "movb (%%rsi), %%al\n\t"
+        "movb %%al, (%%rdi)\n\t"
+        "inc %%rsi\n\t"
+        "inc %%rdi\n\t"
         "cmp $0, %%al\n\t"
         "jnz 1b\n\t"
         : "=&D"(d0), "=&S"(d1)

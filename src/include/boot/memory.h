@@ -9,7 +9,7 @@
 static inline unsigned long get_pgd(void)
 {
     unsigned long pgd;
-    asm volatile("movl %%cr3, %0" : "=r"(pgd)::"memory");
+    asm volatile("movq %%cr3, %0" : "=r"(pgd)::"memory");
     return __vir(pgd);
 }
 

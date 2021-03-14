@@ -2,7 +2,7 @@ ENTRY(_start)
 SECTIONS
 {
 
-	. = 0x100000 + 0xc0000000;
+	. = 0x100000 + 0xffff800000000000;
 	.text : AT(0x100000)
 	{
 		_text = .;

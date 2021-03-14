@@ -36,23 +36,23 @@
  * __switch_to执行前，压入了标号1处的值，这会使prev进程在下次被调度并从__switch_to中
  * ret后继续从标号1处执行
  */
-#define switch_to(prev, next, last)                                                                                   \
-    do {                                                                                                              \
-        unsigned long ebx, ecx, edx, esi, edi;                                                                        \
-        asm volatile(                                                                                                 \
-            "pushfl\n\t"                                                                                              \
-            "pushl %%ebp\n\t"                                                                                         \
-            "movl %%esp, %0\n\t" /* 保存prev进程的栈顶 */                                                      \
-            "movl %8, %%esp\n\t" /* 切换栈 */                                                                      \
-            "movl $1f, %1\n\t"   /* 保存prev的eip */                                                               \
-            "pushl %9\n\t"       /* next的eip入栈 */                                                               \
-            "jmp __switch_to\n\t"                                                                                     \
-            "1:\t"                                                                                                    \
-            "popl %%ebp\n\t"                                                                                          \
-            "popfl\n\t"                                                                                               \
-            : "=m"(prev->thread.esp), "=m"(prev->thread.eip), "=a"(last), "=b"(ebx), "=c"(ecx), "=d"(edx), "=S"(esi), \
-              "=D"(edi)                                                                                               \
-            : "m"(next->thread.esp), "m"(next->thread.eip), "a"(prev), "d"(next));                                    \
-    } while (0)
+#define switch_to(prev, next, last)                                                                                  // \
+    // do {                                                                                                              \
+    //     unsigned long ebx, ecx, edx, esi, edi;                                                                        \
+    //     asm volatile(                                                                                                 \
+    //         "pushfl\n\t"                                                                                              \
+    //         "pushl %%ebp\n\t"                                                                                         \
+    //         "movl %%esp, %0\n\t" /* 保存prev进程的栈顶 */                                                      \
+    //         "movl %8, %%esp\n\t" /* 切换栈 */                                                                      \
+    //         "movl $1f, %1\n\t"   /* 保存prev的eip */                                                               \
+    //         "pushl %9\n\t"       /* next的eip入栈 */                                                               \
+    //         "jmp __switch_to\n\t"                                                                                     \
+    //         "1:\t"                                                                                                    \
+    //         "popl %%ebp\n\t"                                                                                          \
+    //         "popfl\n\t"                                                                                               \
+    //         : "=m"(prev->thread.esp), "=m"(prev->thread.eip), "=a"(last), "=b"(ebx), "=c"(ecx), "=d"(edx), "=S"(esi), \
+    //           "=D"(edi)                                                                                               \
+    //         : "m"(next->thread.esp), "m"(next->thread.eip), "a"(prev), "d"(next));                                    \
+    // } while (0)
 
 #endif

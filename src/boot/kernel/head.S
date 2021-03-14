@@ -1,3 +1,4 @@
+#include <boot/multiboot.h>
 #include <feng/linkage.h>
 #include <feng/mm.h>
 
@@ -11,8 +12,13 @@ stack_top:
 
 .section ".head.text"
 
-ENTRY(_start)
-
+.global _start
+_start:
+	cmpl 	%eax, MULTIBOOT2_BOOTLOADER_MAGIC
+	jne	ok
+	hlt
+ok:
+	/*
 	movl 	%ebx, (boot_info_addr - __KERNEL_OFFSET)
 
     	# 初始化页表
@@ -38,10 +44,12 @@ flushtlb:
 	movl	$stack_top, %esp
     	movl	$stack_top, %ebp
 	jmp     kernel_main				# 跳转到内核
-
+*/
 boot_info_addr:
 .long 0
 
+/*
+.section ".data"
 .align 4096
 _PDE:
 	.long   _PTE + 0x0007 - __KERNEL_OFFSET
@@ -54,3 +62,4 @@ _PDE:
 .align 4096
 _PTE:
 	.fill   2048,4,0            			# 开辟2048个页表空间
+*/

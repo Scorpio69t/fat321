@@ -68,8 +68,7 @@ static unsigned long init_pages(unsigned long long mem_size, unsigned long mem_m
     mem_map_addr = (mem_map_addr / PAGE_SIZE) * PAGE_SIZE + (mem_map_addr % PAGE_SIZE ? PAGE_SIZE : 0);
     mem_map = (struct page *)mem_map_addr;
 
-    do_div(mem_size, PAGE_SIZE);
-    num = (unsigned long)mem_size;
+    num = mem_size / PAGE_SIZE;
 
     kn = ZONE_KERNEL_END / PAGE_SIZE;
     addr = (void *)0x00;
@@ -123,9 +122,7 @@ static int setup_pages_from_minfo(unsigned long num)
 
         if (type == 1)
             continue; /* 类型1为操作系统可用的内存 */
-
-        do_div(addr, PAGE_SIZE);
-        bi = addr; /* 在pages数组中的起始下标 */
+        bi = addr / PAGE_SIZE; /* 在pages数组中的起始下标 */
         if (bi >= num)
             continue; /* 超过实际内存大小，大于pages数组的长度 */
         ei = bi + limit / PAGE_SIZE + (limit % PAGE_SIZE ? 1 : 0);
@@ -253,8 +250,7 @@ void mm_init()
     tail_addr = reset_page_table(memsize);
     tail_addr = init_pages(memsize, tail_addr);
 
-    do_div(memsize, PAGE_SIZE);
-    pagenum = memsize;
+    pagenum = memsize / PAGE_SIZE;
 
     setup_pages_from_minfo(pagenum);
     setup_pages_reserved(tail_addr);

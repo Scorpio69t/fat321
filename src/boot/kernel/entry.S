@@ -9,30 +9,30 @@
 
 #define SAVE_ALL    \
     cld;            \
-    pushl   %gs;    \
-    pushl   %fs;    \
-    pushl   %es;    \
-    pushl   %ds;    \
-    pushl   %eax;   \
-    pushl   %ebp;   \
-    pushl   %edi;   \
-    pushl   %esi;   \
-    pushl   %edx;   \
-    pushl   %ecx;   \
-    pushl   %ebx
+    /* pushq   %gs;    \
+    pushq   %fs;    \
+    pushq   %es;    \
+    pushq   %ds; */   \
+    pushq   %rax;   \
+    pushq   %rbp;   \
+    pushq   %rdi;   \
+    pushq   %rsi;   \
+    pushq   %rdx;   \
+    pushq   %rcx;   \
+    pushq   %rbx
 
 #define RESTOR_ALL  \
-    popl    %ebx;   \
-    popl    %ecx;   \
-    popl    %edx;   \
-    popl    %esi;   \
-    popl    %edi;   \
-    popl    %ebp;   \
-    popl    %eax;   \
-    popl    %ds;    \
-    popl    %es;    \
-    popl    %fs;    \
-    popl    %gs
+    popq    %rbx;   \
+    popq    %rcx;   \
+    popq    %rdx;   \
+    popq    %rsi;   \
+    popq    %rdi;   \
+    popq    %rbp;   \
+    popq    %rax;   \
+    /* popq    %ds;    \
+    popq    %es;    \
+    popq    %fs;    \
+    popq    %gs */
 
 PT_EAX = 0x18
 
@@ -48,11 +48,11 @@ TASK_FLAGS  = 0x04
     iretl
 
 #define PUSH_PT_ARGS    \
-    movl    %esp, %eax; \
-    pushl   %eax
+    movq    %rsp, %rax; \
+    pushq   %rax
 
 #define POP_PT_ARGS     \
-    addl    $4, %esp
+    addq    $4, %rsp
 
 /* could not use stack */
 #define RESET_8259A_CHIP    \
@@ -90,7 +90,7 @@ TASK_FLAGS  = 0x04
   2: ;
 
 #define RING0_HW_IRQ_FREAM(irq)    \
-    pushl $irq;                 \
+    pushq $irq;                 \
     SAVE_ALL;                   \
     CLOSE_8259A_PIN(irq);       \
     RESET_8259A_CHIP;           \
@@ -140,92 +140,102 @@ ENTRY(hwint0x2f) RING0_HW_IRQ_FREAM(0x2f); END(hwint0x2f)
 
 /* 中断和异常 -- 异常 */
 ENTRY(divide_error)
-	pushl	$0xffffffff
-	pushl	$0
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$0
 	jmp 	exception
 END(divide_error)
 
 ENTRY(single_step_exception)
-	pushl	$0xffffffff
-	pushl	$1
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$1
 	jmp 	exception
 END(single_step_exception)
 
 ENTRY(nmi)
-	pushl	$0xffffffff
-	pushl	$2
-	jmp	    exception
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$2
+	jmp	exception
 END(nmi)
 
 ENTRY(breakpoint_exception)
-	pushl	$0xffffffff
-	pushl	$3
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$3
 	jmp	    exception
 END(breakpoint_exception)
 
 ENTRY(overflow)
-	pushl	$0xffffffff
-	pushl	$4
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$4
 	jmp	    exception
 END(overflow)
 
 ENTRY(bounds_check)
-	pushl	$0xffffffff
-	pushl	$5
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$5
 	jmp	    exception
 END(bounds_check)
 
 ENTRY(inval_opcode)
-	pushl	$0xffffffff
-	pushl	$6
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$6
 	jmp	    exception
 END(inval_opcode)
 
 ENTRY(copr_not_available)
-	pushl	$0xffffffff
-	pushl	$7
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$7
 	jmp	    exception
 END(copr_not_available)
 
 ENTRY(double_fault)
-	pushl	$8
+	pushq	$8
 	jmp	    exception
 END(double_fault)
 
 ENTRY(copr_seg_overrun)
-	pushl	$0xffffffff
-	pushl	$9
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$9
 	jmp	    exception
 END(copr_seg_overrun)
 
 ENTRY(inval_tss)
-	pushl	$10
+	pushq	$10
 	jmp	    exception
 END(inval_tss)
 
 ENTRY(segment_not_present)
-	pushl	$11
+	pushq	$11
 	jmp	    exception
 END(segment_not_present)
 
 ENTRY(stack_exception)
-	pushl	$12
+	pushq	$12
 	jmp	    exception
 END(stack_exception)
 
 ENTRY(general_protection)
-	pushl	$13
+	pushq	$13
 	jmp	    exception
 END(general_protection)
 
 ENTRY(page_fault)
-	pushl	$14
+	pushq	$14
 	jmp	    exception
 END(page_fault)
 
 ENTRY(copr_error)
-	pushl	$0xffffffff
-	pushl	$16
+	movq 	$0xffffffff, %rax
+	pushq	%rax
+	pushq	$16
 	jmp	    exception
 END(copr_error)
 
@@ -240,28 +250,28 @@ exception:
  * eax中为功能号
  */
 ENTRY(system_call)
-    pushl   %eax    /* 压入功能号 */
+    pushq   %rax    /* 压入功能号 */
 	SAVE_ALL
-    movl    PT_EAX(%esp), %eax
-    call    *sys_call_table(,%eax,4)
-    movl    %eax, PT_EAX(%esp)
+    movq    PT_EAX(%rsp), %rax
+    # call    *sys_call_table(,%rax,4)
+    movq    %rax, PT_EAX(%rsp)
     RESTOR_ALL
     INTERRUPT_RETURN
 END(system_call)
 
 ENTRY(kernel_thread_ret)
-    popl    %ebx
-    popl    %ecx
-    popl    %edx
-    popl    %esi
-    popl    %edi
-    popl    %ebp
-    popl    %eax
-    popl    %ds
-    popl    %es
-    popl    %fs
-    popl    %gs
-    call    *%ebx
-    pushl   %eax
+    popq    %rbx
+    popq    %rcx
+    popq    %rdx
+    popq    %rsi
+    popq    %rdi
+    popq    %rbp
+    popq    %rax
+/*    popq    %ds
+    popq    %es
+    popq    %fs
+    popq    %gs */
+    call    *%rbx
+    pushq   %rax
     call    sys_exit
 END(kernel_thread_ret)
