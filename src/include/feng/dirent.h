@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_DIRENT_H_
-#define _ALPHAZ_DIRENT_H_
+#ifndef _FENG_DIRENT_H_
+#define _FENG_DIRENT_H_
 
 #include <feng/types.h>
 

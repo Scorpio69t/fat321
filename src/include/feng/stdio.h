@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_STDIO_H_
-#define _ALPHAZ_STDIO_H_
+#ifndef _FENG_STDIO_H_
+#define _FENG_STDIO_H_
 
 /**
  * stdarg.h是GCC的一部分，其中的va_list也是GCC的内建类型，且定义了一组宏用于处理具有可变参

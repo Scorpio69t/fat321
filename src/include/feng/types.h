@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_TYPE_H_
-#define _ALPHAZ_TYPE_H_
+#ifndef _FENG_TYPE_H_
+#define _FENG_TYPE_H_
 
 typedef char               int8;
 typedef short              int16;

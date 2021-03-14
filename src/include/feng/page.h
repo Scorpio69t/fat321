@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_PAGE_H_
-#define _ALPHAZ_PAGE_H_
+#ifndef _FENG_PAGE_H_
+#define _FENG_PAGE_H_
 
 #include <feng/mm_types.h>
 

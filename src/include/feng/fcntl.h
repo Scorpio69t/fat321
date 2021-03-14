@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_FCNTL_H_
-#define _ALPHAZ_FCNTL_H_
+#ifndef _FENG_FCNTL_H_
+#define _FENG_FCNTL_H_
 
 int open(const char *path, int oflag);
 

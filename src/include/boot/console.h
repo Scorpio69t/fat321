@@ -1,5 +1,5 @@
-#ifndef _ASM_CONSOLE_H_
-#define _ASM_CONSOLE_H_
+#ifndef _BOOT_CONSOLE_H_
+#define _BOOT_CONSOLE_H_
 
 #include <feng/mm.h>
 #include <feng/types.h>

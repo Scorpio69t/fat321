@@ -1,5 +1,5 @@
-#ifndef _ASM_SPINLOCK_H_
-#define _ASM_SPINLOCK_H_
+#ifndef _BOOT_SPINLOCK_H_
+#define _BOOT_SPINLOCK_H_
 
 /* 值为1为加锁，其他值表示加锁 */
 typedef struct {

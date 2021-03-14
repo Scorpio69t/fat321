@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_BUGS_H_
-#define _ALPHAZ_BUGS_H_
+#ifndef _FENG_BUGS_H_
+#define _FENG_BUGS_H_
 
 void __panic(char *fmt, char *file, int line, ...);
 void __assert(char *exp, char *file, int line);

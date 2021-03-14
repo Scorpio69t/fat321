@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_KEYBOARD_H_
-#define _ALPHAZ_KEYBOARD_H_
+#ifndef _FENG_KEYBOARD_H_
+#define _FENG_KEYBOARD_H_
 
 #include <feng/fs.h>
 #include <feng/types.h>

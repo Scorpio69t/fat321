@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_FONTDATA_H_
-#define _ALPHAZ_FONTDATA_H_
+#ifndef _FENG_FONTDATA_H_
+#define _FENG_FONTDATA_H_
 
 struct font_desc {
     const char *         name;

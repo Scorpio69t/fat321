@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_CTYPEH_H_
-#define _ALPHAZ_CTYPEH_H_
+#ifndef _FENG_CTYPEH_H_
+#define _FENG_CTYPEH_H_
 
 int isalpha(int);
 int isblank(int);

@@ -1,5 +1,5 @@
-#ifndef _ASM_I8259_H_
-#define _ASM_I8259_H_
+#ifndef _BOOT_I8259_H_
+#define _BOOT_I8259_H_
 
 /* 8259A的初始化端口，主片和从片 */
 #define INT_M_CTL     0x20

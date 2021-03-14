@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_WAIT_H_
-#define _ALPHAZ_WAIT_H_
+#ifndef _FENG_WAIT_H_
+#define _FENG_WAIT_H_
 
 #include <feng/list.h>
 #include <feng/sched.h>

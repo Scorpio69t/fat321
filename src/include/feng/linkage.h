@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_LINKAGE_H_
-#define _ALPHAZ_LINKAGE_H_
+#ifndef _FENG_LINKAGE_H_
+#define _FENG_LINKAGE_H_
 
 #ifndef __ALIGN
 #define __ALIGN     .align 4, 0x90

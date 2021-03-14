@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_BLKDEV_H_
-#define _ALPHAZ_BLKDEV_H_
+#ifndef _FENG_BLKDEV_H_
+#define _FENG_BLKDEV_H_
 
 #include <boot/disk.h>
 

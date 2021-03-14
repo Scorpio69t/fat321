@@ -1,5 +1,5 @@
-#ifndef _ASM_STRING_H_
-#define _ASM_STRING_H_
+#ifndef _BOOT_STRING_H_
+#define _BOOT_STRING_H_
 
 #include <feng/types.h>
 

@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_LIST_H_
-#define _ALPHAZ_LIST_H_
+#ifndef _FENG_LIST_H_
+#define _FENG_LIST_H_
 
 #include <feng/types.h>
 

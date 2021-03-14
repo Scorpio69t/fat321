@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_COMPILER_H_
-#define _ALPHAZ_COMPILER_H_
+#ifndef _FENG_COMPILER_H_
+#define _FENG_COMPILER_H_
 
 #define __noinline __attribute__((noinline))
 #define __data     __attribute__((section(".data")))

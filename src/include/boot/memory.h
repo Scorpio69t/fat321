@@ -1,5 +1,5 @@
-#ifndef _ASM_MEMORY_H_
-#define _ASM_MEMORY_H_
+#ifndef _BOOT_MEMORY_H_
+#define _BOOT_MEMORY_H_
 
 #include <feng/page.h>
 

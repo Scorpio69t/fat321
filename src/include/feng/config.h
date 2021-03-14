@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_CONFIG_H_
-#define _ALPHAZ_CONFIG_H_
+#ifndef _FENG_CONFIG_H_
+#define _FENG_CONFIG_H_
 
 #define __ARCH_I386
 #define __USE_VBE

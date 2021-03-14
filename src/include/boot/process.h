@@ -1,5 +1,5 @@
-#ifndef _ASM_PROCESS_H_
-#define _ASM_PROCESS_H_
+#ifndef _BOOT_PROCESS_H_
+#define _BOOT_PROCESS_H_
 
 #include <boot/cpu.h>
 #include <feng/sched.h>

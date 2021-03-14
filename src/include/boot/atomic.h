@@ -1,5 +1,5 @@
-#ifndef _ASM_ATOMIC_H_
-#define _ASM_ATOMIC_H_
+#ifndef _BOOT_ATOMIC_H_
+#define _BOOT_ATOMIC_H_
 
 typedef struct {
     volatile int counter;

@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_VFS_H_
-#define _ALPHAZ_VFS_H_
+#ifndef _FENG_VFS_H_
+#define _FENG_VFS_H_
 
 #include <boot/atomic.h>
 #include <feng/blkdev.h>

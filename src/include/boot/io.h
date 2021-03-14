@@ -1,5 +1,5 @@
-#ifndef _ASM_IO_H_
-#define _ASM_IO_H_
+#ifndef _BOOT_IO_H_
+#define _BOOT_IO_H_
 
 #include <feng/types.h>
 

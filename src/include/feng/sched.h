@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_SCHED_H_
-#define _ALPHAZ_SCHED_H_
+#ifndef _FENG_SCHED_H_
+#define _FENG_SCHED_H_
 
 #define KERNEL_STACK_SIZE 4096 /* 内核栈的大小 */
 #define USER_STACK_SIZE   4096 /* 用户栈的大小 */

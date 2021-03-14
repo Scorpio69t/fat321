@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_CONSOLE_H_
-#define _ALPHAZ_CONSOLE_H_
+#ifndef _FENG_CONSOLE_H_
+#define _FENG_CONSOLE_H_
 
 #include <feng/types.h>
 

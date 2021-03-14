@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_SYSCALL_H_
-#define _ALPHAZ_SYSCALL_H_
+#ifndef _FENG_SYSCALL_H_
+#define _FENG_SYSCALL_H_
 
 #include <feng/types.h>
 

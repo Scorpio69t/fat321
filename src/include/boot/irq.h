@@ -1,5 +1,5 @@
-#ifndef _ASM_INT_H_
-#define _ASM_INT_H_
+#ifndef _BOOT_INT_H_
+#define _BOOT_INT_H_
 
 #ifndef __ASSEMBLY__
 #include <boot/cpu.h>

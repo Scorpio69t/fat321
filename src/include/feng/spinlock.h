@@ -5,8 +5,8 @@
  * 的锁结构是为了让程序按照多处理器模式进行开发，方便以后向多处理器方向扩充
  */
 
-#ifndef _ALPHAZ_SPINLOCK_H_
-#define _ALPHAZ_SPINLOCK_H_
+#ifndef _FENG_SPINLOCK_H_
+#define _FENG_SPINLOCK_H_
 
 #include <boot/spinlock.h>
 

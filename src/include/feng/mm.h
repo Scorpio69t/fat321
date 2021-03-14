@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_MM_H_
-#define _ALPHAZ_MM_H_
+#ifndef _FENG_MM_H_
+#define _FENG_MM_H_
 
 #define __KERNEL_OFFSET 0xc0000000
 #define __USER_OFFSET   0x40000000

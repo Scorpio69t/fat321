@@ -1,5 +1,5 @@
-#ifndef _ASM_DIV64_H_
-#define _ASM_DIV64_H_
+#ifndef _BOOT_DIV64_H_
+#define _BOOT_DIV64_H_
 
 /*
  * This code is from linux

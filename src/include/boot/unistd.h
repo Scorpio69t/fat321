@@ -1,5 +1,5 @@
-#ifndef _ASM_UNISTD_H_
-#define _ASM_UNISTD_H_
+#ifndef _BOOT_UNISTD_H_
+#define _BOOT_UNISTD_H_
 
 #define __NR_getticks 0
 #define __NR_fork     2

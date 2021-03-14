@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_KERNEL_H_
-#define _ALPHAZ_KERNEL_H_
+#ifndef _FENG_KERNEL_H_
+#define _FENG_KERNEL_H_
 
 /* printk打印前缀 */
 #define KERN_EMERG   "<0>" /* system is unusable            */

@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_STRING_H_
-#define _ALPHAZ_STRING_H_
+#ifndef _FENG_STRING_H_
+#define _FENG_STRING_H_
 
 #include <boot/string.h>
 

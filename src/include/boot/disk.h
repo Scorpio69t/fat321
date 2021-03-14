@@ -1,5 +1,5 @@
-#ifndef _ASM_DISK_H_
-#define _ASM_DISK_H_
+#ifndef _BOOT_DISK_H_
+#define _BOOT_DISK_H_
 
 #define PORT_DISK0_DATA        0x1f0
 #define PORT_DISK0_ERR_FEATURE 0x1f1

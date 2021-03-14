@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_FAT32_H_
-#define _ALPHAZ_FAT32_H_
+#ifndef _FENG_FAT32_H_
+#define _FENG_FAT32_H_
 
 #define __packed __attribute__((packed))
 

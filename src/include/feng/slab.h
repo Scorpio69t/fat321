@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_SLAB_H_
-#define _ALPHAZ_SLAB_H_
+#ifndef _FENG_SLAB_H_
+#define _FENG_SLAB_H_
 
 #include <feng/list.h>
 #include <feng/types.h>

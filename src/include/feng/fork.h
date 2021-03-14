@@ -1,5 +1,5 @@
-#ifndef _ALPHAZ_FORK_H_
-#define _ALPHAZ_FORK_H_
+#ifndef _FENG_FORK_H_
+#define _FENG_FORK_H_
 
 #include <boot/cpu.h>
 #include <feng/linkage.h>

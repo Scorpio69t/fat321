@@ -1,5 +1,5 @@
-#ifndef _ASM_CPU_H_
-#define _ASM_CPU_H_
+#ifndef _BOOT_CPU_H_
+#define _BOOT_CPU_H_
 
 #include <feng/types.h>
 
