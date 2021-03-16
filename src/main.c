@@ -75,7 +75,7 @@ void kernel_main()
 
     clear_screen();
 
-    sti();
+    enable_interrupt();
     //    kernel_thread(init, NULL, 0);
     while (1) {
         hlt();

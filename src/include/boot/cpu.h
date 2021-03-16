@@ -6,8 +6,9 @@
 #define load_tss(tss_desc) asm volatile("ltr %%ax" ::"a"((uint16)tss_desc))
 #define load_ldt(ldt_desc) asm volatile("lldt %%ax" ::"a"((uint16)ldt_desc))
 
+/* gdt_table and gdt_end are defiend in head.S */
 extern uint8 gdt_table[];
-extern uint8 idt_table[];
+extern uint8 gdt_end[];
 
 struct gdtr_struct {
     uint16 len;
@@ -50,11 +51,12 @@ struct tss_desc_struct {
 
 /* 门描述符 */
 struct gate_struct {
-    u16 offset_low;  /* Offset Low */
-    u16 selector;    /* Selector */
-    u8  dcount;      /* 栈切换时要复制的参数数量 */
-    u8  attr;        /* P(1) DPL(2) DT(1) TYPE(4) */
-    u16 offset_high; /* Offset High */
+    uint16 offset0;
+    uint16 segment;
+    uint16 ist : 3, zero0 : 5, type : 4, zero1 : 1, dpl : 2, p : 1;
+    u16    offset1;
+    u32    offset2;
+    u32    zero2;
 } __attribute__((packed));
 
 /**

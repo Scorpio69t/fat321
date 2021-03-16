@@ -174,11 +174,15 @@ gdt_table:
 	.quad	0x0020f80000000000	/* 64bit user code segment, 0x18 */
 	.quad	0x0000f20000000000	/* 64bit user data segment, 0x20 */
 	.fill	12, 8, 0		/* reserved */
+.global gdt_end
 gdt_end:
 
+	.section .data
 .align 8
 .global	idt_table
 idt_table:
-	.rept 128
-	.quad 0
+	.rept 256
+	.quad 0,0
 	.endr
+.global idt_end
+idt_end:

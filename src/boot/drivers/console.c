@@ -70,7 +70,7 @@ void write_char(char c, unsigned char type, unsigned short cur)
     unsigned short val = (unsigned short)c | ((unsigned short)type << 8);
     unsigned long  pos = cur * 2 + DEFAULT_VIDEO_BASE;
 
-    asm volatile("movw %%ax, (%%edi)" ::"a"(val), "D"(pos));
+    asm volatile("movw %%ax, (%%rdi)" ::"a"(val), "D"(pos));
 }
 
 #endif

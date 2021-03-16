@@ -1,36 +1,37 @@
+#include <boot/boot.h>
 #include <boot/cpu.h>
 #include <boot/i8259.h>
 #include <boot/irq.h>
 #include <feng/kernel.h>
 #include <feng/linkage.h>
 
-struct gate_struct idt[NR_IRQ];
-
-static inline void init_idt_desc(u8 vector, u8 desc_type, irq_entry entry, u8 privilege)
+static void setup_idt_desc(struct gate_struct *gate, uint64 addr, uint8 dpl)
 {
-    struct gate_struct *p_gate = &idt[vector];
-    u32                 base = (u32)entry;
-    p_gate->offset_low = base & 0xffff;
-    p_gate->selector = SELECTOR_FLAT_C;
-    p_gate->dcount = 0;
-    p_gate->attr = desc_type | (privilege << 5);
-    p_gate->offset_high = (base >> 16) & 0xffff;
+    gate->offset0 = addr & 0xffff;
+    gate->segment = KERNEL_CODE_DESC;
+    gate->type = 0xe;
+    gate->type = dpl & 0x3;
+    gate->p = 1;
+    gate->offset1 = (addr >> 16) & 0xffff;
+    gate->offset2 = addr >> 32;
 }
 
 static void setup_irq(void)
 {
     int i;
     for (i = 0; i < NR_IRQ; i++) {
-        if (irq_array[i].state & IRQ_STATE_DEFINED)
-            init_idt_desc(irq_array[i].vector, DA_386IGate, irq_array[i].entry, irq_array[i].ring);
+        struct irq_struct *irq = &irq_array[i];
+        if (irq_array[i].state & IRQ_STATE_DEFINED) {
+            setup_idt_desc((void *)idt_table + sizeof(struct gate_struct) * irq->vector, (uint64)irq->entry, irq->ring);
+        }
     }
 }
 
 static inline void setup_idtr(void)
 {
     static struct idtr_struct idtr;
-    idtr.len = NR_IRQ * sizeof(struct gate_struct) - 1;
-    idtr.base = (u32)&idt;
+    idtr.len = idt_end - idt_table - 1;
+    idtr.base = (uint64)idt_table;
     asm volatile("lidt %0" ::"m"(idtr));
 }
 

@@ -155,10 +155,10 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, u
 
     p->pid = alloc_pid();
 
-    cli();
+    disable_interrupt();
     list_add(&p->sibling, &current->children);
     list_add_tail(&p->task, &task_head);
-    sti();
+    enable_interrupt();
     p->state = TASK_RUNNING;
     return p->pid;
 }

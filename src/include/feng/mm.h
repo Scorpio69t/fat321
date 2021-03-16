@@ -1,7 +1,9 @@
 #ifndef _FENG_MM_H_
 #define _FENG_MM_H_
 
-#define __KERNEL_OFFSET 0xc0000000
+#include <boot/boot.h>
+
+#define __KERNEL_OFFSET KERNEL_OFFSET
 #define __USER_OFFSET   0x40000000
 
 #ifndef __ASSEMBLY__

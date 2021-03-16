@@ -5,6 +5,10 @@
 #include <boot/cpu.h>
 #include <boot/i8259.h>
 
+/* idt_table and idt_end are defined in head.S */
+extern uint8 idt_table[];
+extern uint8 idt_end[];
+
 typedef void (*irq_entry)();
 typedef void (*irq_handler)(struct pt_regs *, unsigned);
 
@@ -23,8 +27,8 @@ int unregister_irq(unsigned vector);
 #define IRQ_STATE_INUSE   (1 << 1)
 
 struct idtr_struct {
-    u16 len;
-    u32 base;
+    uint16 len;
+    uint64 base;
 } __attribute__((packed));
 
 /* 中断向量数 */
@@ -39,7 +43,7 @@ extern void disable_irq(unsigned short);
 /*
  * 开中断 IF=1
  */
-static inline void sti(void)
+static inline void enable_interrupt(void)
 {
     asm volatile("sti");
 }
@@ -47,7 +51,7 @@ static inline void sti(void)
 /*
  * 关中断 IF=0
  */
-static inline void cli(void)
+static inline void disable_interrupt(void)
 {
     asm volatile("cli");
 }

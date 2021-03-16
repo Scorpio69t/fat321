@@ -89,7 +89,7 @@ void schedule(void)
     next = NULL;
 
     prev->flags &= ~NEED_SCHEDULE;
-    cli();
+    disable_interrupt();
     list_del(&prev->task);
     list_add_tail(&prev->task, &task_head);
     list_for_each_entry(p, &task_head, task)
@@ -103,7 +103,7 @@ void schedule(void)
         next = idle;
     next->counter = 1;
     prev = context_switch(prev, next);
-    sti();
+    enable_interrupt();
 }
 
 /**
