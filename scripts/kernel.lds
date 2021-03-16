@@ -1,3 +1,5 @@
+OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64", "elf64-x86-64")
+OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 SECTIONS
 {
@@ -6,8 +8,8 @@ SECTIONS
 	.text : AT(0x100000)
 	{
 		_text = .;
+		*(.head.text);
 		*(.multiboot_header);
-        *(.head.text);
 		*(.text)
 		_etext = .;
 	}
