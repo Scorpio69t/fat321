@@ -196,7 +196,7 @@ static void setup_idle_process(void)
 
     idle = ts;
 
-    tss.esp0 = ts->thread.esp0;
+    // tss.esp0 = ts->thread.esp0;
 
     list_add(&ts->task, &task_head);
 }

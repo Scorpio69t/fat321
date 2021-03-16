@@ -3,54 +3,50 @@
 
 #include <feng/types.h>
 
-#define __packed __attribute__((packed))
+#define load_tss(tss_desc) asm volatile("ltr %%ax" ::"a"((uint16)tss_desc))
+#define load_ldt(ldt_desc) asm volatile("lldt %%ax" ::"a"((uint16)ldt_desc))
+
+extern uint8 gdt_table[];
+extern uint8 idt_table[];
 
 struct gdtr_struct {
-    u16 len;
-    u32 base;
-} __packed;
+    uint16 len;
+    uint64 base;
+} __attribute__((packed));
 
-/* TSS(任务状态段) _开头为保留，cpu不使用 */
+#define IO_BITMAP_SIZE 16
 struct tss_struct {
-    u32 backlink;
-    u32 esp0;
-    u16 ss0, _ss0h;
-    u32 esp1;
-    u16 ss1, _ss1h;
-    u32 esp2;
-    u16 ss2, _ss2h;
-    u32 cr3;
-    u32 eip;
-    u32 flags;
-    u32 eax;
-    u32 ecx;
-    u32 edx;
-    u32 ebx;
-    u32 esp;
-    u32 ebp;
-    u32 esi;
-    u32 edi;
-    u16 es, _esh;
-    u16 cs, _csh;
-    u16 ss, _ssh;
-    u16 ds, _dsh;
-    u16 fs, _fsh;
-    u16 gs, _gsh;
-    u16 ldt, _ldth;
-    u16 trap;
-    u16 iobase; /* I/O位图基址大于或等于TSS段界限，就表示没有I/O许可位图 */
-} __packed;
+    uint32 reserved1;
+    uint64 rsp0;
+    uint64 rsp1;
+    uint64 rsp2;
+    uint64 reserved2;
+    uint64 ist[7];
+    uint32 reserved3;
+    uint32 reserved4;
+    uint16 reserved5;
+    uint16 io_map_base;
+    uint32 io_bitmap[IO_BITMAP_SIZE];
+} __attribute__((packed));
 
-/* 描述符 */
-struct desc_struct /* 共 8 个字节 */
-{
-    u16 limit_low;        /* Limit */
-    u16 base_low;         /* Base */
-    u8  base_mid;         /* Base */
-    u8  attr1;            /* P(1) DPL(2) DT(1) TYPE(4) */
-    u8  limit_high_attr2; /* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
-    u8  base_high;        /* Base */
-} __packed;
+#define IO_BITMAP_BASE offsetof(struct tss_struct, io_bitmap)
+
+struct desc_struct {
+    u16      limit0;
+    u16      base0;
+    unsigned base1 : 8, type : 4, s : 1, dpl : 2, p : 1;
+    unsigned limit : 4, avl : 1, l : 1, d : 1, g : 1, base2 : 8;
+} __attribute__((packed));
+
+/* tss descriptor */
+struct tss_desc_struct {
+    uint16 limit0;
+    uint16 base0;
+    uint16 base1 : 8, type : 4, zero0 : 1, dpl : 2, p : 1;
+    uint16 limit1 : 4, zero1 : 3, g : 1, base2 : 8;
+    uint32 base3;
+    uint32 zero2;
+} __attribute__((packed));
 
 /* 门描述符 */
 struct gate_struct {
@@ -59,7 +55,7 @@ struct gate_struct {
     u8  dcount;      /* 栈切换时要复制的参数数量 */
     u8  attr;        /* P(1) DPL(2) DT(1) TYPE(4) */
     u16 offset_high; /* Offset High */
-} __packed;
+} __attribute__((packed));
 
 /**
  * 被中断时压入内核栈的寄存器, 按照压栈的顺序定义
@@ -82,7 +78,7 @@ struct pt_regs {
     long eflags;
     long esp;
     long ss;
-} __packed;
+} __attribute__((packed));
 
 /**
  * 进程的cpu上下文信息
@@ -181,8 +177,9 @@ void cpu_init(void);
  */
 static inline u32 seg_to_phys(u16 seg)
 {
-    struct desc_struct *p_dest = get_desc(gdt, seg);
-    return (p_dest->base_high << 24 | p_dest->base_mid << 16 | p_dest->base_low);
+    // struct desc_struct *p_dest = get_desc(gdt, seg);
+    // return (p_dest->base_high << 24 | p_dest->base_mid << 16 | p_dest->base_low);
+    return 0;
 }
 
 /*

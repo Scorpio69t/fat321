@@ -36,7 +36,7 @@
  * __switch_to执行前，压入了标号1处的值，这会使prev进程在下次被调度并从__switch_to中
  * ret后继续从标号1处执行
  */
-#define switch_to(prev, next, last)                                                                                  // \
+#define switch_to(prev, next, last)  // \
     // do {                                                                                                              \
     //     unsigned long ebx, ecx, edx, esi, edi;                                                                        \
     //     asm volatile(                                                                                                 \

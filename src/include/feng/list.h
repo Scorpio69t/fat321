@@ -16,8 +16,6 @@ struct list_head {
         (type *)((char *)__mptr - offsetof(type, member)); \
     })
 
-#define offsetof(type, member) ((size_t) & ((type *)0)->member)
-
 /**
  * list_entry - 获取宿主地址
  * @ptr:     成员变量member的地址

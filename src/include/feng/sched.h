@@ -117,6 +117,11 @@ struct task_struct {
 
 extern struct task_struct *idle;
 
+// TODO:
+#define INIT_TASK(task) \
+    {                   \
+    }
+
 /**
  * 内核栈的定义方式，task_struct和其内核栈共用一片内存区域
  * task_struct使用低端内存，内核栈使用高端内存，该联合体只是想表达内核栈的定义方式
@@ -125,6 +130,8 @@ union task_union {
     struct task_struct task;
     unsigned long      stack[KERNEL_STACK_SIZE / sizeof(unsigned long)];
 } __attribute__((aligned(8)));
+
+extern union task_union init_task_union;
 
 /**
  * 获取当前内核栈的栈底，减8是防止i386下没有内核栈的切换时访问ss和esp寄存器引发缺页异常

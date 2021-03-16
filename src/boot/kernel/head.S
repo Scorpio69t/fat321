@@ -1,6 +1,7 @@
 #include <boot/multiboot.h>
 #include <boot/boot.h>
 #include <feng/linkage.h>
+#include <feng/sched.h>
 
 /*
  * This file is the kernel head that will be loaded at the physical address
@@ -74,8 +75,7 @@ start_hlt:
 	.code64
 	.org 0x200
 real_long_mode:
-	/* TODO: 暂时使用0x100000作为栈底，这里应该使用init进程的栈 */
-	movq	0x100000, %rax
+	movq	init_stack(%rip), %rax
 	movq	%rax, %rsp
 
 	movq	$(0x100f40+KERNEL_OFFSET), %rax	/* the address of gdt_desc */
@@ -115,9 +115,13 @@ boot_info:				/* address 0x100f30 */
 	.long	0
 
 .org 0xf40
+.global	gdt_desc
 gdt_desc:				/* address 0x100f40 */
 	.word	gdt_end - gdt_table
 	.quad	gdt_table
+
+init_stack:
+	.quad 	init_task_union + KERNEL_STACK_SIZE - 8
 
 kernel_main_entry:
 	.quad	kernel_main

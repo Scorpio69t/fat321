@@ -1,4 +1,4 @@
-MAKEFLAGS  += -rR --no-print-directory
+MAKEFLAGS  += --no-print-directory
 
 DEBUG = 1
 
@@ -11,7 +11,8 @@ srctree	:= $(CURDIR)
 
 export CC LD CFLAGS
 
-subdir := boot drivers fs init core lib mm
+subdir := boot drivers fs core lib mm
+HEADER := ./include
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g -ggdb
@@ -21,13 +22,21 @@ endif
 
 _all: all
 
+-include Makefile.dep
+
 all: $(TARGET)
 
-$(TARGET): $(subdir)
+$(TARGET): main.o $(subdir)
 	$(LD) $(LDFLAGS) -o $@ $(shell find . -name "*.o")
 
 $(subdir):
 	@$(MAKE) -C $@
+
+%.o: %.c
+	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
+
+Makefile.dep: main.c
+	$(CC) -I$(HEADER) -MM $^ > Makefile.dep
 
 iso: all
 	grub-mkrescue -o alphaz.iso iso/

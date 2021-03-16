@@ -42,7 +42,7 @@ inline struct task_struct *__current(void)
 #include <boot/bug.h>
 struct task_struct *__regparm3 __switch_to(struct task_struct *prev, struct task_struct *next)
 {
-    tss.esp0 = next->thread.esp0;
+    // tss.esp0 = next->thread.esp0;
     switch_pgd((unsigned long)next->mm->pgd);
     return prev;
 }

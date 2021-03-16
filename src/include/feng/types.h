@@ -26,4 +26,6 @@ typedef long ssize_t;
 #define INT_MAX 2147483647
 #define INT_MIN (-INT_MAX - 1)
 
+#define offsetof(type, member) ((size_t) & ((type *)0)->member)
+
 #endif
