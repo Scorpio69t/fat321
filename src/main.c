@@ -2,6 +2,7 @@
  * 内核初始化入口
  */
 
+#include <boot/boot.h>
 #include <boot/bug.h>
 #include <boot/cpu.h>
 #include <boot/disk.h>
@@ -62,20 +63,25 @@
 
 void kernel_main()
 {
+    boot_init();
     cpu_init();
     irq_init();
+    for (int i = 0; i < MEMINFO_SIZE; i++) {
+        if (check_meminfo_end(&meminfo[i]))
+            break;
+        printk("%x %x %x\n", meminfo[i].address, meminfo[i].limit, meminfo[i].type);
+    }
+    // mm_init();
+    // kmem_cache_init();
+    // kmalloc_cache_init();
 
-    mm_init();
-    kmem_cache_init();
-    kmalloc_cache_init();
+    // keyboard_init();
+    // console_init();
+    // task_init();
 
-    keyboard_init();
-    console_init();
-    task_init();
+    // clear_screen();
 
-    clear_screen();
-
-    enable_interrupt();
+    // enable_interrupt();
     //    kernel_thread(init, NULL, 0);
     while (1) {
         hlt();

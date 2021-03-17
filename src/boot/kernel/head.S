@@ -111,6 +111,7 @@ long_jump_vector:			/* address 0x100f20 */
 	.word	0x08			/* code descriptor */
 
 .org 0xf30
+.global boot_info
 boot_info:				/* address 0x100f30 */
 	.long	0
 

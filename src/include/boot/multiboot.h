@@ -93,8 +93,6 @@
 
 #ifndef __ASSEMBLY__
 
-extern unsigned long boot_info_addr;
-
 typedef unsigned char      multiboot_uint8_t;
 typedef unsigned short     multiboot_uint16_t;
 typedef unsigned int       multiboot_uint32_t;

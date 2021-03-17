@@ -121,7 +121,7 @@ static int setup_pages_from_minfo(unsigned long num)
         info++;
 
         if (type == 1)
-            continue; /* 类型1为操作系统可用的内存 */
+            continue;          /* 类型1为操作系统可用的内存 */
         bi = addr / PAGE_SIZE; /* 在pages数组中的起始下标 */
         if (bi >= num)
             continue; /* 超过实际内存大小，大于pages数组的长度 */
