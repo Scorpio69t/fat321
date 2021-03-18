@@ -15,16 +15,13 @@
 
 #ifndef __ASSEMBLY__
 
-#define to_phy(address) (address - KERNEL_OFFSET)
-#define to_vir(address) (address + KERNEL_OFFSET)
-
 /* boot_info is defined in head.S, it's 32-bit physical
  * address of the Multiboot2 information structure
  */
 extern uint32 boot_info;
 
 #define MEMINFO_SIZE 32
-static struct meminfo_struct {
+struct meminfo_struct {
     uint64 address;
     uint64 limit;
     uint8  type;

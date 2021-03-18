@@ -66,12 +66,8 @@ void kernel_main()
     boot_init();
     cpu_init();
     irq_init();
-    for (int i = 0; i < MEMINFO_SIZE; i++) {
-        if (check_meminfo_end(&meminfo[i]))
-            break;
-        printk("%x %x %x\n", meminfo[i].address, meminfo[i].limit, meminfo[i].type);
-    }
-    // mm_init();
+
+    mm_init();
     // kmem_cache_init();
     // kmalloc_cache_init();
 

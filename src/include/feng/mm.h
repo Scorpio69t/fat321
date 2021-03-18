@@ -40,11 +40,10 @@ extern struct page *mem_map;
 
 void mm_init();
 
-#define PAGE_SIZE 0x1000
-
-/* 只适用于内核空间 */
-#define vir_to_phy(addr) ((void *)((unsigned long)addr - KERNEL_BASE))
-#define phy_to_vir(addr) ((void *)((unsigned long)addr + KERNEL_BASE))
+#define to_phy(address)        ((uint64)address - KERNEL_OFFSET)
+#define to_vir(address)        ((uint64)address + KERNEL_OFFSET)
+#define phy_ptr(type, address) ((type *)to_phy(address))
+#define vir_ptr(type, address) ((type *)to_vir(address))
 
 #endif
 

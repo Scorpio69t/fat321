@@ -1,3 +1,4 @@
+#include <boot/boot.h>
 #include <boot/bug.h>
 #include <boot/div64.h>
 #include <boot/io.h>
@@ -44,15 +45,15 @@ static int is_minfo_end(struct minfo *info)
     return info->base_addr_low == MEM_INFO_END_MAGIC && info->base_addr_high == MEM_INFO_END_MAGIC;
 }
 
-/* 计算内存总大小，包括内存空洞 */
-static unsigned long long calc_total_mem(void)
+/* 计算内存总大小，包括不可用内存 */
+static uint64 calc_memsize(void)
 {
-    struct minfo *     info = (struct minfo *)minfo_array;
-    unsigned long long total = 0;
-
-    while (!is_minfo_end(info)) {
-        total += info->length_low | ((unsigned long long)info->length_high << 32);
-        info++;
+    uint64 total = 0;
+    for (int i = 0; i < MEMINFO_SIZE; i++) {
+        struct meminfo_struct *info = &meminfo[i];
+        if (check_meminfo_end(info))
+            break;
+        total += info->limit;
     }
     return total;
 }
@@ -188,7 +189,7 @@ static int setup_video_reserved(unsigned long num)
     int          i;
     unsigned int ind, nr;
 
-    ind = __phy(VIDEO_MAP_ADDR) / PAGE_SIZE;
+    ind = to_phy(VIDEO_MAP_ADDR) / PAGE_SIZE;
     nr = VIDEO_BUF_SIZE / PAGE_SIZE + (VIDEO_BUF_SIZE % PAGE_SIZE ? 1 : 0);
     if (num < ind)
         return 0;
@@ -213,10 +214,10 @@ static int map_video_buf(void)
     nr = VIDEO_BUF_SIZE / PAGE_SIZE;  // 缓冲区页数
     for (i = ind;; i++) {
         if (pgd[i])
-            pte = (unsigned long *)__vir(pgd[i] & (~0xfffUL));
+            pte = (unsigned long *)to_vir(pgd[i] & (~0xfffUL));
         else {
             pte = (unsigned long *)get_zeroed_page(GFP_KERNEL);
-            pgd[i] = __phy((unsigned long)pte) | PAGE_ATTR;
+            pgd[i] = to_phy((unsigned long)pte) | PAGE_ATTR;
         }
         assert(pte != NULL);
         for (j = 0; j < NUM_PER_PAGE && nr; j++, phyaddr += PAGE_SIZE, nr--) pte[j] = phyaddr | PAGE_ATTR;
@@ -227,37 +228,24 @@ static int map_video_buf(void)
     return 0;
 }
 
-static void setup_console(void)
-{
-    console.buf = (unsigned int *)VIDEO_MAP_ADDR;
-    console.width = *(int *)VIDEO_XRESOLUTION;
-    console.height = *(int *)VIDEO_YRESOLUTION;
-    console.pixel_size = 4;
-}
-
 void mm_init()
 {
-    unsigned long long memsize;
-    unsigned long      pagenum;
-    unsigned long      tail_addr;
+    uint64        memsize;
+    unsigned long pagenum;
+    unsigned long tail_addr;
 
-    memsize = calc_total_mem();
-#ifdef __ARCH_I386
-    if (memsize >= 0xffffffff)
-        memsize = 0xffffffff;
-#endif
+    memsize = calc_memsize();
+    printk("_end %x", &_end);
+    printk("_end: %llx memsize: %x\n", _end, memsize);
+    tail_addr = setup_page_table(memsize);
+    printk("tail_addr: %p\n", tail_addr);
+    // tail_addr = init_pages(memsize, tail_addr);
 
-    tail_addr = reset_page_table(memsize);
-    tail_addr = init_pages(memsize, tail_addr);
+    // pagenum = memsize / PAGE_SIZE;
 
-    pagenum = memsize / PAGE_SIZE;
-
-    setup_pages_from_minfo(pagenum);
-    setup_pages_reserved(tail_addr);
-    setup_video_reserved(pagenum);
-    setup_zones(pagenum);
-    buddy_system_init();
-
-    map_video_buf();
-    setup_console();
+    // setup_pages_from_minfo(pagenum);
+    // setup_pages_reserved(tail_addr);
+    // setup_video_reserved(pagenum);
+    // setup_zones(pagenum);
+    // buddy_system_init();
 }

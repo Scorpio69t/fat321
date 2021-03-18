@@ -6,6 +6,7 @@
 #include <feng/gfp.h>
 #include <feng/kernel.h>
 #include <feng/mm.h>
+#include <feng/page.h>
 #include <feng/slab.h>
 #include <feng/types.h>
 

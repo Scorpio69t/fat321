@@ -28,4 +28,6 @@ typedef long ssize_t;
 
 #define offsetof(type, member) ((size_t) & ((type *)0)->member)
 
+#define upper_div(dividend, divisor) (dividend / divisor + (dividend % divisor > 0))
+
 #endif

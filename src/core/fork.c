@@ -7,6 +7,7 @@
 #include <feng/linkage.h>
 #include <feng/malloc.h>
 #include <feng/mm.h>
+#include <feng/page.h>
 #include <feng/sched.h>
 #include <feng/types.h>
 #include <feng/unistd.h>

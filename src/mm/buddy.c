@@ -6,6 +6,7 @@
 #include <feng/kernel.h>
 #include <feng/mm.h>
 #include <feng/mmzone.h>
+#include <feng/page.h>
 #include <feng/string.h>
 
 static int block_append(struct zone *zone, struct page *page, unsigned int count)

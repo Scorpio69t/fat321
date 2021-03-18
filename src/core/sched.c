@@ -150,7 +150,7 @@ int sys_exit(int status)
 
 extern unsigned long _text, _etext;
 extern unsigned long _data, _edata;
-extern unsigned long _end;
+// extern unsigned long _end;
 
 /**
  * 设置idle进程，其中栈在head.S中创建

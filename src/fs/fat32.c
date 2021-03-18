@@ -245,7 +245,8 @@ static ssize_t read(struct file *filp, char *buf, size_t size, loff_t pos)
     if (pos >= filp->f_dentry->d_inode->i_size) /* 大于文件的大小, 返回EOF */
         return EOF;
 
-    private = filp->f_dentry->d_sb->s_fs_info;
+   private
+    = filp->f_dentry->d_sb->s_fs_info;
     offset = pos % private->bytes_per_clus;
     index = pos;
     clus = filp->f_dentry->d_inode->i_ino; /* 第一个簇 */
@@ -307,7 +308,7 @@ static int fat32_readdir(struct file *filp, void *dirent, filldir_t filldir)
     //     return EOF;
 
     offset = pos % private->bytes_per_clus; /* 簇内偏移 */
-    index = pos;                                   /* 第几个簇 */
+    index = pos;                            /* 第几个簇 */
 
     clus = filp->f_dentry->d_inode->i_ino; /* 起始簇 */
     buffer = (unsigned char *)kmalloc(private->bytes_per_clus, 0);

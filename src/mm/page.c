@@ -8,63 +8,63 @@
 #include <feng/slab.h>
 #include <feng/string.h>
 
-unsigned long __phy(unsigned long addr)
+static void fill_pml4(uint64 base, uint64 addr, uint32 nr)
 {
-    if (addr >= __KERNEL_OFFSET)
-        return addr - __KERNEL_OFFSET;
-    return addr + __USER_OFFSET;
+    uint64 *pml4e = (uint64 *)base;
+    memset(pml4e, 0x00, PAGE_SIZE);
+    for (int i = 0; i < nr; i++, addr += PAGE_SIZE) {
+        pml4e[i] = to_phy(addr) | PML4E_ATTR;
+        pml4e[i + 256] = to_phy(addr) | PML4E_ATTR;
+    }
 }
 
-unsigned long __vir(unsigned long addr)
+static void fill_pdpt(uint64 base, uint64 addr, uint32 nr)
 {
-    if (addr <= __USER_OFFSET)
-        return addr + __KERNEL_OFFSET;
-    return addr - __USER_OFFSET;
+    uint64 *pdpte = (uint64 *)base;
+    memset(pdpte, 0x00, upper_div(nr, PRE_PAGE_ENTRY) * PAGE_SIZE);
+    for (int i = 0; i < nr; i++, addr += PAGE_SIZE) {
+        pdpte[i] = to_phy(addr) | PDPTE_ATTR;
+    }
 }
 
-static void fill_pde(unsigned long pde, unsigned long pte, unsigned long nr)
+static void fill_pd(uint64 base, uint64 addr, uint32 nr)
 {
-    int            i;
-    unsigned long *pd, phyaddr;
-    unsigned long  ki, ui;  // kernel index, user index
-
-    phyaddr = __phy(pte);
-    nr = nr / NUM_PER_PAGE + (nr % NUM_PER_PAGE ? 1 : 0);
-
-    pd = (unsigned long *)pde;
-    ki = KERNEL_BASE / (PAGE_SIZE * NUM_PER_PAGE);  // 内核页目录起始位置
-    ui = USER_BASE / (PAGE_SIZE * NUM_PER_PAGE);    // 用户页目录起始地址
-
-    for (i = ki; i < NUM_PER_PAGE && nr; i++, nr--, phyaddr += PAGE_SIZE) pd[i] = phyaddr | PAGE_ATTR;
-
-    for (i = ui; i < ki && nr; i++, nr--, phyaddr += PAGE_SIZE) pd[i] = phyaddr | PAGE_ATTR;
+    uint64 *pde = (uint64 *)base;
+    memset(pde, 0x00, upper_div(nr, PRE_PAGE_ENTRY) * PAGE_SIZE);
+    for (int i = 0; i < nr; i++, addr += PAGE_SIZE) {
+        pde[i] = to_phy(addr) | PDE_ATTR;
+    }
 }
 
-static void fill_pte(unsigned long pte, unsigned long nr)
+static void fill_pt(uint64 base, uint64 addr, uint32 nr)
 {
-    int            i;
-    unsigned long *pt, phyaddr;
-
-    pt = (unsigned long *)pte;
-    phyaddr = 0x00;
-
-    for (i = 0; i < nr; i++, phyaddr += PAGE_SIZE) pt[i] = phyaddr | PAGE_ATTR;
+    uint64 *pte = (uint64 *)base;
+    memset(pte, 0x00, upper_div(nr, PRE_PAGE_ENTRY) * PAGE_SIZE);
+    for (int i = 0; i < nr; i++, addr += PAGE_SIZE) {
+        pte[i] = to_phy(addr) | PTE_ATTR;
+    }
 }
 
-unsigned long reset_page_table(unsigned long memsize)
+uint64 setup_page_table(uint64 memsize)
 {
-    unsigned long pde, pte, addr;
-    unsigned long nr;
+    uint64 nr_pml4e, nr_pdpte, nr_pde, nr_pte;
+    uint64 base_pml4, base_pdpt, base_pd,
+        base_pt; /* the linear address of PML4 table, page directory pointer table, page directory, page table */
+    nr_pte = memsize / PAGE_SIZE; /* ignore a little memory */
+    nr_pde = upper_div(nr_pte, PRE_PAGE_ENTRY);
+    nr_pdpte = upper_div(nr_pde, PRE_PAGE_ENTRY);
+    nr_pml4e = upper_div(nr_pdpte, PRE_PAGE_ENTRY);
 
-    addr = PAGE_PDE;                                          // 获取到我们要保存页表的地址
-    pde = (addr / PAGE_SIZE + 1) * PAGE_SIZE;                 // 页目录起始地址，4k对其
-    pte = pde + PAGE_SIZE;                                    // 页表起始地址
-    nr = memsize / PAGE_SIZE + (memsize % PAGE_SIZE ? 1 : 0); /* 页表项数 */
+    base_pml4 = PAGE_TABLE_ADDRESS;
+    base_pdpt = base_pml4 + upper_div(nr_pml4e, PRE_PAGE_ENTRY) * PAGE_SIZE;
+    base_pd = base_pdpt + upper_div(nr_pdpte, PRE_PAGE_ENTRY) * PAGE_SIZE;
+    base_pt = base_pd + upper_div(nr_pde, PRE_PAGE_ENTRY) * PAGE_SIZE;
 
-    memset((void *)pde, 0, PAGE_SIZE);
+    fill_pml4(base_pml4, base_pdpt, nr_pml4e);
+    fill_pdpt(base_pdpt, base_pd, nr_pdpte);
+    fill_pd(base_pd, base_pt, nr_pde);
+    fill_pt(base_pt, KERNEL_OFFSET, nr_pte);
 
-    fill_pte(pte, nr);
-    fill_pde(pde, pte, nr);
-    switch_pgd(pde);
-    return pte + nr * sizeof(unsigned long);  // 返回整个页表结构占用内存的尾地址
+    switch_pgd(base_pml4);
+    return base_pt + upper_div(nr_pte, PRE_PAGE_ENTRY) * PAGE_SIZE;
 }

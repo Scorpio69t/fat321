@@ -1,6 +1,7 @@
 #include <feng/bugs.h>
 #include <feng/gfp.h>
 #include <feng/mm.h>
+#include <feng/page.h>
 #include <feng/slab.h>
 #include <feng/types.h>
 
@@ -83,7 +84,7 @@ void kfree(void *addr)
 {
     unsigned long phy, ind;
 
-    phy = (unsigned long)vir_to_phy(addr);
+    phy = (unsigned long)to_phy(addr);
     ind = phy / PAGE_SIZE;
     kmem_cache_free(mem_map[ind].slab, addr);
 }
