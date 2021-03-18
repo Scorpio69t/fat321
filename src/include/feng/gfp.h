@@ -1,7 +1,7 @@
 #ifndef _ALPAHZ_GFP_H_
 #define _ALPAHZ_GFP_H_
 
-#include <feng/mm_types.h>
+#include <feng/mm.h>
 
 void buddy_system_init(void);
 
