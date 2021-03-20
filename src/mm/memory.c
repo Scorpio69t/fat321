@@ -110,11 +110,6 @@ void mm_init()
     end_addr = init_pages(memsize, PAGE_UPPER_ALIGN(end_addr), &nr_pages);
     printk("end_addr: %p", end_addr);
     setup_pages_reserved(nr_pages);
-    // pagenum = memsize / PAGE_SIZE;
 
-    // setup_pages_from_minfo(pagenum);
-    // setup_pages_reserved(tail_addr);
-    // setup_video_reserved(pagenum);
-    // setup_zones(pagenum);
-    // buddy_system_init();
+    buddy_system_init(nr_pages);
 }

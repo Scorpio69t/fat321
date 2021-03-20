@@ -8,269 +8,233 @@
 #include <feng/page.h>
 #include <feng/string.h>
 
-static int block_append(struct zone *zone, struct page *page, unsigned int count)
-{
-    int i, ret = 0;
+static struct buddy_struct buddy;
 
-    // for (i = (MAX_ORDER - 1); i >= 0; --i) {
-    //     if (count & (1 << i)) {
-    //         list_add_tail(&page->list, &zone->free_area[i].free_list);
-    //         zone->free_area[i].nr_free++;
-    //         ret++;
-    //         page += (1 << i);
-    //     }
-    // }
-    return ret;
+static uint32 check_order(struct page *page)
+{
+    uint32 offset;
+    offset = page - mem_map;
+
+    for (int i = MAX_ORDER - 1; i >= 0; i--) {
+        if ((offset & ((1 << i) - 1)) == 0)
+            return i;
+    }
+    return 0;
 }
 
-static void block_insert(struct free_area *free, struct page *page)
+/* Must lock buddy.lock before call the function */
+static inline void block_insert(struct page *page, unsigned int order)
 {
-    // struct page *p;
+    struct page *p;
+    int i;
 
-    // /* pages都是按照地址由小到大排序的 */
-    // list_for_each_entry(p, &free->free_list, list)
-    // {
-    //     if (p < page)
-    //         continue;
-    //     break;
-    // }
-    // __list_add(&page->list, p->list.prev, &p->list);
-    // free->nr_free++;
+    for (i = order; i == order && i < MAX_ORDER; i++) {
+        list_for_each_entry(p, &buddy.block[i], list) {
+            if (i < MAX_ORDER - 1) {
+                if ((p + (1 << order)) == page && check_order(p) >= order + 1) {
+                    list_del(&p->list);
+                    page = p;
+                    order++;
+                    break;
+                } else if ((page + (1 << order)) == p && check_order(page) >= order + 1) {
+                    list_del(&p->list);
+                    order++;
+                    break;
+                }
+            }
+            if (p < page)
+                continue;
+            break;
+        }
+    }
+    __list_add(&page->list, p->list.prev, &p->list);
 }
 
-/* 首先插入大块 */
-static int block_insert_big_first(struct zone *zone, struct page *page, unsigned int count)
+struct page *__alloc_pages(unsigned int order)
 {
-    int i, ret = 0;
+    struct page *page = NULL;
 
-    // for (i = (MAX_ORDER - 1); i >= 0; --i) {
-    //     if (count & (1 << i)) {
-    //         block_insert(&zone->free_area[i], page);
-    //         ret++;
-    //         page += (1 << i);
-    //     }
-    // }
-    return ret;
-}
+    if (order >= MAX_ORDER)
+        return NULL;
 
-/* 首先插入小块 */
-static int block_insert_small_first(struct zone *zone, struct page *page, unsigned int count)
-{
-    int i, ret = 0;
+    spin_lock(&buddy.lock);
 
-    // for (i = 0; i < MAX_ORDER; ++i) {
-    //     if (count & (1 << i)) {
-    //         block_insert(&zone->free_area[i], page);
-    //         ret++;
-    //         page += (1 << i);
-    //     }
-    // }
-    return ret;
-}
-
-/*
- * 找到每一个页块，并插入到伙伴系统的链表中, 返回找到的页块数量
- */
-static int init_each_pages_block(unsigned int zone)
-{
-    struct page *bp, *ep, *tail;
-    unsigned int count, ret;
-
-    // bp = ep = mm_zones[zone].first_page;
-    // tail = mm_zones[zone].first_page + mm_zones[zone].nr_pages;
-    // ret = count = 0;
-
-    // /* 滑动窗口 */
-    // while (ep != tail) {
-    //     if ((ep->flags & PF_RESERVE) || (ep + 1) == tail || count >= (1 << (MAX_ORDER - 1))) {
-    //         if (count)
-    //             ret += block_append(&mm_zones[zone], bp, count);
-    //         bp = ++ep;
-    //         count = 0;
-    //     } else {
-    //         count++;
-    //         ep++;
-    //     }
-    // }
-    return ret;
-}
-
-static struct page *alloc_page_zone(struct zone *zone, unsigned int order)
-{
-    unsigned int i;
-    struct page *ret = NULL;
-
-    // spin_lock(&zone->lock);
-
-    // for (i = order; i < MAX_ORDER; i++) {
-    //     if (zone->free_area[i].nr_free != 0) {
-    //         ret = list_first_entry(&zone->free_area[i].free_list, struct page, list);
-    //         list_del(&ret->list);
-    //         zone->free_area[i].nr_free--;
-    //         break;
-    //     }
-    // }
-
-    // if (!ret) {
-    //     spin_unlock(&zone->lock);
-    //     return NULL;
-    // }
-
-    // if (i > order) {
-    //     block_insert_small_first(zone, ret + (1 << order), (1 << i) - (1 << order));
-    // }
-
-    // list_add(&ret->list, &zone->activate);
-    // spin_unlock(&zone->lock);
-    return ret;
+    if (list_is_null(&buddy.block[order])) {
+        unsigned int next;
+        for (next = order + 1; next < MAX_ORDER; next++) {
+            if (list_is_null(&buddy.block[next]))
+                continue;
+            page = list_first_entry(&buddy.block[next], struct page, list);
+            list_del(&page->list);
+            break;
+        }
+        if (next >= MAX_ORDER)
+            goto fail;
+        while (next > order) {
+            next = next - 1;
+            block_insert(page + (1 << next), next);
+        }
+    } else {
+        page = list_first_entry(&buddy.block[order], struct page, list);
+        list_del(&page->list);
+    }
+    spin_unlock(&buddy.lock);
+    return page;
+fail:
+    spin_unlock(&buddy.lock);
+    return NULL;
 }
 
 struct page *alloc_pages(unsigned int gfp_mask, unsigned int order)
 {
     struct page *ret = NULL;
 
-    // switch (gfp_mask) {
-    // case GFP_USER:
-    //     ret = alloc_page_zone(&mm_zones[ZONE_USER], order);
-    //     if (ret) {
-    //         ret->flags |= PF_USER;
-    //         break;
-    //     }
-    // case GFP_KERNEL:
-    //     ret = alloc_page_zone(&mm_zones[ZONE_KERNEL], order);
-    //     if (ret) {
-    //         ret->flags |= PF_KERNEL;
-    //         break;
-    //     }
-    // default:
-    //     ret = alloc_page_zone(&mm_zones[ZONE_KERNEL], order);
-    //     if (ret)
-    //         ret->flags |= PF_KERNEL;
-    // }
+    switch (gfp_mask) {
+    case GFP_USER:
+    case GFP_KERNEL:
+        ret = __alloc_pages(order);
+        if (ret) {
+            ret->flags |= PF_BUSY;
+        }
+        break;
+    default:
+        ret = __alloc_pages(order);
+        if (ret) {
+            ret->flags |= PF_BUSY;
+        }
+    }
     return ret;
 }
 
 struct page *alloc_page(unsigned int gfp_mask)
 {
-    // return alloc_pages(gfp_mask, 0);
+    return alloc_pages(gfp_mask, 0);
 }
 
 unsigned long __get_free_pages(unsigned int gfp_mask, unsigned int order)
 {
-    // struct page *ret = alloc_pages(gfp_mask, order);
-    // if (!ret)
-    //     return 0;
-    // return (unsigned long)ret->virtual;
+    struct page *ret = alloc_pages(gfp_mask, order);
+    if (!ret)
+        return 0;
+    return (unsigned long)ret->virtual;
 }
 
 unsigned long __get_free_page(unsigned int gfp_mask)
 {
-    // struct page *ret = alloc_page(gfp_mask);
-    // if (!ret)
-    //     return 0;
-    // return (unsigned long)ret->virtual;
+    struct page *ret = alloc_page(gfp_mask);
+    if (!ret)
+        return 0;
+    return (unsigned long)ret->virtual;
 }
 
 unsigned long get_zeroed_page(unsigned int gfp_mask)
 {
-    // unsigned long ret = __get_free_page(gfp_mask);
-    // if (!ret)
-    //     return 0;
-    // memset((void *)ret, 0, PAGE_SIZE);
-    // return ret;
-}
-
-static void free_pages_zone(struct zone *zone, struct page *page, unsigned int order)
-{
-    // int          i;
-    // struct page *p;
-
-    // spin_lock(&zone->lock);
-
-    // list_del(&page->list);
-
-    // /* 检查是否有相邻的伙伴可进行合并, 最大的order即使相邻页不进行合并 */
-    // for (i = order; i <= order && i < MAX_ORDER - 1; i++) {
-    //     list_for_each_entry(p, &zone->free_area[i].free_list, list)
-    //     {
-    //         if ((p + (1 << order)) == page) {
-    //             list_del(&p->list);
-    //             zone->free_area[i].nr_free--;
-    //             page = p;
-    //             order++;
-    //             break;
-    //         } else if ((page + (1 << order)) == p) {
-    //             list_del(&p->list);
-    //             zone->free_area[i].nr_free--;
-    //             order++;
-    //             break;
-    //         }
-    //     }
-    // }
-
-    // block_insert(&zone->free_area[order], page);
-    // spin_unlock(&zone->lock);
+    unsigned long ret = __get_free_page(gfp_mask);
+    if (!ret)
+        return 0;
+    memset((void *)ret, 0x00, PAGE_SIZE);
+    return ret;
 }
 
 void __free_pages(struct page *page, unsigned int order)
 {
-    // switch (page->flags & (PF_KERNEL | PF_USER)) {
-    // case PF_KERNEL:
-    //     free_pages_zone(&mm_zones[ZONE_KERNEL], page, order);
-    //     break;
-    // case PF_USER:
-    //     free_pages_zone(&mm_zones[ZONE_USER], page, order);
-    //     break;
-    // default:
-    //     break;
-    // }
+    spin_lock(&buddy.lock);
+    block_insert(page, order);
+    spin_unlock(&buddy.lock);
 }
 
 void free_pages(unsigned long addr, unsigned int order)
 {
-    // int          i;
-    // struct page *p, *ans = NULL;
-
-    // for (i = 0; i < MAX_NR_ZONES; i++) {
-    //     spin_lock(&mm_zones[i].lock);
-    //     list_for_each_entry(p, &mm_zones[i].activate, list) if (p->virtual == (void *)addr)
-    //     {
-    //         ans = p;
-    //         break;
-    //     }
-    //     spin_unlock(&mm_zones[i].lock);
-    //     if (ans)
-    //         break;
-    // }
-    // if (ans)
-    //     __free_pages(ans, order);
+    struct page *page;
+    addr = PAGE_LOWER_ALIGN(addr);
+    spin_lock(&buddy.lock);
+    list_for_each_entry(page, &buddy.activate, list) {
+        if (page->virtual == (void *)addr) {
+            list_del(&page->list);
+            break;
+        }
+    }
+    spin_unlock(&buddy.lock);
+    __free_pages(page, order);
 }
 
 void free_page(unsigned long addr)
 {
-    // free_pages(addr, 0);
+    free_pages(addr, 0);
 }
 
-void buddy_system_init(void)
+void buddy_system_init(uint32 nr_pages)
 {
-    // int i;
+    struct page *left = mem_map, *right = mem_map, *tail = mem_map + nr_pages;
 
-    // for (i = 0; i < MAX_NR_ZONES; i++) init_each_pages_block(i);
+    spin_init(&buddy.lock);
+    for (int i = 0; i < MAX_ORDER; i++) {
+        list_head_init(&buddy.block[i]);
+    }
 
-    //     int j;
-    //     for (i = 1; i < 2; i++)
-    //         for (j = 0; j < MAX_ORDER; j++)
-    //         printk("%s %d: %d\n", mm_zones[i].name, j, mm_zones[i].free_area[j].nr_free);
+    while (right != tail) {
+        if (right->flags & PF_RESERVE) {
+            left = ++right;
+            continue;
+        }
+        int32  count = 0, order = check_order(left); /* Do not use unsigned type */
+        while (!(right->flags & PF_RESERVE) && right != tail && count < (1 << order)) {
+            count++;
+            right++;
+        }
+        if (count == 1 << order) {
+            list_add_tail(&left->list, &buddy.block[order]);
+        } else {
+            for (;order >= 0; order--) {
+                if (count & (1 << order)) {
+                    list_add_tail(&left->list, &buddy.block[order]);
+                    left += 1 << order;
+                }
+            }
+        }
+        left = right;
+    }
 
-    //     struct page *p;
-    //     p = alloc_pages(GFP_KERNEL, 0);
-    //     __free_pages(p, 0);
-    //     p = alloc_pages(GFP_KERNEL, 1);
-    //     __free_pages(p, 1);
-    //     p = alloc_pages(GFP_KERNEL, 2);
-    //     __free_pages(p, 2);
+    /* 一些测试代码 */
+    // for (int i = 0; i < MAX_ORDER; i++) {
+    //     struct page *pos;
+    //     int count = 0;
+    //     list_for_each_entry(pos, &buddy.block[i], list) {
+    //         count++;
+    //     }
+    //     printk("order %d: count %d\n", i, count);
+    // }
+
+    // struct page *p;
+    // p = alloc_pages(GFP_KERNEL, 0);
+    // printk("order 0: %p", p->virtual);
+    // __free_pages(p, 0);
+    // p = alloc_pages(GFP_KERNEL, 1);
+    // printk("order 1: %p", p->virtual);
+    // __free_pages(p, 1);
+    // p = alloc_pages(GFP_KERNEL, 2);
+    // printk("order 2: %p", p->virtual);
+    // __free_pages(p, 2);
+    // p = alloc_pages(GFP_KERNEL, 7);
+    // printk("order 7: %p", p->virtual);
+    // __free_pages(p, 7);
     // printk("=========================\n");
-    //     for (i = 1; i < 2; i++)
-    //         for (j = 0; j < MAX_ORDER; j++)
-    //         printk("%s %d: %d\n", mm_zones[i].name, j, mm_zones[i].free_area[j].nr_free);
+
+    // struct page *pages[1024];
+    // for (int i = 0; i < 1024; i++) {
+    //     pages[i] = alloc_pages(GFP_KERNEL, 0);
+    // }
+
+    // for (int i = 0; i < 1024; i++) {
+    //     __free_pages(pages[i], 0);
+    // }
+
+    // for (int i = 0; i < MAX_ORDER; i++) {
+    //     struct page *pos;
+    //     int count = 0;
+    //     list_for_each_entry(pos, &buddy.block[i], list) {
+    //         count++;
+    //     }
+    //     printk("order %d: count %d\n", i, count);
+    // }
 }

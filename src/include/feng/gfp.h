@@ -2,8 +2,18 @@
 #define _ALPAHZ_GFP_H_
 
 #include <feng/mm.h>
+#include <feng/spinlock.h>
 
-void buddy_system_init(void);
+/* 伙伴系统的最长连续的页数 2^(MAX_ORDER - 1) */
+#define MAX_ORDER 8
+
+struct buddy_struct {
+    struct list_head block[MAX_ORDER];
+    struct list_head activate;
+    spinlock_t lock;
+};
+
+void buddy_system_init(uint32 nr_pages);
 
 struct page * alloc_pages(unsigned int gfp_mask, unsigned int order);
 struct page * alloc_page(unsigned int gfp_mask);

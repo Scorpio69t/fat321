@@ -14,8 +14,6 @@
 extern uint64 _start;
 #define KERNEL_START ((uint64)&_start)
 
-#define PAGE_STATUS_BUSY 0x01
-
 struct page {
     struct list_head   list; /* 页块列表 */
     unsigned long      flags;
@@ -28,6 +26,7 @@ extern struct page *mem_map;
 
 /* 页属性 */
 #define PF_RESERVE (1UL << 0) /* 保留页，操作系统不能使用 */
+#define PF_BUSY    (1UL << 1)
 
 void mm_init();
 
@@ -35,9 +34,6 @@ void mm_init();
 #define to_vir(address)        ((uint64)address + KERNEL_OFFSET)
 #define phy_ptr(type, address) ((type *)to_phy(address))
 #define vir_ptr(type, address) ((type *)to_vir(address))
-
-/* 伙伴系统的最长连续的页数 2^(MAX_ORDER - 1) */
-#define MAX_ORDER 8
 
 #endif
 
