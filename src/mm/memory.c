@@ -13,6 +13,7 @@
 #include <feng/page.h>
 #include <feng/string.h>
 #include <feng/types.h>
+#include <feng/slab.h>
 
 struct page *mem_map;
 
@@ -24,6 +25,7 @@ static uint64 calc_memsize(void)
         struct meminfo_struct *info = &meminfo[i];
         if (check_meminfo_end(info))
             break;
+        printk("%llx %llx %x\n", info->address, info->limit, info->type);
         total += info->limit;
     }
     return total;
@@ -89,9 +91,10 @@ static void setup_pages_reserved(uint32 nr_page)
     }
 
     /*
-     * kernel and page table have been used: 0x100000 to the end of mem_map
+     * kernel and page table have been used: 0x100000 to the end of mem_map,
+     * and in addition, we do not use low 1M memory
      */
-    base = to_phy(KERNEL_START);
+    base = to_phy(KERNEL_OFFSET);
     printk("kernel start: %x\n", base);
     uint64 mem_map_end = (uint64)(mem_map + nr_page);
     i_begin = base / PAGE_SIZE;
@@ -112,4 +115,6 @@ void mm_init()
     setup_pages_reserved(nr_pages);
 
     buddy_system_init(nr_pages);
+    kmem_cache_test();
+    // kmalloc_cache_init();
 }
