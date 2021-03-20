@@ -35,7 +35,7 @@ void *kmalloc(size_t, int);
 void  kfree(void *);
 void  kmalloc_cache_init(void);
 
-void               kmem_cache_init(void);
+void               kmem_cache_test(void);
 struct kmem_cache *kmem_cache_create(const char *, size_t, unsigned int);
 int                kmem_cache_destroy(struct kmem_cache *);
 void *             kmem_cache_alloc(struct kmem_cache *, unsigned int);

@@ -25,7 +25,6 @@ static uint64 calc_memsize(void)
         struct meminfo_struct *info = &meminfo[i];
         if (check_meminfo_end(info))
             break;
-        printk("%llx %llx %x\n", info->address, info->limit, info->type);
         total += info->limit;
     }
     return total;
@@ -115,6 +114,6 @@ void mm_init()
     setup_pages_reserved(nr_pages);
 
     buddy_system_init(nr_pages);
-    kmem_cache_test();
-    // kmalloc_cache_init();
+    // kmem_cache_test();
+    kmalloc_cache_init();
 }

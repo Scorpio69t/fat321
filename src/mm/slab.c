@@ -1,5 +1,5 @@
 /*
- * slab高速缓存
+ * slab高速缓存, 当前实现并发不安全
  */
 
 #include <feng/bugs.h>
@@ -278,7 +278,7 @@ void kmem_cache_free(struct kmem_cache *cachep, void *objp)
     }
 }
 
-void kmem_cache_init(void)
+void kmem_cache_test(void)
 {
     void *             p;
     struct kmem_cache *cachep = kmem_cache_create("test", 500, 0);

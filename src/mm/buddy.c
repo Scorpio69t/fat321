@@ -78,6 +78,7 @@ struct page *__alloc_pages(unsigned int order)
         page = list_first_entry(&buddy.block[order], struct page, list);
         list_del(&page->list);
     }
+    list_add(&page->list, &buddy.activate);
     spin_unlock(&buddy.lock);
     return page;
 fail:
@@ -145,16 +146,19 @@ void __free_pages(struct page *page, unsigned int order)
 
 void free_pages(unsigned long addr, unsigned int order)
 {
-    struct page *page;
+    struct page *page = NULL, *pos;
     addr = PAGE_LOWER_ALIGN(addr);
     spin_lock(&buddy.lock);
-    list_for_each_entry(page, &buddy.activate, list) {
-        if (page->virtual == (void *)addr) {
-            list_del(&page->list);
+    list_for_each_entry(pos, &buddy.activate, list) {
+        if (pos->virtual == (void *)addr) {
+            list_del(&pos->list);
+            page = pos;
             break;
         }
     }
     spin_unlock(&buddy.lock);
+    if (!page)
+        return;
     __free_pages(page, order);
 }
 
@@ -168,6 +172,7 @@ void buddy_system_init(uint32 nr_pages)
     struct page *left = mem_map, *right = mem_map, *tail = mem_map + nr_pages;
 
     spin_init(&buddy.lock);
+    list_head_init(&buddy.activate);
     for (int i = 0; i < MAX_ORDER; i++) {
         list_head_init(&buddy.block[i]);
     }
