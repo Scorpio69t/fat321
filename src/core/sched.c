@@ -18,15 +18,7 @@
 #include <feng/string.h>
 #include <feng/unistd.h>
 
-/**
- * 任务链表的头结点
- */
-struct list_head task_head;
-
-/**
- * idle进程的task_struct地址
- */
-struct task_struct *idle;
+struct sched_struct scheduler;
 
 /**
  * 时钟中断计数器
@@ -47,7 +39,7 @@ static inline void update_alarm(void)
 {
     struct task_struct *p;
 
-    list_for_each_entry(p, &task_head, task)
+    list_for_each_entry(p, &scheduler.task_head, task)
     {
         if (p->alarm == 0) {
             continue;
@@ -91,8 +83,7 @@ void schedule(void)
     prev->flags &= ~NEED_SCHEDULE;
     disable_interrupt();
     list_del(&prev->task);
-    list_add_tail(&prev->task, &task_head);
-    list_for_each_entry(p, &task_head, task)
+    list_for_each_entry(p, &scheduler.task_head, task)
     {
         if (p->state == TASK_RUNNING) {
             next = p;
@@ -100,9 +91,10 @@ void schedule(void)
         }
     }
     if (!next)
-        next = idle;
+        next = scheduler.idle;
     next->counter = 1;
     prev = context_switch(prev, next);
+    list_add_tail(&prev->task, &scheduler.task_head);
     enable_interrupt();
 }
 
@@ -113,6 +105,7 @@ void do_timer(struct pt_regs *reg, unsigned nr)
 {
     ticks_plus();
     update_alarm();
+    printk("do_timer ");
     current->flags |= NEED_SCHEDULE;
 }
 
@@ -148,59 +141,6 @@ int sys_exit(int status)
     return status;
 }
 
-extern unsigned long _text, _etext;
-extern unsigned long _data, _edata;
-// extern unsigned long _end;
-
-/**
- * 设置idle进程，其中栈在head.S中创建
- */
-static void setup_idle_process(void)
-{
-    /* 其中包括内核栈 */
-    struct task_struct *ts = current;
-
-    ts->state = TASK_RUNNING;
-    ts->flags |= PF_KTHREAD;
-
-    ts->stack = NULL; /* 无用户栈 */
-    ts->pid = 0;
-    ts->prio = LOWEST_PRIO;
-    ts->counter = 1;
-    ts->alarm = 0;
-
-    strcpy(ts->comm, "idle");
-
-    ts->parent = NULL;
-    list_head_init(&ts->children);
-
-    ts->thread.rsp0 = NULL_STACK_MAGIC;
-    ts->thread.rsp = NULL_STACK_MAGIC;
-    ts->signal = 0;
-
-    ts->files = (struct files_struct *)kmalloc(sizeof(struct files_struct), 0);
-    assert(ts->files != NULL);
-    memset(ts->files, 0, sizeof(struct files_struct));
-    atomic_set(3, &ts->files->count);
-    ts->files->files[STDIN_FILENO] = stdin;
-    ts->files->files[STDOUT_FILENO] = stdout;
-    ts->files->files[STDERR_FILENO] = stderr;
-
-    ts->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
-    assert(ts->mm != NULL);
-    ts->mm->start_code = (unsigned long)&_text;
-    ts->mm->end_code = (unsigned long)&_etext;
-    ts->mm->start_data = (unsigned long)&_data;
-    ts->mm->end_data = (unsigned long)&_edata;
-    ts->mm->pgd = (unsigned long *)get_pgd();
-
-    idle = ts;
-
-    // tss.esp0 = ts->thread.esp0;
-
-    list_add(&ts->task, &task_head);
-}
-
 /**
  * 任务(进程)初始化，创建第一个进程
  * 该函数应该在内核全部初始化完成后调用，即放在kernel_main()最后调用，该函数会创建一个init
@@ -208,8 +148,8 @@ static void setup_idle_process(void)
  */
 void task_init(void)
 {
-    // list_head_init(&task_head);
+    list_head_init(&scheduler.task_head);
+    scheduler.idle = &init_task_union.task;
     setup_counter();
-    // setup_idle_process();
     register_irq(0x20, do_timer);
 }

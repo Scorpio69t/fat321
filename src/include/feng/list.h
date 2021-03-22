@@ -3,6 +3,11 @@
 
 #include <feng/types.h>
 
+#define LIST_HEAD_INIT(head) \
+    {                        \
+        &(head), &(head)     \
+    }
+
 /*
  * 通用双向链表
  */

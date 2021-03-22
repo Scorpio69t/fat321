@@ -1,7 +1,7 @@
 #ifndef _FENG_SCHED_H_
 #define _FENG_SCHED_H_
 
-#define KERNEL_STACK_SIZE 4096 /* 内核栈的大小 */
+#define KERNEL_STACK_SIZE 8192 /* 内核栈的大小 */
 #define USER_STACK_SIZE   4096 /* 用户栈的大小 */
 
 /* 进程状态 */
@@ -14,6 +14,9 @@
 /* 进程标示 */
 #define PF_KTHREAD    (1 << 0) /* 内核级进程 */
 #define NEED_SCHEDULE (1 << 1) /* 进程需要调度标示 */
+
+#define TASK_STATE 0x00
+#define TASK_FLAGS 0x08
 
 #ifndef __ASSEMBLY__
 
@@ -90,7 +93,6 @@ struct task_struct {
 
     void *         stack;   /* 用户栈 */
     pid_t          pid;     /* 进程id */
-    unsigned short prio;    /* 进程优先级 */
     unsigned long  counter; /* 进程可用时间片 */
     unsigned long  alarm;   /* 滴答数定时器 */
 
@@ -115,12 +117,24 @@ struct task_struct {
      */
 };
 
-extern struct task_struct *idle;
-
-// TODO:
-#define INIT_TASK(task) \
-    {                   \
-    }
+#define INIT_TASK(tsk) \
+{                   \
+    .state = TASK_RUNNING,  \
+    .flags = PF_KTHREAD,    \
+    .stack = NULL,      \
+    .pid =    0, \
+    .alarm = 0, \
+    .comm= "idle", \
+    .parent= NULL,   \
+    .children= LIST_HEAD_INIT(tsk.children), \
+    .sibling= LIST_HEAD_INIT(tsk.sibling), \
+    .thread= {}, \
+    .mm= NULL, \
+    .signal= 0, \
+    .task= LIST_HEAD_INIT(tsk.task), \
+    .cwd= NULL, \
+    .files= NULL \
+}
 
 /**
  * 内核栈的定义方式，task_struct和其内核栈共用一片内存区域
@@ -132,6 +146,13 @@ union task_union {
 } __attribute__((aligned(8)));
 
 extern union task_union init_task_union;
+
+struct sched_struct {
+    struct list_head task_head;
+    struct task_struct *idle;
+};
+
+extern struct sched_struct scheduler;
 
 /**
  * 获取当前内核栈的栈底，减8是防止i386下没有内核栈的切换时访问ss和esp寄存器引发缺页异常

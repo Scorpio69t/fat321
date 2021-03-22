@@ -30,7 +30,7 @@ void setup_counter(void)
 inline struct task_struct *__current(void)
 {
     struct task_struct *cur;
-    asm volatile("andq %%rsp, %0" : "=r"(cur) : "0"(~4095UL));
+    asm volatile("andq %%rsp, %0" : "=r"(cur) : "0"(~((uint64)KERNEL_STACK_SIZE - 1)));
     return cur;
 }
 

@@ -23,6 +23,9 @@ SECTIONS
 		_edata = .;
 	}
 
+	. = ALIGN(8192);
+  	.data.init_task : { *(.data.init_task) }
+
 	.rodata :
 	{
 		_rodata = .;

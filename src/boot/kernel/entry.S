@@ -45,12 +45,9 @@
 
 PT_EAX = 0x18
 
-TASK_STATE  = 0x00
-TASK_FLAGS  = 0x04
-
 #define GET_CURRENT(reg)	\
 	movq	$-KERNEL_STACK_SIZE, reg;	\
-	andq	%esp, reg
+	andq	%rsp, reg
 
 #define INTERRUPT_RETURN     \
     addq    $8, %rsp;        \
@@ -112,27 +109,25 @@ TASK_FLAGS  = 0x04
 	jmp     ret_from_int
 
 
-ENTRY(ret_from_int)
-	/*    GET_CURRENT(%rbx)
-	testl    $NEED_SCHEDULE, TASK_FLAGS(%rbx)
-	jnz     re_sched
+ret_from_int:
+	GET_CURRENT(%rbx)
+	testl	$NEED_SCHEDULE, TASK_FLAGS(%rbx)
+	jnz	re_sched
 	jmp     int_ret
 	re_sched:
 	call    schedule
-	int_ret:*/
+	int_ret:
 	testq $3, 136(%rsp)
 	je 1f
 	swapgs
 1:  	RESTOR_ALL
     	INTERRUPT_RETURN
-END(ret_from_int)
 
-
-ENTRY(ret_from_fork)
+.global ret_from_fork
+ret_from_fork:
     cli
     RESTOR_ALL
     INTERRUPT_RETURN
-END(ret_from_fork)
 
 ENTRY(hwint0x20) RING0_HW_IRQ_FREAM(0x20); END(hwint0x20)
 ENTRY(hwint0x21) RING0_HW_IRQ_FREAM(0x21); END(hwint0x21)
@@ -253,11 +248,11 @@ ENTRY(copr_error)
 END(copr_error)
 
 exception:
-    SAVE_ALL
-    PUSH_PT_ARGS
-    cli
+	SAVE_ALL
+	PUSH_PT_ARGS
+	cli
 	call	do_IRQ
-    hlt
+	hlt
 
 /* 系统调用入口 int 0x80
  * eax中为功能号

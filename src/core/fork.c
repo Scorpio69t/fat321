@@ -123,7 +123,6 @@ static struct task_struct *copy_process(int clone_flags, unsigned long stack_sta
     if (!p)
         return 0;
     p->state = TASK_UNINTERRUPTIBLE;
-    p->prio = 1;
     p->counter = 1;
     p->alarm = 0;
     p->parent = current;
@@ -158,7 +157,7 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, u
 
     disable_interrupt();
     list_add(&p->sibling, &current->children);
-    list_add_tail(&p->task, &task_head);
+    list_add_tail(&p->task, &scheduler.task_head);
     enable_interrupt();
     p->state = TASK_RUNNING;
     return p->pid;

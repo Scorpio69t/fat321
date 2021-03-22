@@ -70,9 +70,7 @@ int unregister_irq(unsigned vector)
 
 void do_IRQ(struct pt_regs *regs)
 {
-    unsigned vector = regs->orig_rax;
-    printk("do_irq %x ", vector);
-    return;
+    uint64 vector = regs->orig_rax;
     if (irq_array[vector].state & IRQ_STATE_INUSE)
         irq_array[vector].handler(regs, vector);
 }

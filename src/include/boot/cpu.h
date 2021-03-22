@@ -64,26 +64,26 @@ struct gate_struct {
  */
 struct pt_regs {
     uint64 r15;
-	uint64 r14;
-	uint64 r13;
-	uint64 r12;
-	uint64 rbp;
-	uint64 rbx;
- 	uint64 r11;
-	uint64 r10;
-	uint64 r9;
-	uint64 r8;
-	uint64 rax;
-	uint64 rcx;
-	uint64 rdx;
-	uint64 rsi;
-	uint64 rdi;
-	uint64 orig_rax;
-	uint64 rip;
-	uint64 cs;
-	uint64 eflags;
-	uint64 rsp;
-	uint64 ss;
+    uint64 r14;
+    uint64 r13;
+    uint64 r12;
+    uint64 rbp;
+    uint64 rbx;
+    uint64 r11;
+    uint64 r10;
+    uint64 r9;
+    uint64 r8;
+    uint64 rax;
+    uint64 rcx;
+    uint64 rdx;
+    uint64 rsi;
+    uint64 rdi;
+    uint64 orig_rax;
+    uint64 rip;
+    uint64 cs;
+    uint64 eflags;
+    uint64 rsp;
+    uint64 ss;
 } __attribute__((packed));
 
 /**
@@ -97,25 +97,23 @@ struct thread_struct {
     unsigned long cr2; /* cr2控制寄存器 */
 };
 
-struct cpu_info
-{
+struct cpu_info {
     uint64 kernelstack; /* kernel stack */
-    uint64 oldrsp;     /* 暂存syscall过来的用户栈 */
+    uint64 oldrsp;      /* 暂存syscall过来的用户栈 */
 };
 
-#define MSR_FS_BASE 0xc0000100
-#define MSR_GS_BASE 0xc0000101
-#define MSR_KERNEL_GS_BASE  0xc0000102
+#define MSR_FS_BASE        0xc0000100
+#define MSR_GS_BASE        0xc0000101
+#define MSR_KERNEL_GS_BASE 0xc0000102
 
-#define wrmsr(msr, val) \
-    asm volatile("wrmsr"::"c" (msr), "a" (((uint64)val) & 0xffffffff), "d" (((uint64)val) >> 32))
+#define wrmsr(msr, val) asm volatile("wrmsr" ::"c"(msr), "a"(((uint64)val) & 0xffffffff), "d"(((uint64)val) >> 32))
 
-#define rdmsr(msr, val) \
-    do {    \
-        uint64 __rax, __rdx;    \
-        asm volatile("rdmsr":"=a"(__rax), "=d"(__rdx):"c"(msr));    \
-        val = __rax | (__rdx << 32);        \
-    } while(0);
+#define rdmsr(msr, val)                                              \
+    do {                                                             \
+        uint64 __rax, __rdx;                                         \
+        asm volatile("rdmsr" : "=a"(__rax), "=d"(__rdx) : "c"(msr)); \
+        val = __rax | (__rdx << 32);                                 \
+    } while (0);
 
 /*
  * LDT的定义，固定为32个
