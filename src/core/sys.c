@@ -188,6 +188,6 @@ long sys_debug(void)
 {
     struct task_struct *p = current;
     struct pt_regs *    regs = get_pt_regs(p);
-    printk("%x pid: %d esp0: %x esp: %x\n", (u32)p, p->pid, p->thread.esp0, regs->esp);
+    printk("%x pid: %d esp0: %x esp: %x\n", (u32)p, p->pid, p->thread.rsp0, regs->rsp);
     return 0;
 }

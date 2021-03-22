@@ -4,35 +4,44 @@
 
 #include <feng/linkage.h>
 #include <feng/sched.h>
+#include <boot/boot.h>
 
 .section .text
 
 #define SAVE_ALL    \
-    cld;            \
-    /* pushq   %gs;    \
-    pushq   %fs;    \
-    pushq   %es;    \
-    pushq   %ds; */   \
-    pushq   %rax;   \
-    pushq   %rbp;   \
-    pushq   %rdi;   \
-    pushq   %rsi;   \
-    pushq   %rdx;   \
-    pushq   %rcx;   \
-    pushq   %rbx
+	cld;            \
+	pushq	%rdi;	\
+	pushq	%rsi;	\
+	pushq	%rdx;	\
+	pushq	%rcx;	\
+	pushq	%rax;	\
+	pushq   %r8;   	\
+	pushq   %r9;   	\
+	pushq   %r10;   \
+	pushq   %r11;   \
+	pushq   %rbx;   \
+	pushq   %rbp;   \
+	pushq   %r12;	\
+	pushq	%r13;	\
+	pushq	%r14;	\
+	pushq	%r15
 
 #define RESTOR_ALL  \
-    popq    %rbx;   \
-    popq    %rcx;   \
-    popq    %rdx;   \
-    popq    %rsi;   \
-    popq    %rdi;   \
-    popq    %rbp;   \
-    popq    %rax;   \
-    /* popq    %ds;    \
-    popq    %es;    \
-    popq    %fs;    \
-    popq    %gs */
+	popq    %r15;   \
+	popq    %r14;   \
+	popq    %r13;   \
+	popq    %r12;   \
+	popq    %rbp;   \
+	popq    %rbx;   \
+	popq    %r11;   \
+	popq	%r10;	\
+	popq	%r9;	\
+	popq	%r8;	\
+	popq	%rax;	\
+	popq	%rcx;	\
+	popq	%rdx;	\
+	popq	%rsi;	\
+	popq	%rdi
 
 PT_EAX = 0x18
 
@@ -40,19 +49,17 @@ TASK_STATE  = 0x00
 TASK_FLAGS  = 0x04
 
 #define GET_CURRENT(reg)	\
-	movl	$-KERNEL_STACK_SIZE, reg;	\
-	andl	%esp, reg
+	movq	$-KERNEL_STACK_SIZE, reg;	\
+	andq	%esp, reg
 
 #define INTERRUPT_RETURN     \
-    addl    $4, %esp;        \
-    iretl
+    addq    $8, %rsp;        \
+    iretq
 
 #define PUSH_PT_ARGS    \
-    movq    %rsp, %rax; \
-    pushq   %rax
+    movq    %rsp, %rdi
 
-#define POP_PT_ARGS     \
-    addq    $4, %rsp
+#define POP_PT_ARGS
 
 /* could not use stack */
 #define RESET_8259A_CHIP    \
@@ -90,28 +97,34 @@ TASK_FLAGS  = 0x04
   2: ;
 
 #define RING0_HW_IRQ_FREAM(irq)    \
-    pushq $irq;                 \
-    SAVE_ALL;                   \
-    CLOSE_8259A_PIN(irq);       \
-    RESET_8259A_CHIP;           \
-    sti;                        \
-    PUSH_PT_ARGS;               \
-    call    do_IRQ;             \
-    POP_PT_ARGS;                \
-    OPEN_8259A_PIN(irq);        \
-    jmp     ret_from_int
+	pushq $irq;                 \
+	testq $3,16(%rsp);	/* test CS RPL */	\
+	je 1f; 				\
+	swapgs;				\
+1:	SAVE_ALL;                   \
+	CLOSE_8259A_PIN(irq);       \
+	RESET_8259A_CHIP;           \
+	sti;                        \
+	PUSH_PT_ARGS;               \
+	call    do_IRQ;             \
+	POP_PT_ARGS;                \
+	OPEN_8259A_PIN(irq);        \
+	jmp     ret_from_int
 
 
 ENTRY(ret_from_int)
-    GET_CURRENT(%ebx)
-    testl    $NEED_SCHEDULE, TASK_FLAGS(%ebx)
-    jnz     re_sched
-    jmp     int_ret
-re_sched:
-    call    schedule
-int_ret:
-    RESTOR_ALL
-    INTERRUPT_RETURN
+	/*    GET_CURRENT(%rbx)
+	testl    $NEED_SCHEDULE, TASK_FLAGS(%rbx)
+	jnz     re_sched
+	jmp     int_ret
+	re_sched:
+	call    schedule
+	int_ret:*/
+	testq $3, 136(%rsp)
+	je 1f
+	swapgs
+1:  	RESTOR_ALL
+    	INTERRUPT_RETURN
 END(ret_from_int)
 
 

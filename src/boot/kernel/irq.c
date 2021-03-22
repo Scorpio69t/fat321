@@ -10,7 +10,7 @@ static void setup_idt_desc(struct gate_struct *gate, uint64 addr, uint8 dpl)
     gate->offset0 = addr & 0xffff;
     gate->segment = KERNEL_CODE_DESC;
     gate->type = 0xe;
-    gate->type = dpl & 0x3;
+    gate->dpl = dpl & 0x3;
     gate->p = 1;
     gate->offset1 = (addr >> 16) & 0xffff;
     gate->offset2 = addr >> 32;
@@ -70,7 +70,9 @@ int unregister_irq(unsigned vector)
 
 void do_IRQ(struct pt_regs *regs)
 {
-    unsigned vector = regs->orig_eax;
+    unsigned vector = regs->orig_rax;
+    printk("do_irq %x ", vector);
+    return;
     if (irq_array[vector].state & IRQ_STATE_INUSE)
         irq_array[vector].handler(regs, vector);
 }

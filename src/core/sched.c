@@ -174,8 +174,8 @@ static void setup_idle_process(void)
     ts->parent = NULL;
     list_head_init(&ts->children);
 
-    ts->thread.esp0 = NULL_STACK_MAGIC;
-    ts->thread.esp = NULL_STACK_MAGIC;
+    ts->thread.rsp0 = NULL_STACK_MAGIC;
+    ts->thread.rsp = NULL_STACK_MAGIC;
     ts->signal = 0;
 
     ts->files = (struct files_struct *)kmalloc(sizeof(struct files_struct), 0);
@@ -208,8 +208,8 @@ static void setup_idle_process(void)
  */
 void task_init(void)
 {
-    list_head_init(&task_head);
+    // list_head_init(&task_head);
     setup_counter();
-    setup_idle_process();
+    // setup_idle_process();
     register_irq(0x20, do_timer);
 }

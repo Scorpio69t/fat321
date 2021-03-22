@@ -166,7 +166,7 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, u
 
 int sys_fork(void)
 {
-    struct pt_regs *regs = (struct pt_regs *)current->thread.esp0 - 1;
+    struct pt_regs *regs = (struct pt_regs *)current->thread.rsp0 - 1;
     return do_fork(0, 0, regs, 0);
 }
 
