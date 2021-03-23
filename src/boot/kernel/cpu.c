@@ -8,9 +8,9 @@
 #include <feng/string.h>
 #include <feng/types.h>
 
-static struct tss_struct init_tss;
-static struct cpu_info   cpu_info;
-struct desc_struct       ldt[LDT_SIZE];
+struct tss_struct  init_tss;
+struct cpu_info    cpu_info;
+struct desc_struct ldt[LDT_SIZE];
 
 static void setup_tss_desc(struct tss_desc_struct *desc, uint64 addr, uint32 size)
 {

@@ -10,7 +10,7 @@
 struct buddy_struct {
     struct list_head block[MAX_ORDER];
     struct list_head activate;
-    spinlock_t lock;
+    spinlock_t       lock;
 };
 
 void buddy_system_init(uint32 nr_pages);

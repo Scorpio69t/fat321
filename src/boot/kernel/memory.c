@@ -7,7 +7,7 @@
  */
 uint64 get_pgd(void)
 {
-    unsigned long pgd;
+    uint64 pgd;
     asm volatile("movq %%cr3, %0" : "=r"(pgd)::"memory");
     return to_vir(pgd);
 }

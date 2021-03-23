@@ -122,7 +122,7 @@ struct cpu_info {
 #define LDT_SIZE 32
 extern struct desc_struct ldt[];
 
-extern struct tss_struct tss;
+extern struct tss_struct init_tss;
 
 void cpu_init(void);
 

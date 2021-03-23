@@ -5,6 +5,7 @@
 #include <boot/sched.h>
 #include <feng/compiler.h>
 #include <feng/kernel.h>
+#include <feng/mm.h>
 #include <feng/sched.h>
 #include <feng/types.h>
 
@@ -40,9 +41,21 @@ inline struct task_struct *__current(void)
  * @next: 下一个进程的进程控制块指针 in edx
  */
 #include <boot/bug.h>
-struct task_struct *__regparm3 __switch_to(struct task_struct *prev, struct task_struct *next)
+struct task_struct *__switch_to(struct task_struct *prev, struct task_struct *next)
 {
-    // tss.esp0 = next->thread.esp0;
-    switch_pgd((unsigned long)next->mm->pgd);
+    init_tss.rsp0 = next->thread.rsp0;
+
+    uint64 pgd = get_pgd();
+    if (next->flags & PF_KTHREAD) {
+        if (pgd != PAGE_TABLE_ADDRESS) {
+            printk("kthread");
+            switch_pgd(PAGE_TABLE_ADDRESS);
+        }
+    } else {
+        printk("no kthread");
+        if (pgd != next->mm->pgd)
+            switch_pgd(next->mm->pgd);
+    }
+
     return prev;
 }
