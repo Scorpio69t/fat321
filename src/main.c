@@ -42,24 +42,20 @@
 //        printf("close error\n");
 //}
 
-// int init(void)
-//{
-//
-//    disk_init();
-//    fat32_init();
-//
-//    move_to_user_mode();
-//
-//    if (!fork()) {
-//        tty_task();
-//    }
-//
-//    while (1) {
-//        sleep(1);
-//    }
-//
-//    return 0;
-//}
+int init(void)
+{
+    printk("init process\n");
+    //    disk_init();
+    //    fat32_init();
+
+    //    if (!fork()) {
+    //        tty_task();
+    //    }
+
+    cpu_idle();
+
+    return 0;
+}
 
 void kernel_main()
 {
@@ -72,9 +68,9 @@ void kernel_main()
     task_init();
 
     // clear_screen();
-
+    printk("kernel_main\n");
     enable_interrupt();
-    //    kernel_thread(init, NULL, 0);
+    kernel_process(init, NULL, CLONE_VM);
     while (1) {
         hlt();
     }

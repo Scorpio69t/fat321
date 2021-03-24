@@ -11,40 +11,18 @@
 #include <feng/slab.h>
 #include <feng/types.h>
 
-/**
- * 获取用户栈的esp
- */
-static u32 get_esp(struct task_struct *new, u32 esp)
-{
-    return (((u32) new->stack &(~(USER_STACK_SIZE - 1))) | (esp & (USER_STACK_SIZE - 1)));
-}
-
-int setup_thread(struct task_struct *p, struct pt_regs *regs, int flags)
+int copy_thread(struct task_struct *p, struct pt_regs *regs, int flags)
 {
     struct pt_regs *newregs;
+    newregs = (struct pt_regs *)kernel_stack_top(p) - 1;
+    *newregs = *regs;
 
-    p->thread.rsp0 = (unsigned long)kernel_stack_top(p);
-    newregs = get_pt_regs(p);
-    memcpy(newregs, regs, sizeof(*newregs));
+    newregs->rsp = (uint64)newregs;
     newregs->rax = 0;
-    if (p->flags & PF_KTHREAD) {
-        newregs->rsp = (unsigned long)newregs;
-        p->thread.rip = (unsigned long)kernel_thread_ret;
-    } else {
-        newregs->rsp = get_esp(p, regs->rsp);
-        p->thread.rip = (unsigned long)ret_from_fork;
-    }
-    p->thread.rsp = (unsigned long)newregs;
-    return 0;
-}
 
-pid_t _kernel_thread(struct pt_regs *regs, int (*fn)(void), void *args, unsigned long flags)
-{
-    memset(regs, 0, sizeof(struct pt_regs));
-    // regs->cs = SELECTOR_FLAT_C;
-    // regs->ds = regs->es = regs->ss = regs->fs = SELECTOR_FLAT_RW;
-    // regs->gs = SELECTOR_VIDEO;
-    regs->rip = (unsigned long)kernel_thread_ret;
-    regs->rbx = (unsigned long)fn;
-    return do_fork(flags | CLONE_VM | CLONE_FS, 0, regs, 0);
+    p->thread.rsp0 = (uint64)newregs; /* ignore some stack space */
+    p->thread.rsp = (uint64)newregs;
+    p->thread.rip = (uint64)ret_from_fork;
+
+    return 0;
 }

@@ -1,8 +1,10 @@
 #ifndef _FENG_SCHED_H_
 #define _FENG_SCHED_H_
 
-#define KERNEL_STACK_SIZE 8192 /* 内核栈的大小 */
-#define USER_STACK_SIZE   4096 /* 用户栈的大小 */
+#define KERNEL_STACK_ORDER 1    /* 内核栈order */
+#define KERNEL_STACK_SIZE  8192 /* 内核栈的大小 (1<<KERNEL_STACK_ORDER)*PAGE_SIZE */
+#define USER_STACK_ORDER   1    /* 用户栈order */
+#define USER_STACK_SIZE    4096 /* 用户栈的大小 (1<<USER_STACK_ORDER)*PAGE_SIZE */
 
 /* 进程状态 */
 #define TASK_RUNNING         (1 << 0) /* 可运行状态 */
@@ -37,7 +39,8 @@
 void            task_init(void);
 void            schedule(void);
 struct pt_regs *get_pt_regs(struct task_struct *task);
-void            copy_thread(struct thread_struct *, struct thread_struct *);
+int             do_exit(int code);
+void            cpu_idle(void);
 
 /* 进程链表头 */
 extern struct list_head task_head;

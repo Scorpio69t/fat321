@@ -4,6 +4,7 @@
 
 #include <feng/linkage.h>
 #include <feng/sched.h>
+#include <feng/fork.h>
 #include <boot/boot.h>
 
 .section .text
@@ -127,7 +128,8 @@ ret_from_int:
 ret_from_fork:
     cli
     RESTOR_ALL
-    INTERRUPT_RETURN
+    addq $8, %rsp	/* skip orgi_rax */
+    iretq
 
 ENTRY(hwint0x20) RING0_HW_IRQ_FREAM(0x20); END(hwint0x20)
 ENTRY(hwint0x21) RING0_HW_IRQ_FREAM(0x21); END(hwint0x21)
@@ -267,19 +269,42 @@ ENTRY(system_call)
     INTERRUPT_RETURN
 END(system_call)
 
-ENTRY(kernel_thread_ret)
-    popq    %rbx
-    popq    %rcx
-    popq    %rdx
-    popq    %rsi
-    popq    %rdi
-    popq    %rbp
-    popq    %rax
-/*    popq    %ds
-    popq    %es
-    popq    %fs
-    popq    %gs */
-    call    *%rbx
-    pushq   %rax
-    call    sys_exit
-END(kernel_thread_ret)
+kernel_process_child:
+	movq	%rdi, %rax	/* kernle process function address */
+	movq	%rsi, %rdi	/* function arguments */
+	call	*%rax
+	xorq	%rdi, %rdi	/* exit code 0 */
+	call	do_exit
+
+/*
+ * C interface pid_t kernel_process(int (*fn)(void), void *args, unsigned long flags)
+ * fn in rdi, args in rsi and flags in rdx
+ */
+.global kernel_process
+kernel_process:
+	/* make fake frame for do_fork */
+	xorq	%rax, %rax
+	pushq	%rax			/* ss */
+	pushq	%rax			/* rsp, will be set in do_fork */
+	movq	$(1<<9), %rax
+	pushq	%rax			/* eflags, enable interrupt */
+	movq	$KERNEL_CODE_DESC, %rax
+	pushq	%rax			/* cs */
+	leaq	kernel_process_child(%rip), %rax
+	pushq	%rax			/* rip */
+	xorq	%rax, %rax
+	pushq	%rax			/* orgi_rax */
+
+	SAVE_ALL
+
+	/* prepare for do_fork */
+	movq	%rdx, %rdi 		/* clone_flags */
+	movq	$-1, %rsi		/* start_stack */
+	movq	%rsp, %rdx		/* regs */
+	xorq	%rcx, %rcx		/* stack_size */
+	call	do_fork
+
+	movq	%rax, 0x50(%rsp)	/* save return value */
+	RESTOR_ALL
+	addq	$8*6, %rsp		/* skip fake frame */
+	ret

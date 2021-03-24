@@ -76,7 +76,7 @@ static int copy_mm(struct task_struct *p, int clone_flags)
     struct mm_struct *mm;
 
     /* 一些旧代码还无法废除 */
-    p->stack = (void *)get_zeroed_page(GFP_USER);
+    p->stack = (void *)__get_free_pages(GFP_USER, USER_STACK_ORDER);
     if (!p->stack)
         return -1;
     if (!(p->flags & PF_KTHREAD))
@@ -118,10 +118,11 @@ static struct task_struct *copy_process(int clone_flags, unsigned long stack_sta
                                         unsigned long stack_size)
 {
     struct task_struct *p;
+    struct pt_regs *    childregs;
 
-    p = (struct task_struct *)get_zeroed_page(GFP_KERNEL);
+    p = (struct task_struct *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
     if (!p)
-        return 0;
+        return NULL;
     p->state = TASK_UNINTERRUPTIBLE;
     p->counter = 1;
     p->alarm = 0;
@@ -137,7 +138,7 @@ static struct task_struct *copy_process(int clone_flags, unsigned long stack_sta
     if (copy_mm(p, clone_flags))
         goto copy_failed;
 
-    setup_thread(p, regs, clone_flags);
+    copy_thread(p, regs, clone_flags);
 
     return p;
 copy_failed:
@@ -167,10 +168,4 @@ int sys_fork(void)
 {
     struct pt_regs *regs = (struct pt_regs *)current->thread.rsp0 - 1;
     return do_fork(0, 0, regs, 0);
-}
-
-int kernel_thread(int (*fn)(void), void *args, unsigned long flags)
-{
-    struct pt_regs regs;
-    return _kernel_thread(&regs, fn, args, flags);
 }

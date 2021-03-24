@@ -138,6 +138,18 @@ int sys_exit(int status)
     return status;
 }
 
+int do_exit(int code)
+{
+    return code;
+}
+
+void cpu_idle(void)
+{
+    while (1) {
+        hlt();
+    }
+}
+
 void task_init(void)
 {
     list_head_init(&scheduler.task_head);

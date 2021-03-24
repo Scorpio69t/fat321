@@ -4,8 +4,6 @@
 #include <boot/cpu.h>
 #include <feng/sched.h>
 
-pid_t _kernel_thread(struct pt_regs *, int (*fn)(void), void *, unsigned long);
-
-int setup_thread(struct task_struct *, struct pt_regs *, int);
+int copy_thread(struct task_struct *p, struct pt_regs *regs, int flags);
 
 #endif
