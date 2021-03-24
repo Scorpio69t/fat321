@@ -5,6 +5,8 @@ typedef struct {
     volatile int counter;
 } atomic_t;
 
+#define INIT_ATOMIC_T { 0, }
+
 static inline void atomic_add(int i, atomic_t *atomic)
 {
     asm volatile("lock addl %1, %0" : "+m"(atomic->counter) : "ir"(i));

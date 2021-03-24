@@ -63,6 +63,28 @@ void interruptible_sleep_on(wait_queue_head_t *head)
     spin_unlock(&head->lock);
 }
 
+/*
+ * 当前进程添加到等待队列上之后再进行一些操作
+ */
+void after_interruptible_sleep_on(wait_queue_head_t *head, void (*fn)(void))
+{
+    wait_queue_t wait;
+    init_wait_queue(&wait, current);
+
+    current->state = TASK_INTERRUPTIBLE;
+
+    spin_lock(&head->lock);
+    __add_wait_queue_tail(head, &wait);
+    spin_unlock(&head->lock);
+
+    fn();
+    schedule();
+
+    spin_lock(&head->lock);
+    __remove_wait_queue(head, &wait);
+    spin_unlock(&head->lock);
+}
+
 /**
  * __wake_up - 唤醒等待队列上的进程
  * @q:  等待队列头指针

@@ -27,7 +27,7 @@ ata2: enabled=0, ioaddr1=0x1e8, ioaddr2=0x3e0, irq=11
 ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 ata0-master: type=disk, path="feng.img", mode=flat
 ata1-master: type=cdrom, path="feng.iso", status=inserted
-boot: cdrom
+boot: disk
 
 pci: enabled=1, chipset=i440fx
 

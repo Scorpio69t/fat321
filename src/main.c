@@ -23,31 +23,36 @@
 #include <feng/slab.h>
 #include <feng/stdio.h>
 #include <feng/unistd.h>
+#include <feng/syscalls.h>
 
-// static void test(void)
-//{
-//    char buf[10];
-//    int i;
-//    int fd = open("/abc/b.txt", O_RDONLY);
-//    if (fd != -1) {
-//        while(read(fd, buf, 3)) {
-//            for (i = 0; i < 3; i++)
-//                printf("%c", buf[i]);
-//        }
-//    } else {
-//        printf("error\n");
-//    }
-//    printf("end\n");
-//    if (close(fd))
-//        printf("close error\n");
-//}
+static void test(void)
+{
+    printk("in test\n");
+   char buf[10];
+   int i;
+   int fd = sys_open("/home/a.txt", O_RDONLY);
+   if (fd != -1) {
+       while(sys_read(fd, buf, 3)) {
+           for (i = 0; i < 3; i++)
+               printk("%c", buf[i]);
+       }
+   } else {
+       printk("error\n");
+   }
+   printk("end\n");
+   if (sys_close(fd))
+       printk("close error\n");
+}
 
 int init(void)
 {
     printk("init process\n");
-    //    disk_init();
-    //    fat32_init();
+    disk_init();
+    printk("disk init successfully\n");
+    fat32_init();
+    printk("fat32 init successfully\n");
 
+    test();
     //    if (!fork()) {
     //        tty_task();
     //    }
@@ -69,8 +74,10 @@ void kernel_main()
 
     // clear_screen();
     printk("kernel_main\n");
+
     enable_interrupt();
     kernel_process(init, NULL, CLONE_VM);
+
     while (1) {
         hlt();
     }

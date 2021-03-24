@@ -17,6 +17,7 @@
 #include <feng/slab.h>
 #include <feng/string.h>
 #include <feng/unistd.h>
+#include <feng/stdio.h>
 
 struct sched_struct scheduler;
 
@@ -152,8 +153,17 @@ void cpu_idle(void)
 
 void task_init(void)
 {
+    struct task_struct *init_task;
+
     list_head_init(&scheduler.task_head);
-    scheduler.idle = &init_task_union.task;
+
+    init_task = &init_task_union.task;
+    /* init_task 中的一些属性缺失的，在这里进行补充 */
+    init_task->files->files[0] = stdin;
+    init_task->files->files[1] = stdout;
+    init_task->files->files[2] = stderr;
+
+    scheduler.idle = init_task;
     setup_counter();
     register_irq(0x20, do_timer);
 }

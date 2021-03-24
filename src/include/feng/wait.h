@@ -22,6 +22,7 @@ void init_wait_queue_head(wait_queue_head_t *head);
 void init_wait_queue(wait_queue_t *wait, struct task_struct *task);
 void sleep_on(wait_queue_head_t *head);
 void interruptible_sleep_on(wait_queue_head_t *head);
+void after_interruptible_sleep_on(wait_queue_head_t *head, void (*fn)(void));
 void __wake_up(wait_queue_head_t *q, unsigned int mode, int nr);
 
 static inline void __add_wait_queue(wait_queue_head_t *head, wait_queue_t *new)

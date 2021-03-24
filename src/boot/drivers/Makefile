@@ -1,6 +1,6 @@
 
 HEADER := ../../include
-OBJS := console.o i8042.o vbe.o
+OBJS := console.o i8042.o
 
 default: $(OBJS)
 

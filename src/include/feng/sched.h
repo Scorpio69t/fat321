@@ -107,6 +107,14 @@ struct task_struct {
 };
 
 // clang-format off
+#define INIT_FILES                              \
+{                                               \
+    .count = INIT_ATOMIC_T,                     \
+    .files = { NULL },                          \
+}
+extern struct files_struct init_files;
+
+// clang-format off
 #define INIT_TASK(tsk)                          \
 {                                               \
     .state = TASK_RUNNING,                      \
@@ -123,7 +131,7 @@ struct task_struct {
     .signal = 0,                                \
     .task = LIST_HEAD_INIT(tsk.task),           \
     .cwd = NULL,                                \
-    .files = NULL                               \
+    .files = &init_files,                       \
 }
 
 /**

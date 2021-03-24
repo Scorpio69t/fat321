@@ -135,7 +135,7 @@ static void write_handler(void)
 {
     request_queue_t *r = disk_request_head.use;
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printk("read_handler: disk read error\n");
+        printk("write_handler: disk write error\n");
     }
     if (--r->nsect) {
         r->buf += SECTOR_SIZE;
@@ -153,7 +153,7 @@ static void identify_handler(void)
 {
     request_queue_t *r = disk_request_head.use;
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printk("read_handler: disk read error\n");
+        printk("identify_handler: disk read error\n");
     } else {
         innw(PORT_DISK0_DATA, r->buf, SECTOR_SIZE / 2);
     }
@@ -229,11 +229,10 @@ static long IDE_transfer(long cmd, unsigned long sector, unsigned long nsect, vo
         put_request(&disk_request_head, r);
         /*
          * do_request不一定执行当前的请求，而是根据请求队列来执行
-         * 此外，do_request后应立即在等待队列上睡眠，防止在睡眠前有磁盘已完成操作触发中断。
+         * do_request添加到等待队列上后才能睡眠，防止在睡眠前有磁盘已完成操作触发中断。
          * 此时，若进程再进行睡眠的话，将造成进程僵死，无法被调度
          */
-        do_request();
-        interruptible_sleep_on(&disk_wait_queue_head);
+        after_interruptible_sleep_on(&disk_wait_queue_head, do_request);
     } else
         return 0;
     return 1;
