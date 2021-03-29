@@ -1,6 +1,6 @@
 #include <boot/memory.h>
-#include <feng/mm.h>
-#include <feng/types.h>
+#include <kernel/mm.h>
+#include <kernel/types.h>
 
 /**
  * get_pgd - 获取页目录的起始逻辑地址

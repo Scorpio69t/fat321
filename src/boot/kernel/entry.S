@@ -2,9 +2,9 @@
  * 中断入口
  */
 
-#include <feng/linkage.h>
-#include <feng/sched.h>
-#include <feng/fork.h>
+#include <kernel/linkage.h>
+#include <kernel/sched.h>
+#include <kernel/fork.h>
 #include <boot/boot.h>
 
 .section .text
@@ -277,11 +277,11 @@ kernel_process_child:
 	call	do_exit
 
 /*
- * C interface pid_t kernel_process(int (*fn)(void), void *args, unsigned long flags)
+ * C interface pid_t kernel_proc(int (*fn)(void), void *args, unsigned long flags)
  * fn in rdi, args in rsi and flags in rdx
  */
-.global kernel_process
-kernel_process:
+.global kernel_proc
+kernel_proc:
 	/* make fake frame for do_fork */
 	xorq	%rax, %rax
 	pushq	%rax			/* ss */

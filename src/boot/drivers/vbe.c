@@ -1,7 +1,7 @@
-#include <feng/config.h>
-#include <feng/console.h>
-#include <feng/fontdata.h>
-#include <feng/string.h>
+#include <kernel/config.h>
+#include <kernel/console.h>
+#include <kernel/fontdata.h>
+#include <kernel/string.h>
 
 #ifdef __VBE
 

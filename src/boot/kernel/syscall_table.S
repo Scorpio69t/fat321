@@ -1,5 +1,5 @@
 
-#include <feng/linkage.h>
+#include <kernel/linkage.h>
 
 .section .data
 

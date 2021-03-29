@@ -1,7 +1,7 @@
 #include <boot/bug.h>
-#include <feng/bugs.h>
-#include <feng/kernel.h>
-#include <feng/stdio.h>
+#include <kernel/bugs.h>
+#include <kernel/kernel.h>
+#include <kernel/stdio.h>
 #include <stdarg.h>
 
 void __panic(char *fmt, char *file, int line, ...)

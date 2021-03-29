@@ -1,7 +1,7 @@
 #ifndef _BOOT_CPU_H_
 #define _BOOT_CPU_H_
 
-#include <feng/types.h>
+#include <kernel/types.h>
 
 #define load_tss(tss_desc) asm volatile("ltr %%ax" ::"a"((uint16)tss_desc))
 #define load_ldt(ldt_desc) asm volatile("lldt %%ax" ::"a"((uint16)ldt_desc))
@@ -89,7 +89,7 @@ struct pt_regs {
 /**
  * 进程的cpu上下文信息
  */
-struct thread_struct {
+struct context_struct {
     uint64 rsp0; /* 内核栈基址 */
     uint64 rsp;  /* 内核栈当前栈指针 */
     uint64 rip;  /* 内核态当前代码指针 */

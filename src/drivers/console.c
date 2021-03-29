@@ -1,17 +1,16 @@
 #include <boot/console.h>
 #include <boot/div64.h>
 #include <boot/io.h>
-#include <feng/bugs.h>
-#include <feng/config.h>
-#include <feng/console.h>
-#include <feng/fontdata.h>
-#include <feng/fs.h>
-#include <feng/malloc.h>
-#include <feng/slab.h>
-#include <feng/stdio.h>
-#include <feng/string.h>
-#include <feng/types.h>
-#include <feng/wait.h>
+#include <kernel/bugs.h>
+#include <kernel/config.h>
+#include <kernel/console.h>
+#include <kernel/fontdata.h>
+#include <kernel/fs.h>
+#include <kernel/malloc.h>
+#include <kernel/slab.h>
+#include <kernel/stdio.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
 
 struct console_desc console;
 

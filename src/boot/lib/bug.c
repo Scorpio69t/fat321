@@ -1,7 +1,7 @@
 #include <boot/bug.h>
-#include <feng/stdio.h>
-#include <feng/types.h>
-#include <feng/unistd.h>
+#include <kernel/stdio.h>
+#include <kernel/types.h>
+#include <kernel/unistd.h>
 
 int disp_pos = 0;
 

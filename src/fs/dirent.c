@@ -1,12 +1,12 @@
-#include <feng/bugs.h>
-#include <feng/dirent.h>
-#include <feng/fcntl.h>
-#include <feng/fs.h>
-#include <feng/malloc.h>
-#include <feng/stdio.h>
-#include <feng/string.h>
-#include <feng/types.h>
-#include <feng/unistd.h>
+#include <kernel/bugs.h>
+#include <kernel/dirent.h>
+#include <kernel/fcntl.h>
+#include <kernel/fs.h>
+#include <kernel/malloc.h>
+#include <kernel/stdio.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
+#include <kernel/unistd.h>
 
 struct DIR *opendir(const char *path)
 {

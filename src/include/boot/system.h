@@ -2,7 +2,7 @@
 #define _BOOT_SYSTEM_H_
 
 #include <boot/cpu.h>
-#include <feng/sched.h>
+#include <kernel/sched.h>
 
 /* 不保存rax, rbp需要放在最后 TODO: rdi和rsi需要保存吗 */
 #define SWITCH_SAVE   \
@@ -39,7 +39,7 @@
 
 #define switch_to(prev, next, last)                                                       \
     do {                                                                                  \
-        struct task_struct *__last;                                                       \
+        struct proc_struct *__last;                                                       \
         asm volatile("pushfq\n\t" SWITCH_SAVE                                             \
                      "movq %%rsp, %0\n\t"        /* save prev rsp */                      \
                      "movq %3, %%rsp\n\t"        /* restore next rsp */                   \
@@ -48,8 +48,8 @@
                      "pushq %4\n\t" /* __switch_to return address */                      \
                      "jmp __switch_to\n\t"                                                \
                      "1:\t" SWITCH_RESTORE "popfq\n\t"                                    \
-                     : "=m"(prev->thread.rsp), "=m"(prev->thread.rip), "=a"(__last)       \
-                     : "m"(next->thread.rsp), "m"(next->thread.rip), "D"(prev), "S"(next) \
+                     : "=m"(prev->context.rsp), "=m"(prev->context.rip), "=a"(__last)       \
+                     : "m"(next->context.rsp), "m"(next->context.rip), "D"(prev), "S"(next) \
                      : "memory", "cc");                                                   \
         last = __last;                                                                    \
     } while (0)

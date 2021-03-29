@@ -1,10 +1,10 @@
 #include <boot/cpu.h>
 #include <boot/io.h>
 #include <boot/unistd.h>
-#include <feng/dirent.h>
-#include <feng/fcntl.h>
-#include <feng/types.h>
-#include <feng/unistd.h>
+#include <kernel/dirent.h>
+#include <kernel/fcntl.h>
+#include <kernel/types.h>
+#include <kernel/unistd.h>
 #include <stdarg.h>
 
 /**

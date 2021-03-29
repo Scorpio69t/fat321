@@ -3,11 +3,13 @@
 #include <boot/io.h>
 #include <boot/irq.h>
 #include <boot/string.h>
-#include <feng/config.h>
-#include <feng/console.h>
-#include <feng/mm.h>
+#include <kernel/config.h>
+#include <kernel/console.h>
+#include <kernel/mm.h>
 
-#ifndef __VBE
+
+#define ROW 25
+#define COL 80
 
 /**
  * 获取屏幕当前的游标
@@ -73,4 +75,40 @@ void write_char(char c, unsigned char type, unsigned short cur)
     asm volatile("movw %%ax, (%%rdi)" ::"a"(val), "D"(pos));
 }
 
-#endif
+
+/**
+ * 向控制台写字符串
+ * @buf: 字符串缓冲区
+ * @n: 字符串长度
+ * @type: 字符串颜色属性
+ */
+ssize_t console_write(const char *buf, size_t n, unsigned char type)
+{
+    int i, cur;
+
+    cur = get_cursor();
+    for (i = 0; i < n; i++) {
+        switch (buf[i]) {
+        case '\n':
+            cur = (cur / COL + 1) * COL;
+            break;
+        case '\t':
+            cur = cur + 4;
+            break;
+        case '\b':
+            cur = cur - 1;
+            write_char(' ', type, (unsigned short)cur);
+            break;
+        default:
+            write_char(buf[i], type, (unsigned short)cur);
+            cur++;
+        }
+        if (cur >= ROW * COL) {
+            cur = (ROW - 1) * COL;
+            console_curl(1);
+        }
+        set_cursor(cur);
+    }
+    return n;
+}
+

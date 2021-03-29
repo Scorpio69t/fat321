@@ -3,17 +3,17 @@
 #include <boot/div64.h>
 #include <boot/io.h>
 #include <boot/memory.h>
-#include <feng/bugs.h>
-#include <feng/config.h>
-#include <feng/console.h>
-#include <feng/gfp.h>
-#include <feng/kernel.h>
-#include <feng/malloc.h>
-#include <feng/mm.h>
-#include <feng/page.h>
-#include <feng/string.h>
-#include <feng/types.h>
-#include <feng/slab.h>
+#include <kernel/bugs.h>
+#include <kernel/config.h>
+#include <kernel/console.h>
+#include <kernel/gfp.h>
+#include <kernel/kernel.h>
+#include <kernel/malloc.h>
+#include <kernel/mm.h>
+#include <kernel/page.h>
+#include <kernel/slab.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
 
 struct page *mem_map;
 

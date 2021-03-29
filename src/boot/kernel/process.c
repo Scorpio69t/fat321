@@ -1,17 +1,17 @@
 #include <boot/cpu.h>
 #include <boot/irq.h>
 #include <boot/process.h>
-#include <feng/bugs.h>
-#include <feng/fork.h>
-#include <feng/gfp.h>
-#include <feng/kernel.h>
-#include <feng/linkage.h>
-#include <feng/malloc.h>
-#include <feng/sched.h>
-#include <feng/slab.h>
-#include <feng/types.h>
+#include <kernel/bugs.h>
+#include <kernel/fork.h>
+#include <kernel/gfp.h>
+#include <kernel/kernel.h>
+#include <kernel/linkage.h>
+#include <kernel/malloc.h>
+#include <kernel/sched.h>
+#include <kernel/slab.h>
+#include <kernel/types.h>
 
-int copy_thread(struct task_struct *p, struct pt_regs *regs, int flags)
+int copy_context(struct proc_struct *p, struct pt_regs *regs, int flags)
 {
     struct pt_regs *newregs;
     newregs = (struct pt_regs *)kernel_stack_top(p) - 1;
@@ -20,9 +20,9 @@ int copy_thread(struct task_struct *p, struct pt_regs *regs, int flags)
     newregs->rsp = (uint64)newregs;
     newregs->rax = 0;
 
-    p->thread.rsp0 = (uint64)newregs; /* ignore some stack space */
-    p->thread.rsp = (uint64)newregs;
-    p->thread.rip = (uint64)ret_from_fork;
+    p->context.rsp0 = (uint64)newregs; /* ignore some stack space */
+    p->context.rsp = (uint64)newregs;
+    p->context.rip = (uint64)ret_from_fork;
 
     return 0;
 }

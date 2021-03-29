@@ -1,7 +1,7 @@
 #ifndef _BOOT_BUG_H_
 #define _BOOT_BUG_H_
 
-#include <feng/compiler.h>
+#include <kernel/compiler.h>
 
 /* 屏幕显示位置 defined in bug.c */
 extern int disp_pos;

@@ -8,11 +8,10 @@
 #include <boot/disk.h>
 #include <boot/io.h>
 #include <boot/irq.h>
-#include <feng/kernel.h>
-#include <feng/list.h>
-#include <feng/slab.h>
-#include <feng/spinlock.h>
-#include <feng/wait.h>
+#include <kernel/kernel.h>
+#include <kernel/list.h>
+#include <kernel/slab.h>
+#include <kernel/spinlock.h>
 
 static request_queue_head_t disk_request_head; /* IO请求队列 */
 wait_queue_head_t           disk_wait_queue_head;

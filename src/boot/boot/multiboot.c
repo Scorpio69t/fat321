@@ -1,10 +1,10 @@
 #include <boot/boot.h>
 #include <boot/multiboot.h>
-#include <feng/bugs.h>
-#include <feng/kernel.h>
-#include <feng/mm.h>
-#include <feng/string.h>
-#include <feng/types.h>
+#include <kernel/bugs.h>
+#include <kernel/kernel.h>
+#include <kernel/mm.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
 
 struct meminfo_struct meminfo[MEMINFO_SIZE];
 

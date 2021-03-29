@@ -1,7 +1,7 @@
 #include <boot/multiboot.h>
 #include <boot/boot.h>
-#include <feng/linkage.h>
-#include <feng/sched.h>
+#include <kernel/linkage.h>
+#include <kernel/sched.h>
 
 /*
  * This file is the kernel head that will be loaded at the physical address
@@ -122,7 +122,7 @@ gdt_desc:				/* address 0x100f40 */
 	.quad	gdt_table
 
 init_stack:
-	.quad 	init_task_union + KERNEL_STACK_SIZE - 8
+	.quad 	init_proc_union + KERNEL_STACK_SIZE - 8
 
 kernel_main_entry:
 	.quad	kernel_main

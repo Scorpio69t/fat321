@@ -2,8 +2,8 @@
 #define _BOOT_PROCESS_H_
 
 #include <boot/cpu.h>
-#include <feng/sched.h>
+#include <kernel/sched.h>
 
-int copy_thread(struct task_struct *p, struct pt_regs *regs, int flags);
+int copy_context(struct proc_struct *p, struct pt_regs *regs, int flags);
 
 #endif

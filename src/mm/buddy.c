@@ -2,11 +2,11 @@
  * 伙伴系统
  */
 
-#include <feng/gfp.h>
-#include <feng/kernel.h>
-#include <feng/mm.h>
-#include <feng/page.h>
-#include <feng/string.h>
+#include <kernel/gfp.h>
+#include <kernel/kernel.h>
+#include <kernel/mm.h>
+#include <kernel/page.h>
+#include <kernel/string.h>
 
 static struct buddy_struct buddy;
 
@@ -26,10 +26,11 @@ static uint32 check_order(struct page *page)
 static inline void block_insert(struct page *page, unsigned int order)
 {
     struct page *p;
-    int i;
+    int          i;
 
     for (i = order; i == order && i < MAX_ORDER; i++) {
-        list_for_each_entry(p, &buddy.block[i], list) {
+        list_for_each_entry(p, &buddy.block[i], list)
+        {
             if (i < MAX_ORDER - 1) {
                 if ((p + (1 << order)) == page && check_order(p) >= order + 1) {
                     list_del(&p->list);
@@ -149,7 +150,8 @@ void free_pages(unsigned long addr, unsigned int order)
     struct page *page = NULL, *pos;
     addr = PAGE_LOWER_ALIGN(addr);
     spin_lock(&buddy.lock);
-    list_for_each_entry(pos, &buddy.activate, list) {
+    list_for_each_entry(pos, &buddy.activate, list)
+    {
         if (pos->virtual == (void *)addr) {
             list_del(&pos->list);
             page = pos;
@@ -182,7 +184,7 @@ void buddy_system_init(uint32 nr_pages)
             left = ++right;
             continue;
         }
-        int32  count = 0, order = check_order(left); /* Do not use unsigned type */
+        int32 count = 0, order = check_order(left); /* Do not use unsigned type */
         while (!(right->flags & PF_RESERVE) && right != tail && count < (1 << order)) {
             count++;
             right++;
@@ -190,7 +192,7 @@ void buddy_system_init(uint32 nr_pages)
         if (count == 1 << order) {
             list_add_tail(&left->list, &buddy.block[order]);
         } else {
-            for (;order >= 0; order--) {
+            for (; order >= 0; order--) {
                 if (count & (1 << order)) {
                     list_add_tail(&left->list, &buddy.block[order]);
                     left += 1 << order;

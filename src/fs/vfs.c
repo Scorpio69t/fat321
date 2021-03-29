@@ -1,11 +1,11 @@
 #include <boot/irq.h>
-#include <feng/bugs.h>
-#include <feng/fs.h>
-#include <feng/kernel.h>
-#include <feng/malloc.h>
-#include <feng/slab.h>
-#include <feng/string.h>
-#include <feng/types.h>
+#include <kernel/bugs.h>
+#include <kernel/fs.h>
+#include <kernel/kernel.h>
+#include <kernel/malloc.h>
+#include <kernel/slab.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
 
 struct super_block *root_sb = NULL;
 struct dentry *     root_dentry = NULL;

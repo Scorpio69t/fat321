@@ -1,14 +1,14 @@
 #include <boot/unistd.h>
-#include <feng/bugs.h>
-#include <feng/dirent.h>
-#include <feng/fcntl.h>
-#include <feng/kernel.h>
-#include <feng/keyboard.h>
-#include <feng/linkage.h>
-#include <feng/malloc.h>
-#include <feng/sched.h>
-#include <feng/slab.h>
-#include <feng/unistd.h>
+#include <kernel/bugs.h>
+#include <kernel/dirent.h>
+#include <kernel/fcntl.h>
+#include <kernel/kernel.h>
+#include <kernel/keyboard.h>
+#include <kernel/linkage.h>
+#include <kernel/malloc.h>
+#include <kernel/sched.h>
+#include <kernel/slab.h>
+#include <kernel/unistd.h>
 
 unsigned long sys_get_ticks(void)
 {
@@ -24,7 +24,7 @@ ssize_t sys_write(int fd, const void *buf, size_t nbytes)
         return -1;
     if (nbytes < 0)
         return -1;
-    filp = current->files->files[fd];
+    // filp = current->files->files[fd];
     if (filp && filp->f_op && filp->f_op->write)
         ret = filp->f_op->write(filp, buf, nbytes, filp->f_pos);
     if (ret != -1)
@@ -34,55 +34,55 @@ ssize_t sys_write(int fd, const void *buf, size_t nbytes)
 
 ssize_t sys_read(int fd, void *buf, size_t nbytes)
 {
-    struct file *filp;
-    int          ret = -1;
+    // struct file *filp;
+    // int          ret = -1;
 
-    if (fd < 0 || fd >= TASK_MAX_FILE)
-        return -1;
-    if (nbytes < 0)
-        return -1;
-    filp = current->files->files[fd];
-    if (filp && filp->f_op && filp->f_op->read)
-        ret = filp->f_op->read(filp, buf, nbytes, filp->f_pos);
-    if (ret != -1)
-        filp->f_pos += ret;
-    return ret;
+    // if (fd < 0 || fd >= TASK_MAX_FILE)
+    //     return -1;
+    // if (nbytes < 0)
+    //     return -1;
+    // // filp = current->files->files[fd];
+    // if (filp && filp->f_op && filp->f_op->read)
+    //     ret = filp->f_op->read(filp, buf, nbytes, filp->f_pos);
+    // if (ret != -1)
+    //     filp->f_pos += ret;
+    // return ret;
 }
 
 int sys_open(const char *path, int oflag)
 {
-    struct dentry *de = NULL;
-    struct file *  filp = NULL;
-    int            fd;
+    // struct dentry *de = NULL;
+    // struct file *  filp = NULL;
+    // int            fd;
 
-    if (atomic_read(&current->files->count) >= TASK_MAX_FILE)
-        goto open_faild;
+    // if (atomic_read(&current->files->count) >= TASK_MAX_FILE)
+    //     goto open_faild;
 
-    de = path_walk(path, 0);
-    if (!de)
-        goto open_faild;
+//     de = path_walk(path, 0);
+//     if (!de)
+//         goto open_faild;
 
-    if ((oflag & O_DIRECTORY) && !(de->d_inode->i_flags & FS_ATTR_DIR))
-        return -1;
+//     if ((oflag & O_DIRECTORY) && !(de->d_inode->i_flags & FS_ATTR_DIR))
+//         return -1;
 
-    filp = make_file(de, 0, oflag);
-    if (!filp)
-        goto open_faild;
+//     filp = make_file(de, 0, oflag);
+//     if (!filp)
+//         goto open_faild;
 
-    for (fd = 0; fd < TASK_MAX_FILE; fd++) {
-        if (!current->files->files[fd])
-            break;
-    }
+//     for (fd = 0; fd < TASK_MAX_FILE; fd++) {
+//         // if (!current->files->files[fd])
+//             break;
+//     }
 
-    atomic_inc(&current->files->count);
-    current->files->files[fd] = filp;
-    return fd;
+//     // atomic_inc(&current->files->count);
+//     // current->files->files[fd] = filp;
+//     return fd;
 
-open_faild:
-    if (de)
-        kfree(de);
-    if (filp)
-        kfree(filp);
+// open_faild:
+//     if (de)
+//         kfree(de);
+//     if (filp)
+//         kfree(filp);
     return -1;
 }
 
@@ -92,9 +92,9 @@ int sys_close(int fd)
 
     if (fd < 0 || fd >= TASK_MAX_FILE)
         return -1;
-    filp = current->files->files[fd];
-    current->files->files[fd] = NULL;
-    atomic_dec(&current->files->count);
+    // filp = current->files->files[fd];
+    // current->files->files[fd] = NULL;
+    // atomic_dec(&current->files->count);
     atomic_dec(&filp->f_count);
 
     if (!atomic_read(&filp->f_count))
@@ -106,18 +106,18 @@ int sys_chdir(const char *path)
 {
     struct dentry *de;
 
-    if (!strcmp(path, ".."))
-        de = current->cwd->d_parent;
-    else if (!strcmp(path, "."))
-        return 0;
-    else
-        de = path_walk(path, 0);
+    // if (!strcmp(path, ".."))
+    // //     de = current->cwd->d_parent;
+    // else if (!strcmp(path, "."))
+    //     return 0;
+    // else
+    //     de = path_walk(path, 0);
 
-    if (de == NULL)
-        return -1;
-    if (!(de->d_inode->i_flags & FS_ATTR_DIR))
-        return -1;
-    current->cwd = de;
+    // if (de == NULL)
+    //     return -1;
+    // if (!(de->d_inode->i_flags & FS_ATTR_DIR))
+    //     return -1;
+    // current->cwd = de;
     return 0;
 }
 
@@ -127,7 +127,7 @@ int sys_getcwd(char *buf, size_t n)
     struct dentry *tmp[16];
     int            i = 0, ret = 0, len, tn;
     char *         p = buf;
-    cur = current->cwd;
+    // cur = current->cwd;
     if (cur == NULL)
         return -1;
 
@@ -167,9 +167,9 @@ int sys_getdents(int fd, void *dirent, int count)
     if (count < 0)
         return -1;
 
-    filp = current->files->files[fd];
-    if (filp && filp->f_op && filp->f_op->readdir)
-        ret = filp->f_op->readdir(filp, dirent, default_filldir);
+    // filp = current->files->files[fd];
+    // if (filp && filp->f_op && filp->f_op->readdir)
+    //     ret = filp->f_op->readdir(filp, dirent, default_filldir);
     return ret;
 }
 
@@ -186,8 +186,8 @@ long sys_reboot(void)
 
 long sys_debug(void)
 {
-    struct task_struct *p = current;
+    struct proc_struct *p = current;
     struct pt_regs *    regs = get_pt_regs(p);
-    printk("%x pid: %d esp0: %x esp: %x\n", (u32)p, p->pid, p->thread.rsp0, regs->rsp);
+    // printk("%x pid: %d esp0: %x esp: %x\n", (u32)p, p->pid, p->thread.rsp0, regs->rsp);
     return 0;
 }

@@ -4,9 +4,9 @@
 
 #include <boot/boot.h>
 #include <boot/cpu.h>
-#include <feng/sched.h>
-#include <feng/string.h>
-#include <feng/types.h>
+#include <kernel/sched.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
 
 struct tss_struct  init_tss;
 struct cpu_info    cpu_info;
@@ -28,7 +28,7 @@ static void setup_tss_desc(struct tss_desc_struct *desc, uint64 addr, uint32 siz
 void cpu_init(void)
 {
     struct tss_struct *tss = &init_tss;
-    tss->rsp0 = (uint64)&init_task_union + KERNEL_STACK_SIZE - 8;
+    tss->rsp0 = (uint64)&init_proc_union + KERNEL_STACK_SIZE - 8;
     memset(tss->io_bitmap, 0xff, sizeof(tss->io_bitmap));
     tss->io_map_base = IO_BITMAP_BASE;
 

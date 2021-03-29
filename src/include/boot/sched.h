@@ -2,13 +2,13 @@
 #define _BOOT_SCHED_H_
 
 #include <boot/cpu.h>
-#include <feng/compiler.h>
-#include <feng/types.h>
+#include <kernel/compiler.h>
+#include <kernel/types.h>
 
 void setup_counter(void);
 
-struct task_struct *__current(void);
+struct proc_struct *__current(void);
 
-struct task_struct *__regparm3 __switch_to(struct task_struct *, struct task_struct *);
+struct proc_struct *__regparm3 __switch_to(struct proc_struct *, struct proc_struct *);
 
 #endif

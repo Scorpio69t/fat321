@@ -1,13 +1,13 @@
 #include <boot/io.h>
 #include <boot/irq.h>
-#include <feng/bugs.h>
-#include <feng/kernel.h>
-#include <feng/keyboard.h>
-#include <feng/malloc.h>
-#include <feng/slab.h>
-#include <feng/spinlock.h>
-#include <feng/types.h>
-#include <feng/wait.h>
+#include <kernel/bugs.h>
+#include <kernel/kernel.h>
+#include <kernel/keyboard.h>
+#include <kernel/malloc.h>
+#include <kernel/slab.h>
+#include <kernel/spinlock.h>
+#include <kernel/types.h>
+#include <kernel/wait.h>
 
 struct file *stdin;
 

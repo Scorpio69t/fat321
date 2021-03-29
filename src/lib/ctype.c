@@ -1,4 +1,4 @@
-#include <feng/ctype.h>
+#include <kernel/ctype.h>
 
 inline int isalpha(int c)
 {

@@ -7,17 +7,17 @@
 #include <boot/memory.h>
 #include <boot/sched.h>
 #include <boot/system.h>
-#include <feng/bugs.h>
-#include <feng/kernel.h>
-#include <feng/linkage.h>
-#include <feng/list.h>
-#include <feng/malloc.h>
-#include <feng/mm.h>
-#include <feng/sched.h>
-#include <feng/slab.h>
-#include <feng/string.h>
-#include <feng/unistd.h>
-#include <feng/stdio.h>
+#include <kernel/bugs.h>
+#include <kernel/kernel.h>
+#include <kernel/linkage.h>
+#include <kernel/list.h>
+#include <kernel/malloc.h>
+#include <kernel/mm.h>
+#include <kernel/sched.h>
+#include <kernel/slab.h>
+#include <kernel/stdio.h>
+#include <kernel/string.h>
+#include <kernel/unistd.h>
 
 struct sched_struct scheduler;
 
@@ -35,9 +35,9 @@ static inline void ticks_plus(void)
 
 static inline void update_alarm(void)
 {
-    struct task_struct *p;
+    struct proc_struct *p;
 
-    list_for_each_entry(p, &scheduler.task_head, task)
+    list_for_each_entry(p, &scheduler.proc_head, proc)
     {
         if (p->alarm == 0) {
             continue;
@@ -52,10 +52,10 @@ static inline void update_alarm(void)
 /**
  * 获取当前进程的cpu上下文
  */
-struct pt_regs *get_pt_regs(struct task_struct *task)
+struct pt_regs *get_pt_regs(struct proc_struct *proc)
 {
     struct pt_regs *regs;
-    regs = (struct pt_regs *)kernel_stack_top(task);
+    regs = (struct pt_regs *)kernel_stack_top(proc);
     regs = regs - 1;
     return regs;
 }
@@ -67,7 +67,7 @@ struct pt_regs *get_pt_regs(struct task_struct *task)
  */
 void schedule(void)
 {
-    struct task_struct *prev, *next, *p;
+    struct proc_struct *prev, *next, *p;
 
     prev = current;
     next = NULL;
@@ -75,12 +75,12 @@ void schedule(void)
     prev->flags &= ~NEED_SCHEDULE;
     disable_interrupt();
     if (!(prev->flags & PF_IDLE)) {
-        list_del(&prev->task);
-        list_add_tail(&prev->task, &scheduler.task_head);
+        list_del(&prev->proc);
+        list_add_tail(&prev->proc, &scheduler.proc_head);
     }
-    list_for_each_entry(p, &scheduler.task_head, task)
+    list_for_each_entry(p, &scheduler.proc_head, proc)
     {
-        if (p->state == TASK_RUNNING) {
+        if (p->state == TASK_RUNNABLE) {
             next = p;
             break;
         }
@@ -122,14 +122,14 @@ long sys_sleep(unsigned long type, unsigned long t)
         printk("sys_sleep error\n");
         return -1;
     }
-    current->state = TASK_INTERRUPTIBLE;
+    current->state = TASK_SENDING;
     schedule();
     return 0;
 }
 
 int sys_pause(void)
 {
-    current->state = TASK_INTERRUPTIBLE;
+    current->state = TASK_SENDING;
     schedule();
     return 0;
 }
@@ -151,19 +151,19 @@ void cpu_idle(void)
     }
 }
 
-void task_init(void)
+void proc_init(void)
 {
-    struct task_struct *init_task;
+    struct proc_struct *init_proc;
 
-    list_head_init(&scheduler.task_head);
+    list_head_init(&scheduler.proc_head);
 
-    init_task = &init_task_union.task;
-    /* init_task 中的一些属性缺失的，在这里进行补充 */
-    init_task->files->files[0] = stdin;
-    init_task->files->files[1] = stdout;
-    init_task->files->files[2] = stderr;
+    // init_proc = &init_proc_union.proc;
+    // /* init_proc 中的一些属性缺失的，在这里进行补充 */
+    // init_proc->files->files[0] = stdin;
+    // init_proc->files->files[1] = stdout;
+    // init_proc->files->files[2] = stderr;
 
-    scheduler.idle = init_task;
+    scheduler.idle = init_proc;
     setup_counter();
     register_irq(0x20, do_timer);
 }

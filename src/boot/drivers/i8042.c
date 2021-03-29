@@ -1,6 +1,6 @@
 #include <boot/bug.h>
 #include <boot/io.h>
-#include <feng/keyboard.h>
+#include <kernel/keyboard.h>
 
 /**
  * read_scancode - 从键盘控制器缓冲区读取扫描码

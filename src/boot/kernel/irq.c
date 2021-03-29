@@ -2,8 +2,8 @@
 #include <boot/cpu.h>
 #include <boot/i8259.h>
 #include <boot/irq.h>
-#include <feng/kernel.h>
-#include <feng/linkage.h>
+#include <kernel/kernel.h>
+#include <kernel/linkage.h>
 
 static void setup_idt_desc(struct gate_struct *gate, uint64 addr, uint8 dpl)
 {

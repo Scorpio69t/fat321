@@ -24,7 +24,7 @@
 
 #define SECTOR_SIZE 512
 
-#include <feng/list.h>
+#include <kernel/list.h>
 
 void disk_init(void);
 void disk_exit(void);

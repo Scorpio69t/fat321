@@ -1,7 +1,7 @@
 #ifndef _BOOT_STRING_H_
 #define _BOOT_STRING_H_
 
-#include <feng/types.h>
+#include <kernel/types.h>
 
 #define __HAVE_ARCH_MEMCPY
 static inline void *memcpy(void *to, void *from, size_t n)

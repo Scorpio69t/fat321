@@ -1,12 +1,12 @@
 #include <boot/bug.h>
 #include <boot/memory.h>
 #include <boot/sched.h>
-#include <feng/gfp.h>
-#include <feng/kernel.h>
-#include <feng/mm.h>
-#include <feng/page.h>
-#include <feng/slab.h>
-#include <feng/string.h>
+#include <kernel/gfp.h>
+#include <kernel/kernel.h>
+#include <kernel/mm.h>
+#include <kernel/page.h>
+#include <kernel/slab.h>
+#include <kernel/string.h>
 
 static void fill_pml4(uint64 base, uint64 addr, uint32 nr)
 {

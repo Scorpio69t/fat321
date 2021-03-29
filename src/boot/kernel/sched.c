@@ -3,11 +3,11 @@
 #include <boot/irq.h>
 #include <boot/memory.h>
 #include <boot/sched.h>
-#include <feng/compiler.h>
-#include <feng/kernel.h>
-#include <feng/mm.h>
-#include <feng/sched.h>
-#include <feng/types.h>
+#include <kernel/compiler.h>
+#include <kernel/kernel.h>
+#include <kernel/mm.h>
+#include <kernel/sched.h>
+#include <kernel/types.h>
 
 /**
  * setup_counter - 设置8253计数器
@@ -28,9 +28,9 @@ void setup_counter(void)
  * 由于进程控制块占一个页，每个页都是4k对其的，所以将%esp低12位变为零便是当前进程的进程控制块
  * 地址
  */
-inline struct task_struct *__current(void)
+inline struct proc_struct *__current(void)
 {
-    struct task_struct *cur;
+    struct proc_struct *cur;
     asm volatile("andq %%rsp, %0" : "=r"(cur) : "0"(~((uint64)KERNEL_STACK_SIZE - 1)));
     return cur;
 }
@@ -41,9 +41,9 @@ inline struct task_struct *__current(void)
  * @next: 下一个进程的进程控制块指针 in edx
  */
 #include <boot/bug.h>
-struct task_struct *__switch_to(struct task_struct *prev, struct task_struct *next)
+struct proc_struct *__switch_to(struct proc_struct *prev, struct proc_struct *next)
 {
-    init_tss.rsp0 = next->thread.rsp0;
+    init_tss.rsp0 = next->context.rsp0;
 
     uint64 pgd = get_pgd();
     if (next->flags & PF_KTHREAD) {
@@ -53,8 +53,8 @@ struct task_struct *__switch_to(struct task_struct *prev, struct task_struct *ne
         }
     } else {
         printk("no kthread");
-        if (pgd != next->mm->pgd)
-            switch_pgd(next->mm->pgd);
+        if (pgd != next->mm.pgd)
+            switch_pgd(next->mm.pgd);
     }
 
     return prev;

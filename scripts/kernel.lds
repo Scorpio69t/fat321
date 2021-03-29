@@ -24,7 +24,7 @@ SECTIONS
 	}
 
 	. = ALIGN(8192);
-  	.data.init_task : { *(.data.init_task) }
+  	.data.init_proc : { *(.data.init_proc) }
 
 	.rodata :
 	{

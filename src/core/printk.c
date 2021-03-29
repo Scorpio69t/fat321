@@ -1,28 +1,9 @@
 #include <boot/console.h>
-#include <feng/console.h>
-#include <feng/kernel.h>
-#include <feng/stdio.h>
-#include <feng/unistd.h>
+#include <kernel/console.h>
+#include <kernel/kernel.h>
+#include <kernel/stdio.h>
+#include <kernel/unistd.h>
 #include <stdarg.h>
-
-/**
- * printf - 用户态字符串格式化输出函数
- *
- * 该函数使用write系统调用进行输出，只能用于用户态，不能用于内核态
- */
-int printf(const char *fmt, ...)
-{
-    static char buf[1024];
-    va_list     args;
-    int         i;
-
-    va_start(args, fmt);
-    i = vsnprintf(buf, sizeof(buf), fmt, args);
-    write(STDOUT_FILENO, buf, i);
-    va_end(args);
-
-    return i;
-}
 
 static unsigned char printk_color[] = {
     0x0f, 0x0f, 0x0f, 0x0c, 0x0f, 0x0f, 0x0f, 0x0f,

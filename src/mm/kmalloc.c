@@ -1,9 +1,9 @@
-#include <feng/bugs.h>
-#include <feng/gfp.h>
-#include <feng/mm.h>
-#include <feng/page.h>
-#include <feng/slab.h>
-#include <feng/types.h>
+#include <kernel/bugs.h>
+#include <kernel/gfp.h>
+#include <kernel/mm.h>
+#include <kernel/page.h>
+#include <kernel/slab.h>
+#include <kernel/types.h>
 
 #define KMALLOC_CACHE_SIZE 11
 

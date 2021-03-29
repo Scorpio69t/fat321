@@ -11,7 +11,7 @@ srctree	:= $(CURDIR)
 
 export CC LD CFLAGS
 
-subdir := boot drivers fs core lib mm
+subdir := boot core lib mm
 HEADER := ./include
 
 ifeq ($(DEBUG), 1)
@@ -26,7 +26,7 @@ _all: all
 
 all: $(TARGET)
 
-$(TARGET): main.o $(subdir)
+$(TARGET): $(subdir)
 	$(LD) $(LDFLAGS) -o $@ $(shell find . -name "*.o")
 
 $(subdir):

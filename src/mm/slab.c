@@ -2,13 +2,13 @@
  * slab高速缓存, 当前实现并发不安全
  */
 
-#include <feng/bugs.h>
-#include <feng/gfp.h>
-#include <feng/kernel.h>
-#include <feng/mm.h>
-#include <feng/page.h>
-#include <feng/slab.h>
-#include <feng/types.h>
+#include <kernel/bugs.h>
+#include <kernel/gfp.h>
+#include <kernel/kernel.h>
+#include <kernel/mm.h>
+#include <kernel/page.h>
+#include <kernel/slab.h>
+#include <kernel/types.h>
 
 static inline unsigned int kmem_align(unsigned int size)
 {

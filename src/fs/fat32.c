@@ -4,15 +4,15 @@
 
 #include <boot/bug.h>
 #include <boot/div64.h>
-#include <feng/blkdev.h>
-#include <feng/bugs.h>
-#include <feng/fat32.h>
-#include <feng/fs.h>
-#include <feng/kernel.h>
-#include <feng/malloc.h>
-#include <feng/slab.h>
-#include <feng/stdio.h>
-#include <feng/string.h>
+#include <kernel/blkdev.h>
+#include <kernel/bugs.h>
+#include <kernel/fat32.h>
+#include <kernel/fs.h>
+#include <kernel/kernel.h>
+#include <kernel/malloc.h>
+#include <kernel/slab.h>
+#include <kernel/stdio.h>
+#include <kernel/string.h>
 
 /*
  * 为了简单起见，不再兼容windows对目录项的创建方式，并且，对于每一个短目录项，都要有其对应的
@@ -309,7 +309,7 @@ static int fat32_readdir(struct file *filp, void *dirent, filldir_t filldir)
     //     return EOF;
 
     offset = pos % private->bytes_per_clus; /* 簇内偏移 */
-    index = pos / private->bytes_per_clus;                            /* 第几个簇 */
+    index = pos / private->bytes_per_clus;  /* 第几个簇 */
 
     clus = filp->f_dentry->d_inode->i_ino; /* 起始簇 */
     buffer = (unsigned char *)kmalloc(private->bytes_per_clus, 0);

@@ -2,7 +2,7 @@
 #define _BOOT_BOOT_H_
 
 #ifndef __ASSEMBLY__
-#include <feng/types.h>
+#include <kernel/types.h>
 #endif
 
 #define KERNEL_OFFSET 0xffff800000000000

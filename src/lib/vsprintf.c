@@ -1,8 +1,8 @@
 #include <boot/div64.h>
-#include <feng/ctype.h>
-#include <feng/stdio.h>
-#include <feng/string.h>
-#include <feng/types.h>
+#include <kernel/ctype.h>
+#include <kernel/stdio.h>
+#include <kernel/string.h>
+#include <kernel/types.h>
 #include <stdarg.h>
 
 /* from Linux */
