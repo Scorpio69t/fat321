@@ -1,6 +1,25 @@
 #ifndef _KERNEL_KERNEL_H_
 #define _KERNEL_KERNEL_H_
 
+#include <kernel/multiboot.h>
+#include <kernel/types.h>
+
+#define KINFO_MEMMAP_SIZE 16
+#define KINFO_MODULE_SIZE 8
+
+typedef struct kernel_info {
+    uint32                 mmap_size;
+    multiboot_memory_map_t mmap[KINFO_MEMMAP_SIZE];
+
+    uint32                 module_size;
+    multiboot_tag_module_t module[KINFO_MODULE_SIZE];
+    uint64                 kernrl_start, kernel_end;         /* linear address of kernel */
+    uint64                 global_pgd_start, global_pgd_end; /* global page table start and end */
+    uint64                 mem_map_start, mem_map_end;       /* mem_map array start address and end */
+} kinfo_t;
+
+extern kinfo_t kinfo;
+
 /* printk打印前缀 */
 #define KERN_EMERG   "<0>" /* system is unusable            */
 #define KERN_ALERT   "<1>" /* action must be taken immediately    */

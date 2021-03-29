@@ -68,7 +68,6 @@ extern pid_t volatile pid;
 /* 进程优先级 */
 #define LOWEST_PRIO 9999 /* 进程的最低优先级 */
 
-
 /* 进程标示和状态标示的前面不可在定义任何变量，因为这两个变量需要在entry.S中借助偏移来访问 */
 typedef struct proc_struct {
     volatile long         state;               /* 进程状态，-1不可运行，0可运行 */

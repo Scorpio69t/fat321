@@ -7,7 +7,6 @@
 #include <kernel/console.h>
 #include <kernel/mm.h>
 
-
 #define ROW 25
 #define COL 80
 
@@ -75,7 +74,6 @@ void write_char(char c, unsigned char type, unsigned short cur)
     asm volatile("movw %%ax, (%%rdi)" ::"a"(val), "D"(pos));
 }
 
-
 /**
  * 向控制台写字符串
  * @buf: 字符串缓冲区
@@ -111,4 +109,3 @@ ssize_t console_write(const char *buf, size_t n, unsigned char type)
     }
     return n;
 }
-

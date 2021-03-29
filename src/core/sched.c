@@ -157,7 +157,7 @@ void proc_init(void)
 
     list_head_init(&scheduler.proc_head);
 
-    // init_proc = &init_proc_union.proc;
+    init_proc = &init_proc_union.proc;
     // /* init_proc 中的一些属性缺失的，在这里进行补充 */
     // init_proc->files->files[0] = stdin;
     // init_proc->files->files[1] = stdout;

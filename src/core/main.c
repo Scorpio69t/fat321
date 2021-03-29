@@ -23,62 +23,82 @@
 #include <kernel/slab.h>
 #include <kernel/stdio.h>
 #include <kernel/syscalls.h>
+#include <kernel/types.h>
 #include <kernel/unistd.h>
 
-// static void test(void)
-// {
-//     printk("in test\n");
-//     char buf[10];
-//     int  i;
-//     int  fd = sys_open("/home/a.txt", O_RDONLY);
-//     if (fd != -1) {
-//         while (sys_read(fd, buf, 3)) {
-//             for (i = 0; i < 3; i++) printk("%c", buf[i]);
-//         }
-//     } else {
-//         printk("error\n");
-//     }
-//     printk("end\n");
-//     if (sys_close(fd))
-//         printk("close error\n");
-// }
+kinfo_t kinfo;
 
-int init(void)
+static void check_boot_info(uint64 addr)
 {
-    printk("init process\n");
-    // disk_init();
-    // printk("disk init successfully\n");
-    // fat32_init();
-    // printk("fat32 init successfully\n");
+    if (addr & 7) {
+        panic("Unaligned mbi: 0x%x\n", addr);
+        return;
+    }
+    struct multiboot_tag *tag;
+    for (tag = (struct multiboot_tag *)(addr + 8); tag->type != MULTIBOOT_TAG_TYPE_END;
+         tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
+        if (tag->type == MULTIBOOT_TAG_TYPE_MMAP) {
+            multiboot_memory_map_t *mmap;
+            for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
+                 (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
+                 mmap =
+                     (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size)) {
+                assert(kinfo.mmap_size < KINFO_MEMMAP_SIZE);
+                kinfo.mmap[kinfo.mmap_size].addr = mmap->addr;
+                kinfo.mmap[kinfo.mmap_size].len = mmap->len;
+                kinfo.mmap[kinfo.mmap_size].type = mmap->type;
+                printk("memory zone: addr: 0x%016llx, len: 0x%016llx, type: %d\n", kinfo.mmap[kinfo.mmap_size].addr,
+                       kinfo.mmap[kinfo.mmap_size].len, kinfo.mmap[kinfo.mmap_size].type);
+                kinfo.mmap_size++;
+            }
+        } else if (tag->type == MULTIBOOT_TAG_TYPE_MODULE) {
+            multiboot_tag_module_t *module = (multiboot_tag_module_t *)tag;
+            assert(kinfo.module_size < KINFO_MODULE_SIZE);
+            assert(strlen(module->cmdline) <= MULTIBOOT_MODULE_CMD_LEN);
+            kinfo.module[kinfo.module_size].mod_start = module->mod_start;
+            kinfo.module[kinfo.module_size].mod_end = module->mod_end;
+            strcpy(kinfo.module[kinfo.module_size].cmdline, module->cmdline);
+            printk("boot module: start: 0x%08llx, end: 0x%08llx, cmd: %s\n", kinfo.module[kinfo.module_size].mod_start,
+                   kinfo.module[kinfo.module_size].mod_end, kinfo.module[kinfo.module_size].cmdline);
+            kinfo.module_size++;
 
-    // test();
-    //    if (!fork()) {
-    //        tty_task();
-    //    }
+            assert(kinfo.mmap_size < KINFO_MEMMAP_SIZE);
 
-    cpu_idle();
-
-    return 0;
+            kinfo.mmap[kinfo.mmap_size].addr = module->mod_start;
+            kinfo.mmap[kinfo.mmap_size].len = module->mod_end - module->mod_end;
+            kinfo.mmap[kinfo.mmap_size].type = MULTIBOOT_MEMORY_RESERVED;
+            kinfo.mmap_size++;
+        }
+    }
 }
 
-void kernel_main()
+void kernel_main(void *boot_info)
 {
-    boot_init();
+    printk("booting...\n");
+    memset(&kinfo, 0x00, sizeof(kinfo_t));
+
+    extern char _kernel_start, _kernel_end;
+    kinfo.kernrl_start = (uint64)&_kernel_start;
+    kinfo.kernel_end = (uint64)&_kernel_end;
+    printk("kernel start: 0x%016llx, end: 0x%016llx\n", kinfo.kernrl_start, kinfo.kernel_end);
+
+    printk("checking boot info...\n");
+    check_boot_info((uint64)boot_info);
+
+    printk("Initializing cpu...\n");
     cpu_init();
+
+    printk("Initializing interrput...\n");
     irq_init();
+
+    printk("Initializing memory management...\n");
     mm_init();
-    // keyboard_init();
-    // console_init();
+
+    printk("Initializing proc...\n");
     proc_init();
 
-    // clear_screen();
     printk("kernel_main\n");
 
     enable_interrupt();
-    // kernel_proc(init, NULL, CLONE_VM);
-    int a;
-    while (1) {
-        printk("%d\n", a++);
-        hlt();
-    }
+    cpu_idle();
 }

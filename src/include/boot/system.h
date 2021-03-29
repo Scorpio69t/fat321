@@ -37,21 +37,21 @@
     "popq %%rsi\n\t"   \
     "popq %%rdi\n\t"
 
-#define switch_to(prev, next, last)                                                       \
-    do {                                                                                  \
-        struct proc_struct *__last;                                                       \
-        asm volatile("pushfq\n\t" SWITCH_SAVE                                             \
-                     "movq %%rsp, %0\n\t"        /* save prev rsp */                      \
-                     "movq %3, %%rsp\n\t"        /* restore next rsp */                   \
-                     "leaq 1f(%%rip), %%rax\n\t" /* label 1 address */                    \
-                     "movq %%rax, %1\n\t"                                                 \
-                     "pushq %4\n\t" /* __switch_to return address */                      \
-                     "jmp __switch_to\n\t"                                                \
-                     "1:\t" SWITCH_RESTORE "popfq\n\t"                                    \
+#define switch_to(prev, next, last)                                                         \
+    do {                                                                                    \
+        struct proc_struct *__last;                                                         \
+        asm volatile("pushfq\n\t" SWITCH_SAVE                                               \
+                     "movq %%rsp, %0\n\t"        /* save prev rsp */                        \
+                     "movq %3, %%rsp\n\t"        /* restore next rsp */                     \
+                     "leaq 1f(%%rip), %%rax\n\t" /* label 1 address */                      \
+                     "movq %%rax, %1\n\t"                                                   \
+                     "pushq %4\n\t" /* __switch_to return address */                        \
+                     "jmp __switch_to\n\t"                                                  \
+                     "1:\t" SWITCH_RESTORE "popfq\n\t"                                      \
                      : "=m"(prev->context.rsp), "=m"(prev->context.rip), "=a"(__last)       \
                      : "m"(next->context.rsp), "m"(next->context.rip), "D"(prev), "S"(next) \
-                     : "memory", "cc");                                                   \
-        last = __last;                                                                    \
+                     : "memory", "cc");                                                     \
+        last = __last;                                                                      \
     } while (0)
 
 #endif

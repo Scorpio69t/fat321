@@ -55,7 +55,7 @@ uint64 setup_page_table(uint64 memsize)
     nr_pdpte = upper_div(nr_pde, PRE_PAGE_ENTRY);
     nr_pml4e = upper_div(nr_pdpte, PRE_PAGE_ENTRY);
 
-    base_pml4 = PAGE_TABLE_ADDRESS;
+    base_pml4 = kinfo.global_pgd_start;
     base_pdpt = base_pml4 + upper_div(nr_pml4e, PRE_PAGE_ENTRY) * PAGE_SIZE;
     base_pd = base_pdpt + upper_div(nr_pdpte, PRE_PAGE_ENTRY) * PAGE_SIZE;
     base_pt = base_pd + upper_div(nr_pde, PRE_PAGE_ENTRY) * PAGE_SIZE;

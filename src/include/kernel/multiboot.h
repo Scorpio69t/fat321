@@ -209,8 +209,10 @@ struct multiboot_tag_module {
     multiboot_uint32_t size;
     multiboot_uint32_t mod_start;
     multiboot_uint32_t mod_end;
-    char               cmdline[0];
+#define MULTIBOOT_MODULE_CMD_LEN 32
+    char cmdline[MULTIBOOT_MODULE_CMD_LEN];
 };
+typedef struct multiboot_tag_module multiboot_tag_module_t;
 
 struct multiboot_tag_basic_meminfo {
     multiboot_uint32_t type;

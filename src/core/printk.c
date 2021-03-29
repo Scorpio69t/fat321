@@ -11,8 +11,6 @@ static unsigned char printk_color[] = {
 
 /**
  * printk - 内核态字符串格式化输出函数
- *
- * 该函数直接使用tty_write实现，只能用于内核态，不能用于用户态
  */
 int printk(const char *fmt, ...)
 {

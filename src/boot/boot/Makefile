@@ -1,7 +1,7 @@
 
 HEADER := ../../include
 
-default: multiboot.o boot.o
+default: boot.o
 
 -include Makefile.dep
 

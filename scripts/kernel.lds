@@ -5,6 +5,7 @@ SECTIONS
 {
 
 	. = 0x100000 + 0xffff800000000000;
+	_kernel_start = .;
 	.text : AT(0x100000)
 	{
 		_text = .;
@@ -40,5 +41,5 @@ SECTIONS
 		_ebss = .;
 	}
 
-	_end = .;
+	_kernel_end = .;
 }

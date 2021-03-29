@@ -58,31 +58,31 @@ int sys_open(const char *path, int oflag)
     // if (atomic_read(&current->files->count) >= TASK_MAX_FILE)
     //     goto open_faild;
 
-//     de = path_walk(path, 0);
-//     if (!de)
-//         goto open_faild;
+    //     de = path_walk(path, 0);
+    //     if (!de)
+    //         goto open_faild;
 
-//     if ((oflag & O_DIRECTORY) && !(de->d_inode->i_flags & FS_ATTR_DIR))
-//         return -1;
+    //     if ((oflag & O_DIRECTORY) && !(de->d_inode->i_flags & FS_ATTR_DIR))
+    //         return -1;
 
-//     filp = make_file(de, 0, oflag);
-//     if (!filp)
-//         goto open_faild;
+    //     filp = make_file(de, 0, oflag);
+    //     if (!filp)
+    //         goto open_faild;
 
-//     for (fd = 0; fd < TASK_MAX_FILE; fd++) {
-//         // if (!current->files->files[fd])
-//             break;
-//     }
+    //     for (fd = 0; fd < TASK_MAX_FILE; fd++) {
+    //         // if (!current->files->files[fd])
+    //             break;
+    //     }
 
-//     // atomic_inc(&current->files->count);
-//     // current->files->files[fd] = filp;
-//     return fd;
+    //     // atomic_inc(&current->files->count);
+    //     // current->files->files[fd] = filp;
+    //     return fd;
 
-// open_faild:
-//     if (de)
-//         kfree(de);
-//     if (filp)
-//         kfree(filp);
+    // open_faild:
+    //     if (de)
+    //         kfree(de);
+    //     if (filp)
+    //         kfree(filp);
     return -1;
 }
 
