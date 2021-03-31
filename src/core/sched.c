@@ -7,11 +7,13 @@
 #include <boot/memory.h>
 #include <boot/sched.h>
 #include <boot/system.h>
+#include <boot/process.h>
 #include <kernel/bugs.h>
+#include <kernel/elf.h>
+#include <kernel/gfp.h>
 #include <kernel/kernel.h>
 #include <kernel/linkage.h>
 #include <kernel/list.h>
-#include <kernel/malloc.h>
 #include <kernel/mm.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
@@ -44,7 +46,7 @@ static inline void update_alarm(void)
         }
         --p->alarm;
         if (p->alarm == 0) {
-            p->state = TASK_RUNNING;
+            p->state = PROC_RUNNING;
         }
     }
 }
@@ -63,7 +65,7 @@ struct pt_regs *get_pt_regs(struct proc_struct *proc)
 /**
  * schedule是进程的调度器，该方法在就绪进程队列中选出一个进程进行切换
  * 当前进程的调度并不涉及优先级和运行时间的一系列复杂因素，仅仅是将时间片消耗完的进程
- * 移到队尾，然后选出进程状态为TASK_RUNNING的进程作为下一个的进程
+ * 移到队尾，然后选出进程状态为PROC_RUNNING的进程作为下一个的进程
  */
 void schedule(void)
 {
@@ -80,7 +82,7 @@ void schedule(void)
     }
     list_for_each_entry(p, &scheduler.proc_head, proc)
     {
-        if (p->state == TASK_RUNNABLE) {
+        if (p->state == PROC_RUNNABLE) {
             next = p;
             break;
         }
@@ -88,6 +90,7 @@ void schedule(void)
     if (!next)
         next = scheduler.idle;
     next->counter = 1;
+    printk("pid %d\n", next->pid);
 
     if (prev == next)
         goto same_process;
@@ -122,14 +125,14 @@ long sys_sleep(unsigned long type, unsigned long t)
         printk("sys_sleep error\n");
         return -1;
     }
-    current->state = TASK_SENDING;
+    current->state = PROC_SENDING;
     schedule();
     return 0;
 }
 
 int sys_pause(void)
 {
-    current->state = TASK_SENDING;
+    current->state = PROC_SENDING;
     schedule();
     return 0;
 }
@@ -151,6 +154,90 @@ void cpu_idle(void)
     }
 }
 
+static int parse_cmdline(char *s)
+{
+    int num = 0;
+    for (; *s != 0; s++) {
+        num = num * 10 + *s - '0';
+    }
+    return num;
+}
+
+static proc_t *module_proc(multiboot_tag_module_t *module)
+{
+    uint64 module_start = to_vir(module->mod_start);
+    proc_t *    proc;
+    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)module_start;
+    Elf64_Phdr *phdr_table;
+
+    /* check header magic */
+    if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || ehdr->e_ident[EI_MAG1] != ELFMAG1 ||
+        ehdr->e_ident[EI_MAG2] != ELFMAG2 || ehdr->e_ident[EI_MAG3] != ELFMAG3)
+            goto check_failed;
+    if (ehdr->e_ident[EI_CLASS] != ELFCLASS64)
+        goto check_failed;
+    if (ehdr->e_type != ET_EXEC)
+        goto check_failed;
+    if (ehdr->e_machine != EM_X86_64)
+        goto check_failed;
+
+    /* create process */
+    proc = (proc_t *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
+    proc->state = PROC_SENDING;
+    proc->pid = parse_cmdline(module->cmdline);
+    proc->counter = 1;
+    proc->alarm = 0;
+    proc->signal = 0;
+    proc->parent = &init_proc_union.proc;
+
+    /* TODO: 耦合太高，重构这个部分 */
+    proc->mm.pgd = get_zeroed_page(GFP_KERNEL);
+    memcpy((void *)proc->mm.pgd, (void *)init_proc_union.proc.mm.pgd, PAGE_SIZE);
+    memset((void *)proc->mm.pgd, 0x00, PAGE_SIZE / 2);
+
+    proc->mm.end_stack = USER_STACK_END;
+    proc->mm.start_stack = USER_STACK_END;
+    for (int i = 0; i < (1 << USER_STACK_ORDER); i++) {
+        proc->mm.start_stack -= PAGE_SIZE;
+        map_page(proc, proc->mm.start_stack);
+    }
+
+    setup_module_context(proc, ehdr->e_entry);
+
+    phdr_table = (Elf64_Phdr *)(module_start + ehdr->e_phoff);
+
+    for (int i = 0; i < ehdr->e_phnum; i++) {
+        Elf64_Phdr *phdr = &phdr_table[i];
+        if(phdr->p_type != PT_LOAD)
+            continue;
+        uint64 seg_start = PAGE_LOWER_ALIGN(phdr->p_vaddr);
+        uint64 seg_end = PAGE_UPPER_ALIGN(phdr->p_vaddr + phdr->p_memsz);
+        int64 page_num = (seg_end - seg_start) / PAGE_SIZE;
+        while (page_num--) {
+            map_page(proc, seg_start);
+            seg_start += PAGE_SIZE;
+        }
+    }
+
+    switch_pgd(proc->mm.pgd);
+
+    for (int i = 0; i < ehdr->e_phnum; i++) {
+        Elf64_Phdr *phdr = &phdr_table[i];
+        if(phdr->p_type != PT_LOAD)
+            continue;
+        memcpy((void *)phdr->p_vaddr, (void *)(module_start + phdr->p_offset), phdr->p_filesz);
+        if (phdr->p_memsz > phdr->p_filesz)
+            memset((void *)(phdr->p_vaddr + phdr->p_filesz), 0x00, phdr->p_memsz - phdr->p_filesz);
+    }
+    switch_pgd(current->mm.pgd);
+
+    proc->state = PROC_RUNNABLE;
+    return proc;
+check_failed:
+    panic("module check failed\n");
+    return NULL;
+}
+
 void proc_init(void)
 {
     struct proc_struct *init_proc;
@@ -158,12 +245,18 @@ void proc_init(void)
     list_head_init(&scheduler.proc_head);
 
     init_proc = &init_proc_union.proc;
-    // /* init_proc 中的一些属性缺失的，在这里进行补充 */
-    // init_proc->files->files[0] = stdin;
-    // init_proc->files->files[1] = stdout;
-    // init_proc->files->files[2] = stderr;
+    /* init_proc 中的一些属性缺失的，在这里进行补充 */
+    init_proc->mm.pgd = kinfo.global_pgd_start;
+    init_proc->mm.start_code = kinfo.kernrl_start;
+    init_proc->mm.end_code = kinfo.kernel_end;
 
     scheduler.idle = init_proc;
+
+    for (int i = 0; i < kinfo.module_size; i++) {
+        proc_t *proc = module_proc(&kinfo.module[i]);
+        assert(proc != NULL);
+        list_add_tail(&proc->proc, &scheduler.proc_head);
+    }
     setup_counter();
     register_irq(0x20, do_timer);
 }

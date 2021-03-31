@@ -39,6 +39,7 @@ sudo mount "$map_dev"p1 $mdir
 
 sudo cp -r config/grub $mdir/boot
 sudo cp src/kernel.bin $mdir/boot
+sudo cp src/init/init.out $mdir/boot
 
 if [[ -d img.tmp ]]; then
         sudo cp -r img.tmp/* $mdir

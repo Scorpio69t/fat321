@@ -3,7 +3,6 @@
 #include <kernel/bugs.h>
 #include <kernel/kernel.h>
 #include <kernel/keyboard.h>
-#include <kernel/malloc.h>
 #include <kernel/slab.h>
 #include <kernel/spinlock.h>
 #include <kernel/types.h>

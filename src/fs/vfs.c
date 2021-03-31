@@ -2,7 +2,6 @@
 #include <kernel/bugs.h>
 #include <kernel/fs.h>
 #include <kernel/kernel.h>
-#include <kernel/malloc.h>
 #include <kernel/slab.h>
 #include <kernel/string.h>
 #include <kernel/types.h>

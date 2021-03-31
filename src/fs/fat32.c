@@ -9,7 +9,6 @@
 #include <kernel/fat32.h>
 #include <kernel/fs.h>
 #include <kernel/kernel.h>
-#include <kernel/malloc.h>
 #include <kernel/slab.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>

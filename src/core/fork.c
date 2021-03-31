@@ -5,7 +5,6 @@
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
 #include <kernel/linkage.h>
-#include <kernel/malloc.h>
 #include <kernel/mm.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>
@@ -40,16 +39,16 @@ static int copy_signal(struct proc_struct *p, int clone_flags)
 static int copy_mm(struct proc_struct *p, int clone_flags)
 {
     /* 一些旧代码还无法废除 */
-    p->stack = (void *)__get_free_pages(GFP_USER, USER_STACK_ORDER);
-    if (!p->stack)
-        return -1;
-    if (!(p->flags & PF_KTHREAD))
-        memcpy(p->stack, current->stack, USER_STACK_SIZE);
+    // p->stack = (void *)__get_free_pages(GFP_USER, USER_STACK_ORDER);
+    // if (!p->stack)
+    //     return -1;
+    // if (!(p->flags & PF_KTHREAD))
+    //     memcpy(p->stack, current->stack, USER_STACK_SIZE);
 
-    if (clone_flags & CLONE_VM) {
-        p->mm = current->mm;
-        goto _ret;
-    }
+    // if (clone_flags & CLONE_VM) {
+    //     p->mm = current->mm;
+    //     goto _ret;
+    // }
 
 _ret:
     return 0;
@@ -84,7 +83,7 @@ static struct proc_struct *copy_process(int clone_flags, unsigned long stack_sta
     p = (struct proc_struct *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
     if (!p)
         return NULL;
-    p->state = TASK_SENDING;
+    p->state = PROC_SENDING;
     p->counter = 1;
     p->alarm = 0;
     p->parent = current;
@@ -119,7 +118,7 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, u
     disable_interrupt();
     list_add_tail(&p->proc, &scheduler.proc_head);
     enable_interrupt();
-    p->state = TASK_RUNNABLE;
+    p->state = PROC_RUNNABLE;
     return p->pid;
 }
 

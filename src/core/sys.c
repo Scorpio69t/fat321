@@ -5,7 +5,6 @@
 #include <kernel/kernel.h>
 #include <kernel/keyboard.h>
 #include <kernel/linkage.h>
-#include <kernel/malloc.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
 #include <kernel/unistd.h>
@@ -20,7 +19,7 @@ ssize_t sys_write(int fd, const void *buf, size_t nbytes)
     struct file *filp;
     int          ret = -1;
 
-    if (fd < 0 || fd >= TASK_MAX_FILE)
+    if (fd < 0 || fd >= PROC_MAX_FILE)
         return -1;
     if (nbytes < 0)
         return -1;
@@ -37,7 +36,7 @@ ssize_t sys_read(int fd, void *buf, size_t nbytes)
     // struct file *filp;
     // int          ret = -1;
 
-    // if (fd < 0 || fd >= TASK_MAX_FILE)
+    // if (fd < 0 || fd >= PROC_MAX_FILE)
     //     return -1;
     // if (nbytes < 0)
     //     return -1;
@@ -55,7 +54,7 @@ int sys_open(const char *path, int oflag)
     // struct file *  filp = NULL;
     // int            fd;
 
-    // if (atomic_read(&current->files->count) >= TASK_MAX_FILE)
+    // if (atomic_read(&current->files->count) >= PROC_MAX_FILE)
     //     goto open_faild;
 
     //     de = path_walk(path, 0);
@@ -69,7 +68,7 @@ int sys_open(const char *path, int oflag)
     //     if (!filp)
     //         goto open_faild;
 
-    //     for (fd = 0; fd < TASK_MAX_FILE; fd++) {
+    //     for (fd = 0; fd < PROC_MAX_FILE; fd++) {
     //         // if (!current->files->files[fd])
     //             break;
     //     }
@@ -90,7 +89,7 @@ int sys_close(int fd)
 {
     struct file *filp;
 
-    if (fd < 0 || fd >= TASK_MAX_FILE)
+    if (fd < 0 || fd >= PROC_MAX_FILE)
         return -1;
     // filp = current->files->files[fd];
     // current->files->files[fd] = NULL;
@@ -162,7 +161,7 @@ int sys_getdents(int fd, void *dirent, int count)
     struct file *filp;
     int          ret = -1;
 
-    if (fd < 0 || fd >= TASK_MAX_FILE)
+    if (fd < 0 || fd >= PROC_MAX_FILE)
         return -1;
     if (count < 0)
         return -1;
@@ -184,10 +183,8 @@ long sys_reboot(void)
     return 0;
 }
 
-long sys_debug(void)
+long sys_debug(char *s)
 {
-    struct proc_struct *p = current;
-    struct pt_regs *    regs = get_pt_regs(p);
-    // printk("%x pid: %d esp0: %x esp: %x\n", (u32)p, p->pid, p->thread.rsp0, regs->rsp);
+    printk("pid: %d %s\n", current->pid, s);
     return 0;
 }

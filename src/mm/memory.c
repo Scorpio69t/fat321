@@ -8,7 +8,6 @@
 #include <kernel/console.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
-#include <kernel/malloc.h>
 #include <kernel/mm.h>
 #include <kernel/multiboot.h>
 #include <kernel/page.h>

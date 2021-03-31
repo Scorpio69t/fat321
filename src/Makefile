@@ -1,7 +1,5 @@
 MAKEFLAGS  += --no-print-directory
 
-DEBUG = 1
-
 CC			= gcc
 LD			= ld
 CFLAGS		= -c -Wall -fno-builtin -fno-common -fno-stack-protector -mcmodel=large
@@ -14,7 +12,7 @@ export CC LD CFLAGS
 subdir := boot core lib mm
 HEADER := ./include
 
-ifeq ($(DEBUG), 1)
+ifdef DEBUG
 	CFLAGS += -g -ggdb
 endif
 
@@ -27,7 +25,7 @@ _all: all
 all: $(TARGET)
 
 $(TARGET): $(subdir)
-	$(LD) $(LDFLAGS) -o $@ $(shell find . -name "*.o")
+	$(LD) $(LDFLAGS) -o $@ $(shell find $(subdir) -name "*.o")
 
 $(subdir):
 	@$(MAKE) -C $@
@@ -42,7 +40,8 @@ iso: all
 	grub-mkrescue -o alphaz.iso iso/
 
 clean:
-	find . -name "*.o" -or -name "*.dep" -or -name $(TARGET) | xargs rm
+	find $(subdir) -name "*.o" -or -name "*.dep" | xargs rm
+	test -e $(TARGET) && rm $(TARGET)
 
 qemu:
 	qemu-system-i386 -cdrom alphaz.iso -m 2G,slots=3,maxmem=4G

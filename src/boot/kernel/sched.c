@@ -47,12 +47,10 @@ struct proc_struct *__switch_to(struct proc_struct *prev, struct proc_struct *ne
 
     uint64 pgd = get_pgd();
     if (next->flags & PF_KTHREAD) {
-        if (pgd != PAGE_TABLE_ADDRESS) {
-            printk("kthread");
-            switch_pgd(PAGE_TABLE_ADDRESS);
+        if (pgd != kinfo.global_pgd_start) {
+            switch_pgd(kinfo.global_pgd_start);
         }
     } else {
-        printk("no kthread");
         if (pgd != next->mm.pgd)
             switch_pgd(next->mm.pgd);
     }

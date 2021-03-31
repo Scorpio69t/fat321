@@ -6,7 +6,7 @@ _all:
 	cd src && $(MAKE) $@
 
 bochs:
-	./scripts/mkiso.sh
+	./scripts/mkimg.sh
 	bochs -f config/bochsrc
 
 qemu:

@@ -2,7 +2,6 @@
 #include <kernel/dirent.h>
 #include <kernel/fcntl.h>
 #include <kernel/fs.h>
-#include <kernel/malloc.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/types.h>

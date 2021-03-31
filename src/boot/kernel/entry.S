@@ -112,7 +112,7 @@ PT_EAX = 0x18
 
 ret_from_int:
 	GET_CURRENT(%rbx)
-	testl	$NEED_SCHEDULE, TASK_FLAGS(%rbx)
+	testl	$NEED_SCHEDULE, PROC_FLAGS(%rbx)
 	jnz	re_sched
 	jmp     int_ret
 	re_sched:
@@ -257,17 +257,19 @@ exception:
 	hlt
 
 /* 系统调用入口 int 0x80
- * eax中为功能号
+ * rax中为功能号
  */
-ENTRY(system_call)
-    pushq   %rax    /* 压入功能号 */
+.global system_call
+system_call:
+	pushq   %rax    /* 压入功能号 */
 	SAVE_ALL
-    movq    PT_EAX(%rsp), %rax
-    # call    *sys_call_table(,%rax,4)
-    movq    %rax, PT_EAX(%rsp)
-    RESTOR_ALL
-    INTERRUPT_RETURN
-END(system_call)
+	pushq	%rbx
+	leaq	syscall_table(%rip), %rbx
+	movq	(%rbx,%rax,8), %rax
+	popq	%rbx
+	call	*%rax
+	RESTOR_ALL
+	INTERRUPT_RETURN
 
 kernel_process_child:
 	movq	%rdi, %rax	/* kernle process function address */
@@ -308,3 +310,12 @@ kernel_proc:
 	RESTOR_ALL
 	addq	$8*6, %rsp		/* skip fake frame */
 	ret
+
+.global syscall_table
+syscall_table:
+    .quad  sys_get_ticks
+    .quad  sys_debug    /* 1 */
+    .quad  sys_fork
+    .quad  sys_read
+    .quad  sys_write
+    .quad  sys_exit    /* 5 */

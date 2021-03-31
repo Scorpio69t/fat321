@@ -3,23 +3,24 @@
 
 #define KERNEL_STACK_ORDER 1    /* 内核栈order */
 #define KERNEL_STACK_SIZE  8192 /* 内核栈的大小 (1<<KERNEL_STACK_ORDER)*PAGE_SIZE */
-#define USER_STACK_ORDER   1    /* 用户栈order */
-#define USER_STACK_SIZE    4096 /* 用户栈的大小 (1<<USER_STACK_ORDER)*PAGE_SIZE */
+
+#define USER_STACK_END     0x7ffffffff000     /* 用户栈的用户空间地址 */
+#define USER_STACK_ORDER   1
 
 /* 进程状态 */
-#define TASK_RUNNABLE  (1 << 0) /* 可运行状态 */
-#define TASK_RUNNING   (1 << 1) /* 正在运行 */
-#define TASK_SENDING   (1 << 2) /* 等待发送消息 */
-#define TASK_RECEIVING (1 << 3) /* 等待接收消息 */
-#define TASK_STOPPED   (1 << 4) /* 停止状态 */
+#define PROC_RUNNABLE  (1 << 0) /* 可运行状态 */
+#define PROC_RUNNING   (1 << 1) /* 正在运行 */
+#define PROC_SENDING   (1 << 2) /* 等待发送消息 */
+#define PROC_RECEIVING (1 << 3) /* 等待接收消息 */
+#define PROC_STOPPED   (1 << 4) /* 停止状态 */
 
 /* 进程标示 */
 #define PF_KTHREAD    (1 << 0) /* 内核级进程 */
 #define NEED_SCHEDULE (1 << 1) /* 进程需要调度标示 */
 #define PF_IDLE       (1 << 2) /* idle进程 */
 
-#define TASK_STATE 0x00
-#define TASK_FLAGS 0x08
+#define PROC_STATE 0x00
+#define PROC_FLAGS 0x08
 
 #ifndef __ASSEMBLY__
 
@@ -63,8 +64,8 @@ extern unsigned long volatile ticks;
  */
 extern pid_t volatile pid;
 
-#define TASK_COMM_LEN 32 /* 进程名的长度 */
-#define TASK_MAX_FILE 64 /* 一个进程最多打开的文件数 */
+#define PROC_COMM_LEN 32 /* 进程名的长度 */
+#define PROC_MAX_FILE 64 /* 一个进程最多打开的文件数 */
 /* 进程优先级 */
 #define LOWEST_PRIO 9999 /* 进程的最低优先级 */
 
@@ -77,7 +78,7 @@ typedef struct proc_struct {
     unsigned long         counter;             /* 进程可用时间片 */
     unsigned long         alarm;               /* 滴答数定时器 */
     long                  signal;              /* 进程持有的信号 */
-    char                  comm[TASK_COMM_LEN]; /* 进程名称 */
+    char                  comm[PROC_COMM_LEN]; /* 进程名称 */
     struct proc_struct *  parent;              /* 父进程 */
     struct context_struct context;             /* 进程的上下文信息 */
     struct list_head      proc;                /* 进程链表 */
@@ -85,12 +86,13 @@ typedef struct proc_struct {
     struct {
         unsigned long flags;
 
-        unsigned long *pgd; /* 页目录所在的起始逻辑地址 */
+        unsigned long pgd; /* 页目录所在的起始逻辑地址 */
 
         unsigned long start_code, end_code;
         unsigned long start_data, end_data;
-        unsigned long start_brk, brk, start_stack;
-    } mm; /* 进程内存信息 */
+        unsigned long start_brk, brk;
+        unsigned long start_stack, end_stack;
+    } mm; /* 进程用户空间描述 */
 } proc_t;
 
 // clang-format off
@@ -104,7 +106,7 @@ extern struct files_struct init_files;
 // clang-format off
 #define INIT_PROC(tsk)                          \
 {                                               \
-    .state = TASK_RUNNING,                      \
+    .state = PROC_RUNNING,                      \
     .flags = PF_KTHREAD | PF_IDLE,              \
     .stack = NULL,                              \
     .pid = 0,                                   \
@@ -113,7 +115,7 @@ extern struct files_struct init_files;
     .parent = NULL,                             \
     .context = {},                              \
     .proc = LIST_HEAD_INIT(tsk.proc),           \
-    .mm = NULL,                                 \
+    .mm = {},                                   \
     .signal = 0,                                \
 }
 

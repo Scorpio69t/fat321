@@ -6,7 +6,6 @@
 #include <kernel/console.h>
 #include <kernel/fontdata.h>
 #include <kernel/fs.h>
-#include <kernel/malloc.h>
 #include <kernel/slab.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>

@@ -3,17 +3,70 @@
 #include <boot/sched.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
+#include <kernel/sched.h>
+#include <kernel/bugs.h>
 #include <kernel/mm.h>
 #include <kernel/page.h>
 #include <kernel/slab.h>
 #include <kernel/string.h>
+
+uint64 map_page(proc_t *proc, uint64 ustart)
+{
+    assert(proc->mm.pgd != NULL);
+    uint64 *pml4, *pdpt, *pd, *pt, *page;
+    uint64 pml4_ind, pdpt_ind, pd_ind, pt_ind;
+
+    pml4 = pdpt = pd = pt = NULL;
+    pml4 = (uint64 *)proc->mm.pgd;
+    ustart = ustart & (((uint64)1 << 48) - 1);
+    pml4_ind = ustart / ((uint64)1 << 39);
+
+    if (pml4[pml4_ind] == 0) {
+        pdpt = (uint64 *)get_zeroed_page(GFP_KERNEL);
+        assert(pdpt != NULL);
+        pml4[pml4_ind] = to_phy(pdpt) | PML4E_ATTR;
+    } else {
+        pdpt = (uint64 *)(to_vir(pml4[pml4_ind] & -((uint64)1 << 12)));
+    }
+
+    ustart = ustart & (((uint64)1 << 39) - 1);
+    pdpt_ind = ustart / ((uint64)1 << 30);
+    if (pdpt[pdpt_ind] == 0) {
+        pd = (uint64 *)get_zeroed_page(GFP_KERNEL);
+        assert(pd != NULL);
+        pdpt[pdpt_ind] = to_phy(pd) | PDPTE_ATTR;
+    } else {
+        pd = (uint64 *)(to_vir(pdpt[pdpt_ind] & -((uint64)1 << 12)));
+    }
+
+    ustart = ustart & (((uint64)1 << 30) - 1);
+    pd_ind = ustart / ((uint64)1 << 21);
+    if (pd[pd_ind] == 0) {
+        pt = (uint64 *)get_zeroed_page(GFP_KERNEL);
+        assert(pt != NULL);
+        pd[pd_ind] = to_phy(pt) | PDE_ATTR;
+    } else {
+        pt = (uint64 *)(to_vir(pd[pd_ind] & -((uint64)1 << 12)));
+    }
+
+    ustart = ustart & (((uint64)1 << 21) - 1);
+    pt_ind = ustart / ((uint64)1 << 12);
+    if (pt[pt_ind] == 0) {
+        page = (uint64 *)get_zeroed_page(GFP_KERNEL);
+        assert(page != NULL);
+        pt[pt_ind] = to_phy(page) | PTE_ATTR;
+    } else {
+        page = (uint64 *)(to_vir(pt[pt_ind]) & -((uint64)1 << 12));
+    }
+
+    return (uint64)page;
+}
 
 static void fill_pml4(uint64 base, uint64 addr, uint32 nr)
 {
     uint64 *pml4e = (uint64 *)base;
     memset(pml4e, 0x00, PAGE_SIZE);
     for (int i = 0; i < nr; i++, addr += PAGE_SIZE) {
-        pml4e[i] = to_phy(addr) | PML4E_ATTR;
         pml4e[i + 256] = to_phy(addr) | PML4E_ATTR;
     }
 }

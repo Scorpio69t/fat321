@@ -19,6 +19,7 @@
 #include <kernel/kernel.h>
 #include <kernel/keyboard.h>
 #include <kernel/mm.h>
+#include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
 #include <kernel/stdio.h>
@@ -88,7 +89,7 @@ void kernel_main(void *boot_info)
     printk("Initializing cpu...\n");
     cpu_init();
 
-    printk("Initializing interrput...\n");
+    printk("Initializing interrupt...\n");
     irq_init();
 
     printk("Initializing memory management...\n");
@@ -100,5 +101,6 @@ void kernel_main(void *boot_info)
     printk("kernel_main\n");
 
     enable_interrupt();
+
     cpu_idle();
 }
