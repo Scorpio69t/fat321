@@ -1,4 +1,4 @@
-#include <boot/bug.h>
+
 #include <kernel/bugs.h>
 #include <kernel/kernel.h>
 #include <kernel/stdio.h>

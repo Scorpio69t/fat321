@@ -10,7 +10,7 @@ extern uint8 idt_table[];
 extern uint8 idt_end[];
 
 typedef void (*irq_entry)();
-typedef void (*irq_handler)(struct pt_regs *, unsigned);
+typedef void (*irq_handler)(frame_t *, unsigned);
 
 struct irq_struct {
     volatile long  state;   /* 中断状态 */

@@ -4,7 +4,6 @@
  */
 
 #include <boot/atomic.h>
-#include <boot/bug.h>
 #include <boot/disk.h>
 #include <boot/io.h>
 #include <boot/irq.h>
@@ -15,7 +14,7 @@
 
 static request_queue_head_t disk_request_head; /* IO请求队列 */
 wait_queue_head_t           disk_wait_queue_head;
-void                        disk_handler(struct pt_regs *, unsigned);
+void                        disk_handler(frame_t *, unsigned);
 
 /**
  * disk_init - ATA硬盘初始化
@@ -45,7 +44,7 @@ void disk_exit(void)
  * disk_handler - 硬盘中断处理函数
  * 硬盘会在写完一个扇区或者读完一个扇区后进行中断，所以一次硬盘设备请求可能会触发不止一次中断
  */
-void disk_handler(struct pt_regs *regs, unsigned nr)
+void disk_handler(frame_t *regs, unsigned nr)
 {
     disk_request_head.use->end_handler();
 }

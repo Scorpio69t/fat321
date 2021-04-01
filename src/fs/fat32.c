@@ -2,7 +2,6 @@
  * fat32文件系统
  */
 
-#include <boot/bug.h>
 #include <boot/div64.h>
 #include <kernel/blkdev.h>
 #include <kernel/bugs.h>

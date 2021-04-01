@@ -5,9 +5,9 @@
 #include <boot/cpu.h>
 #include <boot/irq.h>
 #include <boot/memory.h>
+#include <boot/process.h>
 #include <boot/sched.h>
 #include <boot/system.h>
-#include <boot/process.h>
 #include <kernel/bugs.h>
 #include <kernel/elf.h>
 #include <kernel/gfp.h>
@@ -52,17 +52,6 @@ static inline void update_alarm(void)
 }
 
 /**
- * 获取当前进程的cpu上下文
- */
-struct pt_regs *get_pt_regs(struct proc_struct *proc)
-{
-    struct pt_regs *regs;
-    regs = (struct pt_regs *)kernel_stack_top(proc);
-    regs = regs - 1;
-    return regs;
-}
-
-/**
  * schedule是进程的调度器，该方法在就绪进程队列中选出一个进程进行切换
  * 当前进程的调度并不涉及优先级和运行时间的一系列复杂因素，仅仅是将时间片消耗完的进程
  * 移到队尾，然后选出进程状态为PROC_RUNNING的进程作为下一个的进程
@@ -90,7 +79,6 @@ void schedule(void)
     if (!next)
         next = scheduler.idle;
     next->counter = 1;
-    printk("pid %d\n", next->pid);
 
     if (prev == next)
         goto same_process;
@@ -103,7 +91,7 @@ same_process:
 /**
  * 时钟中断处理函数
  */
-void do_timer(struct pt_regs *reg, unsigned nr)
+void do_timer(frame_t *reg, unsigned nr)
 {
     ticks_plus();
     update_alarm();
@@ -147,13 +135,6 @@ int do_exit(int code)
     return code;
 }
 
-void cpu_idle(void)
-{
-    while (1) {
-        hlt();
-    }
-}
-
 static int parse_cmdline(char *s)
 {
     int num = 0;
@@ -165,15 +146,15 @@ static int parse_cmdline(char *s)
 
 static proc_t *module_proc(multiboot_tag_module_t *module)
 {
-    uint64 module_start = to_vir(module->mod_start);
+    uint64      module_start = to_vir(module->mod_start);
     proc_t *    proc;
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)module_start;
     Elf64_Phdr *phdr_table;
 
     /* check header magic */
-    if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || ehdr->e_ident[EI_MAG1] != ELFMAG1 ||
-        ehdr->e_ident[EI_MAG2] != ELFMAG2 || ehdr->e_ident[EI_MAG3] != ELFMAG3)
-            goto check_failed;
+    if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || ehdr->e_ident[EI_MAG1] != ELFMAG1 || ehdr->e_ident[EI_MAG2] != ELFMAG2 ||
+        ehdr->e_ident[EI_MAG3] != ELFMAG3)
+        goto check_failed;
     if (ehdr->e_ident[EI_CLASS] != ELFCLASS64)
         goto check_failed;
     if (ehdr->e_type != ET_EXEC)
@@ -208,11 +189,11 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
 
     for (int i = 0; i < ehdr->e_phnum; i++) {
         Elf64_Phdr *phdr = &phdr_table[i];
-        if(phdr->p_type != PT_LOAD)
+        if (phdr->p_type != PT_LOAD)
             continue;
         uint64 seg_start = PAGE_LOWER_ALIGN(phdr->p_vaddr);
         uint64 seg_end = PAGE_UPPER_ALIGN(phdr->p_vaddr + phdr->p_memsz);
-        int64 page_num = (seg_end - seg_start) / PAGE_SIZE;
+        int64  page_num = (seg_end - seg_start) / PAGE_SIZE;
         while (page_num--) {
             map_page(proc, seg_start);
             seg_start += PAGE_SIZE;
@@ -223,7 +204,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
 
     for (int i = 0; i < ehdr->e_phnum; i++) {
         Elf64_Phdr *phdr = &phdr_table[i];
-        if(phdr->p_type != PT_LOAD)
+        if (phdr->p_type != PT_LOAD)
             continue;
         memcpy((void *)phdr->p_vaddr, (void *)(module_start + phdr->p_offset), phdr->p_filesz);
         if (phdr->p_memsz > phdr->p_filesz)

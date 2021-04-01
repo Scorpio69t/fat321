@@ -1,5 +1,5 @@
-#ifndef _KERNEL_CTYPEH_H_
-#define _KERNEL_CTYPEH_H_
+#ifndef _CTYPEH_H_
+#define _CTYPEH_H_
 
 int isalpha(int);
 int isblank(int);

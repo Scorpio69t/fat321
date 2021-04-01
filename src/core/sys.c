@@ -182,9 +182,3 @@ long sys_reboot(void)
     __sys_reboot();
     return 0;
 }
-
-long sys_debug(char *s)
-{
-    printk("pid: %d %s\n", current->pid, s);
-    return 0;
-}

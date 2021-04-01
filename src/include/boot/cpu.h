@@ -62,7 +62,7 @@ struct gate_struct {
 /**
  * 被中断时压入内核栈的寄存器, 按照压栈的顺序定义
  */
-struct pt_regs {
+typedef struct pt_regs {
     uint64 r15;
     uint64 r14;
     uint64 r13;
@@ -84,7 +84,7 @@ struct pt_regs {
     uint64 eflags;
     uint64 rsp;
     uint64 ss;
-} __attribute__((packed));
+} __attribute__((packed)) frame_t;
 
 /**
  * 进程的cpu上下文信息
@@ -125,7 +125,7 @@ extern struct desc_struct ldt[];
 extern struct tss_struct init_tss;
 
 void cpu_init(void);
-
+void cpu_idle(void);
 /* cpu特权级 */
 #define RING0 0
 #define RING1 1

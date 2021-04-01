@@ -1,4 +1,4 @@
-subdir := lib kernel drivers boot
+subdir := kernel drivers boot
 
 .PHONY: default $(subdir)
 

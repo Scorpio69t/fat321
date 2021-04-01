@@ -1,9 +1,7 @@
-#include <boot/div64.h>
-#include <kernel/ctype.h>
-#include <kernel/stdio.h>
-#include <kernel/string.h>
-#include <kernel/types.h>
+#include <ctype.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 /* from Linux */
 #define ZEROPAD 1 /* 使用0填充 */

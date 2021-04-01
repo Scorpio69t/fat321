@@ -39,3 +39,10 @@ void cpu_init(void)
     wrmsr(MSR_FS_BASE, 0);
     wrmsr(MSR_GS_BASE, 0);
 }
+
+void cpu_idle(void)
+{
+    while (1) {
+        asm volatile("hlt");
+    }
+}

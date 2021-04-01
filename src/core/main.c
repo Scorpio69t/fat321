@@ -3,7 +3,6 @@
  */
 
 #include <boot/boot.h>
-#include <boot/bug.h>
 #include <boot/cpu.h>
 #include <boot/disk.h>
 #include <boot/io.h>

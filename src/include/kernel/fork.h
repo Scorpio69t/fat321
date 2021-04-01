@@ -17,7 +17,7 @@
 
 #ifndef __ASSEMBLY__
 
-long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, unsigned long stack_size);
+long do_fork(int clone_flags, unsigned long stack_start, frame_t *regs, unsigned long stack_size);
 
 extern void  ret_from_fork(void);
 extern pid_t kernel_proc(int (*fn)(void), void *args, unsigned long flags);

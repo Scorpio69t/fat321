@@ -5,7 +5,7 @@ HEADER := ../include
 SOURCE := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, $(SOURCE))
 
-default: $(OBJS)
+default:
 
 -include Makefile.dep
 

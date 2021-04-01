@@ -1,6 +1,4 @@
 #include <boot/boot.h>
-#include <boot/bug.h>
-#include <boot/div64.h>
 #include <boot/io.h>
 #include <boot/memory.h>
 #include <kernel/bugs.h>

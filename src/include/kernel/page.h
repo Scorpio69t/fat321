@@ -1,9 +1,8 @@
 #ifndef _KERNEL_PAGE_H_
 #define _KERNEL_PAGE_H_
 
-#include <kernel/types.h>
 #include <kernel/sched.h>
-
+#include <kernel/types.h>
 
 /* use 4k page */
 #define PAGE_SIZE                 0x1000

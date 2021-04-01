@@ -4,8 +4,8 @@
 #define KERNEL_STACK_ORDER 1    /* 内核栈order */
 #define KERNEL_STACK_SIZE  8192 /* 内核栈的大小 (1<<KERNEL_STACK_ORDER)*PAGE_SIZE */
 
-#define USER_STACK_END     0x7ffffffff000     /* 用户栈的用户空间地址 */
-#define USER_STACK_ORDER   1
+#define USER_STACK_END   0x7ffffffff000 /* 用户栈的用户空间地址 */
+#define USER_STACK_ORDER 1
 
 /* 进程状态 */
 #define PROC_RUNNABLE  (1 << 0) /* 可运行状态 */
@@ -37,11 +37,10 @@
 
 #define NULL_STACK_MAGIC 0x1234 /* 空栈魔数，便于识别错误 */
 
-void            proc_init(void);
-void            schedule(void);
-struct pt_regs *get_pt_regs(struct proc_struct *proc);
-int             do_exit(int code);
-void            cpu_idle(void);
+void proc_init(void);
+void schedule(void);
+int  do_exit(int code);
+void cpu_idle(void);
 
 #define HZ 100 /* 时钟中断频率100hz */
 

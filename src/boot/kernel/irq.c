@@ -68,7 +68,7 @@ int unregister_irq(unsigned vector)
     return 0;
 }
 
-void do_IRQ(struct pt_regs *regs)
+void do_IRQ(frame_t *regs)
 {
     uint64 vector = regs->orig_rax;
     if (irq_array[vector].state & IRQ_STATE_INUSE)
@@ -76,13 +76,13 @@ void do_IRQ(struct pt_regs *regs)
 }
 
 /* 异常的统一处理函数 */
-static void exception_handler(struct pt_regs *regs, unsigned nr)
+static void exception_handler(frame_t *regs, unsigned nr)
 {
     printk("Exception ---> %d\n", nr);
 }
 
 /* 硬件中断的统一处理函数 */
-static void spurious_irq(struct pt_regs *regs, unsigned nr)
+static void spurious_irq(frame_t *regs, unsigned nr)
 {
     printk("spurious_irq: %d\n", nr);
 }

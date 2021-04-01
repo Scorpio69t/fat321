@@ -30,7 +30,7 @@ extern struct page *mem_map;
 
 void mm_init();
 
-#define to_phy(address)        ((uint64)(address) - KERNEL_OFFSET)
+#define to_phy(address)        ((uint64)(address)-KERNEL_OFFSET)
 #define to_vir(address)        ((uint64)(address) + KERNEL_OFFSET)
 #define phy_ptr(type, address) ((type *)to_phy(address))
 #define vir_ptr(type, address) ((type *)to_vir(address))

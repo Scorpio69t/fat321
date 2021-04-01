@@ -171,7 +171,7 @@ static inline void init_buf(void)
     memset(kb_buf.buf, 0, KEYBOARD_BUF_SIZE);
 }
 
-static void keyboard_handle(struct pt_regs *regs, unsigned no)
+static void keyboard_handle(frame_t *regs, unsigned no)
 {
     if (kb_buf.count < KEYBOARD_BUF_SIZE) {
         kb_buf.buf[kb_buf.head] = read_scancode();

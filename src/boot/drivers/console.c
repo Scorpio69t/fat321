@@ -1,4 +1,4 @@
-#include <boot/bug.h>
+
 #include <boot/console.h>
 #include <boot/io.h>
 #include <boot/irq.h>

@@ -74,11 +74,11 @@ _ret:
 //     return 0;
 // }
 
-static struct proc_struct *copy_process(int clone_flags, unsigned long stack_start, struct pt_regs *regs,
+static struct proc_struct *copy_process(int clone_flags, unsigned long stack_start, frame_t *regs,
                                         unsigned long stack_size)
 {
     struct proc_struct *p;
-    struct pt_regs *    childregs;
+    frame_t *           childregs;
 
     p = (struct proc_struct *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
     if (!p)
@@ -105,7 +105,7 @@ copy_failed:
     return 0;
 }
 
-long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, unsigned long stack_size)
+long do_fork(int clone_flags, unsigned long stack_start, frame_t *regs, unsigned long stack_size)
 {
     struct proc_struct *p;
 
@@ -124,6 +124,6 @@ long do_fork(int clone_flags, unsigned long stack_start, struct pt_regs *regs, u
 
 int sys_fork(void)
 {
-    struct pt_regs *regs = (struct pt_regs *)current->context.rsp0 - 1;
+    frame_t *regs = (frame_t *)current->context.rsp0 - 1;
     return do_fork(0, 0, regs, 0);
 }

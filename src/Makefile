@@ -1,52 +1,50 @@
-MAKEFLAGS  += --no-print-directory
+# MAKEFLAGS  += --no-print-directory
 
 CC			= gcc
 LD			= ld
+AR 			= ar
 CFLAGS		= -c -Wall -fno-builtin -fno-common -fno-stack-protector -mcmodel=large
+ARFLAGS		= -rc
 LDFLAGS		= -T ../scripts/kernel.lds --whole-archive
 TARGET=kernel.bin
 srctree	:= $(CURDIR)
-
-export CC LD CFLAGS
-
-subdir := boot core lib mm
-HEADER := ./include
 
 ifdef DEBUG
 	CFLAGS += -g -ggdb
 endif
 
-.PHONY: all iso clean qemu debug ttt $(subdir)
+export CC LD CFLAGS KCFLAGS ARFLAGS
+
+kendir := boot core mm
+libdir := libc
+moddir := init drivers
+HEADER := ./include
+
+.PHONY: all iso clean qemu debug $(kendir) $(libdir) $(moddir)
 
 _all: all
 
 -include Makefile.dep
 
-all: $(TARGET)
+all: $(libdir) $(TARGET) $(moddir)
 
-$(TARGET): $(subdir)
-	$(LD) $(LDFLAGS) -o $@ $(shell find $(subdir) -name "*.o")
+$(TARGET): $(kendir)
+	$(LD) $(LDFLAGS) -o $@ $(shell find $(kendir) -name "*.o")
 
-$(subdir):
+$(kendir):
+	@$(MAKE) -C $@
+
+$(libdir):
+	@$(MAKE) -C $@
+
+$(moddir):
+	echo "make $@"
 	@$(MAKE) -C $@
 
 %.o: %.c
 	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
 
-Makefile.dep: main.c
-	$(CC) -I$(HEADER) -MM $^ > Makefile.dep
-
-iso: all
-	grub-mkrescue -o alphaz.iso iso/
-
 clean:
 	find $(subdir) -name "*.o" -or -name "*.dep" | xargs rm
+	find $(subdir) -name "*.a" -or -name "*.out" | xargs rm
 	test -e $(TARGET) && rm $(TARGET)
-
-qemu:
-	qemu-system-i386 -cdrom alphaz.iso -m 2G,slots=3,maxmem=4G
-
-debug:
-	@qemu-system-i386 -s -S -cdrom alphaz.iso -m 2G,slots=3,maxmem=4G &
-	@gdb -x scripts/gdbinit
-	@kill $$(ps | grep qemu | awk '{print $$1 }')

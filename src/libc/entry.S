@@ -1,4 +1,6 @@
 
+#include <syscall.h>
+
 .global _start
 _start:
 	movq	$1, %rdi
@@ -6,6 +8,6 @@ _start:
 
 .global debug
 debug:
-	movq	$1, %rax
+	movq	$NR_DEBUG, %rax
 	int	$0x80
 	retq

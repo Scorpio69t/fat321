@@ -267,6 +267,7 @@ system_call:
 	leaq	syscall_table(%rip), %rbx
 	movq	(%rbx,%rax,8), %rax
 	popq	%rbx
+	movq	%rsp, %rdi
 	call	*%rax
 	RESTOR_ALL
 	INTERRUPT_RETURN
@@ -313,9 +314,11 @@ kernel_proc:
 
 .global syscall_table
 syscall_table:
-    .quad  sys_get_ticks
-    .quad  sys_debug    /* 1 */
-    .quad  sys_fork
-    .quad  sys_read
-    .quad  sys_write
-    .quad  sys_exit    /* 5 */
+	.quad  sys_send
+	.quad  sys_recv
+	.quad  sys_sendrecv
+	.quad  sys_debug
+syscall_table_end:
+
+syscall_table_len:
+	.quad	syscall_table_end - syscall_table

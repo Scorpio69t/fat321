@@ -1,12 +1,12 @@
-#include <boot/bug.h>
+
 #include <boot/memory.h>
 #include <boot/sched.h>
+#include <kernel/bugs.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
-#include <kernel/sched.h>
-#include <kernel/bugs.h>
 #include <kernel/mm.h>
 #include <kernel/page.h>
+#include <kernel/sched.h>
 #include <kernel/slab.h>
 #include <kernel/string.h>
 
@@ -14,7 +14,7 @@ uint64 map_page(proc_t *proc, uint64 ustart)
 {
     assert(proc->mm.pgd != NULL);
     uint64 *pml4, *pdpt, *pd, *pt, *page;
-    uint64 pml4_ind, pdpt_ind, pd_ind, pt_ind;
+    uint64  pml4_ind, pdpt_ind, pd_ind, pt_ind;
 
     pml4 = pdpt = pd = pt = NULL;
     pml4 = (uint64 *)proc->mm.pgd;

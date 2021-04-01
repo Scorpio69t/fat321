@@ -1,4 +1,4 @@
-#include <boot/bug.h>
+
 #include <boot/io.h>
 #include <kernel/keyboard.h>
 
@@ -12,9 +12,10 @@ inline unsigned char read_scancode(void)
 
 inline void __keyboard_init(void)
 {
-    while (inb(0x64) & 0x02) nop(); /* 8042缓冲区满则循环 */
+    while (inb(0x64) & 0x02) asm volatile("nop"); /* 8042缓冲区满则循环 */
     outb(0x64, 0x60);
-    while (inb(0x64) & 0x02) nop();
+    while (inb(0x64) & 0x02) asm volatile("nop");
+    ;
     outb(0x60, 0x65); /* 使用第一套扫描码，只使能键盘 */
 }
 

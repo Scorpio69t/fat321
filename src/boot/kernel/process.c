@@ -10,10 +10,10 @@
 #include <kernel/slab.h>
 #include <kernel/types.h>
 
-int copy_context(struct proc_struct *p, struct pt_regs *regs, int flags)
+int copy_context(struct proc_struct *p, frame_t *regs, int flags)
 {
-    struct pt_regs *newregs;
-    newregs = (struct pt_regs *)kernel_stack_top(p) - 1;
+    frame_t *newregs;
+    newregs = (frame_t *)kernel_stack_top(p) - 1;
     *newregs = *regs;
 
     newregs->rsp = (uint64)newregs; /* 只对内核进程有用 */
@@ -28,8 +28,8 @@ int copy_context(struct proc_struct *p, struct pt_regs *regs, int flags)
 
 int setup_module_context(proc_t *proc, uint64 entry)
 {
-    struct pt_regs *newregs;
-    newregs = (struct pt_regs *)kernel_stack_top(proc) - 1;
+    frame_t *newregs;
+    newregs = (frame_t *)kernel_stack_top(proc) - 1;
     memset(newregs, 0x00, sizeof(newregs));
 
     newregs->rip = entry;

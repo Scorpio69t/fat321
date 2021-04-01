@@ -40,7 +40,7 @@ inline struct proc_struct *__current(void)
  * @prev: 当前进程的进程控制块指针 in eax
  * @next: 下一个进程的进程控制块指针 in edx
  */
-#include <boot/bug.h>
+
 struct proc_struct *__switch_to(struct proc_struct *prev, struct proc_struct *next)
 {
     init_tss.rsp0 = next->context.rsp0;
