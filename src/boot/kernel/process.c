@@ -34,7 +34,7 @@ int setup_module_context(proc_t *proc, uint64 entry)
 
     newregs->rip = entry;
     newregs->cs = USER_CODE_DESC;
-    newregs->eflags = (1 << 9); /* enable interrupt */
+    newregs->eflags = (1 << 9) | (3 << 12); /* IF, IOPL */
     newregs->rsp = proc->mm.end_stack - 8;
     newregs->ss = USER_DATA_DESC;
 

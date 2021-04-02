@@ -1,7 +1,7 @@
-#ifndef _KERNEL_IPC_H_
-#define _KERNEL_IPC_H_
+#ifndef _SYS_IPC_H_
+#define _SYS_IPC_H_
 
-#include <kernel/types.h>
+#include <sys/types.h>
 
 #define IPC_NOWAIT 0
 #define IPC_INIT   1

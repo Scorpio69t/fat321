@@ -1,5 +1,5 @@
-#ifndef _TYPE_H_
-#define _TYPE_H_
+#ifndef _SYS_TYPE_H_
+#define _SYS_TYPE_H_
 
 typedef char               int8;
 typedef short              int16;
@@ -30,5 +30,7 @@ typedef long ssize_t;
 
 #define upper_div(dividend, divisor) ((dividend) / (divisor) + ((dividend) % (divisor) > 0))
 #define lower_div(dividend, divisor) ((dividend) / (divisor))
+
+#define nop() asm volatile("nop")
 
 #endif

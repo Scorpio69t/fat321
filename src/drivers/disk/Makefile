@@ -1,22 +1,17 @@
 
-HEADER:= ../../include .
+HEADER:=../../include/libc
+SOURCE := $(wildcard *.c)
 OBJS := disk.o
-CFLAGS := -c -Wall -fno-builtin -fno-common -fno-stack-protector
+LIBS := ../../libc/libc.a
 LDFLAGS := -T ../../../scripts/proc.lds
 
-ifdef DEBUG
-	CFLAGS += -g -ggdb
-endif
-
-.PHONY: _all clean
-
-_all: disk.out
-
-disk.out: $(OBJS)
+disk.out: $(OBJS) $(LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
+
+-include Makefile.dep
 
 %.o: %.c
 	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
 
-clean:
-	find . -name "*.o" -or -name "*.out" | xargs rm
+Makefile.dep: $(SOURCE)
+	$(CC) -I$(HEADER) -MM $^ > Makefile.dep

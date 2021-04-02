@@ -1,8 +1,6 @@
 #ifndef _KERNEL_BLKDEV_H_
 #define _KERNEL_BLKDEV_H_
 
-#include <boot/disk.h>
-
 #define __packed __attribute__((packed))
 
 #define BLK_READ  ATA_READ_CMD

@@ -1,7 +1,7 @@
-#ifndef _BOOT_IO_H_
-#define _BOOT_IO_H_
+#ifndef _SYS_IO_H_
+#define _SYS_IO_H_
 
-#include <kernel/types.h>
+#include <sys/types.h>
 
 static inline void outb(u16 port, u8 value)
 {

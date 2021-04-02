@@ -11,8 +11,7 @@ int main(int argc, char *argv[])
 {
     abc = 1;
     while (1) {
-        sprintf(buf, "init %d\n", abc++);
-        debug(buf);
+        dprintf("init %d\n", abc++);
     }
     return 0;
 }

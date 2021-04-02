@@ -15,7 +15,7 @@ struct gdtr_struct {
     uint64 base;
 } __attribute__((packed));
 
-#define IO_BITMAP_SIZE 16
+#define IO_BITMAP_SIZE 32
 struct tss_struct {
     uint32 reserved1;
     uint64 rsp0;

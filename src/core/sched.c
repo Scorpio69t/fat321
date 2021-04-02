@@ -11,6 +11,7 @@
 #include <kernel/bugs.h>
 #include <kernel/elf.h>
 #include <kernel/gfp.h>
+#include <kernel/ipc.h>
 #include <kernel/kernel.h>
 #include <kernel/linkage.h>
 #include <kernel/list.h>
@@ -21,7 +22,29 @@
 #include <kernel/string.h>
 #include <kernel/unistd.h>
 
+struct list_head __proc_hash_map[PROC_HASH_MAP_SIZE];
+
 struct sched_struct scheduler;
+
+proc_t *map_proc(pid_t pid)
+{
+    struct list_head *head;
+    proc_t *          pos;
+    head = &__proc_hash_map[pid % PROC_HASH_MAP_SIZE];
+
+    list_for_each_entry(pos, head, hash_map)
+    {
+        if (pos->pid == pid)
+            return pos;
+    }
+    return NULL;
+}
+
+void hash_proc(proc_t *proc)
+{
+    assert(proc->pid != 0);
+    list_add_tail(&proc->hash_map, &__proc_hash_map[proc->pid % PROC_HASH_MAP_SIZE]);
+}
 
 /**
  * 时钟中断计数器
@@ -30,12 +53,12 @@ unsigned long volatile ticks = INIT_TICKS;
 
 pid_t volatile pid = INIT_PID;
 
-static inline void ticks_plus(void)
+inline void ticks_plus(void)
 {
     ticks++;
 }
 
-static inline void update_alarm(void)
+inline void update_alarm(void)
 {
     struct proc_struct *p;
 
@@ -88,14 +111,18 @@ same_process:
     enable_interrupt();
 }
 
-/**
- * 时钟中断处理函数
- */
-void do_timer(frame_t *reg, unsigned nr)
+int set_intr(pid_t pid)
 {
-    ticks_plus();
-    update_alarm();
-    current->flags |= NEED_SCHEDULE;
+    assert(pid != 0);
+    proc_t *proc = map_proc(pid);
+    assert(proc != NULL);
+    if (proc->wait == IPC_INTR) {
+        proc->msg.type = MSG_CFM;
+        proc->msg.m_cfm.type = CFM_OK;
+        proc->state = PROC_RUNNABLE;
+        return 0;
+    }
+    return -1;
 }
 
 /**
@@ -224,6 +251,7 @@ void proc_init(void)
     struct proc_struct *init_proc;
 
     list_head_init(&scheduler.proc_head);
+    for (int i = 0; i < PROC_HASH_MAP_SIZE; i++) list_head_init(&__proc_hash_map[i]);
 
     init_proc = &init_proc_union.proc;
     /* init_proc 中的一些属性缺失的，在这里进行补充 */
@@ -237,7 +265,6 @@ void proc_init(void)
         proc_t *proc = module_proc(&kinfo.module[i]);
         assert(proc != NULL);
         list_add_tail(&proc->proc, &scheduler.proc_head);
+        hash_proc(proc);
     }
-    setup_counter();
-    register_irq(0x20, do_timer);
 }

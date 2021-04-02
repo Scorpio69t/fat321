@@ -28,6 +28,7 @@
 #include <boot/cpu.h>
 #include <boot/sched.h>
 #include <kernel/fs.h>
+#include <kernel/ipc.h>
 #include <kernel/list.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>
@@ -81,7 +82,9 @@ typedef struct proc_struct {
     struct proc_struct *  parent;              /* 父进程 */
     struct context_struct context;             /* 进程的上下文信息 */
     struct list_head      proc;                /* 进程链表 */
-
+    struct list_head      hash_map;
+    pid_t                 wait;
+    message               msg;
     struct {
         unsigned long flags;
 
@@ -135,6 +138,14 @@ struct sched_struct {
 };
 
 extern struct sched_struct scheduler;
+
+#define PROC_HASH_MAP_SIZE 256
+extern struct list_head __proc_hash_map[];
+proc_t *map_proc(pid_t);
+
+void ticks_plus(void);
+void update_alarm(void);
+int set_intr(pid_t pid);
 
 /**
  * 获取当前内核栈的栈底，减8是防止i386下没有内核栈的切换时访问ss和esp寄存器引发缺页异常

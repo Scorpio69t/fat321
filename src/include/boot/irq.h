@@ -9,22 +9,8 @@
 extern uint8 idt_table[];
 extern uint8 idt_end[];
 
-typedef void (*irq_entry)();
-typedef void (*irq_handler)(frame_t *, unsigned);
-
-struct irq_struct {
-    volatile long  state;   /* 中断状态 */
-    irq_entry      entry;   /* 中断入口 */
-    irq_handler    handler; /* 中断处理函数 */
-    unsigned long  vector;  /* 中断向量 */
-    unsigned short ring;    /* 中断特权级 */
-};
-
-int register_irq(unsigned, irq_handler);
+int register_irq(unsigned, pid_t);
 int unregister_irq(unsigned vector);
-
-#define IRQ_STATE_DEFINED (1 << 0)
-#define IRQ_STATE_INUSE   (1 << 1)
 
 struct idtr_struct {
     uint16 len;
@@ -34,7 +20,6 @@ struct idtr_struct {
 /* 中断向量数 */
 #define NR_IRQ 256
 extern struct gate_struct idt[];
-extern struct irq_struct  irq_array[];
 
 void        irq_init();
 extern void enable_irq(unsigned short);
@@ -69,7 +54,6 @@ static inline int get_if(void)
     return (d0 & 512);  // 1<<9 if在标志寄存器右起第十位
 }
 
-/* cpu异常处理函数，定义在arch/../kernel/entry.asm */
 extern void divide_error();
 extern void single_step_exception();
 extern void nmi();
@@ -87,7 +71,6 @@ extern void general_protection();
 extern void page_fault();
 extern void copr_error();
 
-/* 硬件中断的处理函数，对应8259a的15个引脚 */
 extern void hwint0x20();
 extern void hwint0x21();
 extern void hwint0x22();
@@ -104,10 +87,6 @@ extern void hwint0x2c();
 extern void hwint0x2d();
 extern void hwint0x2e();
 extern void hwint0x2f();
-
-/* 系统调用号 */
-#define INT_VECTOR_SYSCALL 0x80
-/* defined in entry.asm */
 extern void system_call(void);
 
 #endif /*__ASSEMBLY__*/

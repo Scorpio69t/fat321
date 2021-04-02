@@ -2,7 +2,7 @@
 #ifndef _STRING_H_
 #define _STRING_H_
 
-#include <types.h>
+#include <sys/types.h>
 
 static inline void *memcpy(void *to, void *from, size_t n)
 {

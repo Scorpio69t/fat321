@@ -4,7 +4,6 @@
 
 #include <boot/boot.h>
 #include <boot/cpu.h>
-#include <boot/disk.h>
 #include <boot/io.h>
 #include <boot/irq.h>
 #include <boot/system.h>
@@ -96,6 +95,9 @@ void kernel_main(void *boot_info)
 
     printk("Initializing proc...\n");
     proc_init();
+
+    printk("Initializing timer...\n");
+    setup_counter();
 
     printk("kernel_main\n");
 

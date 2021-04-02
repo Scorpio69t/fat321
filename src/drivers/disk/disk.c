@@ -3,29 +3,153 @@
  * 进行调整。
  */
 
-#include <boot/atomic.h>
-#include <boot/disk.h>
-#include <boot/io.h>
-#include <boot/irq.h>
-#include <kernel/kernel.h>
-#include <kernel/list.h>
-#include <kernel/slab.h>
-#include <kernel/spinlock.h>
+#include "disk.h"
 
-static request_queue_head_t disk_request_head; /* IO请求队列 */
-wait_queue_head_t           disk_wait_queue_head;
-void                        disk_handler(frame_t *, unsigned);
+#include <stdio.h>
+#include <sys/io.h>
+#include <sys/ipc.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 
-/**
- * disk_init - ATA硬盘初始化
- * 为了简单起见，这里使用基于IDT的I/O端口编程模式对ATA硬盘进行访问，而不使用SATA控制器和PCI
- * 总线控制器来访问
- */
-void disk_init(void)
+static struct {
+    int secsz; /* 扇区大小 */
+    int lba48; /* 是否支持LBA48 */
+} dinfo;
+
+static struct {
+    int   nsect;
+    void *buf;
+} req;
+
+static int do_request(int cmd, unsigned short nsect, unsigned long sector, void *buf)
 {
-    INIT_REQUEST_QUEST_HEAD(&disk_request_head);
-    init_wait_queue_head(&disk_wait_queue_head);
-    register_irq(0x2e, disk_handler);
+    while (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_BUSY) nop();
+    switch (cmd) {
+    case LBA28_WRITE_CMD:
+        outb(PORT_DISK0_DEVICE, 0xe0 | ((sector >> 24) & 0x0f));
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, nsect);
+        outb(PORT_DISK0_SECTOR_LOW, sector & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 16) & 0xff);
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
+        outb(PORT_DISK0_STATUS_CMD, LBA28_WRITE_CMD);
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
+        outnb(PORT_DISK0_DATA, buf, dinfo.secsz);
+        break;
+    case LBA28_READ_CMD:
+        outb(PORT_DISK0_DEVICE, 0xe0 | ((sector >> 24) & 0x0f));
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, nsect);
+        outb(PORT_DISK0_SECTOR_LOW, sector & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 16) & 0xff);
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
+        outb(PORT_DISK0_STATUS_CMD, LBA28_READ_CMD);
+        break;
+    case LBA48_WRITE_CMD:
+        outb(PORT_DISK0_DEVICE, 0x40);
+
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, (nsect >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_LOW, (sector >> 24) & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 32) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 40) & 0xff);
+
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, nsect & 0xff);
+        outb(PORT_DISK0_SECTOR_LOW, sector & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 16) & 0xff);
+
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
+        outb(PORT_DISK0_STATUS_CMD, LBA48_WRITE_CMD);
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
+        outnb(PORT_DISK0_DATA, buf, dinfo.secsz);
+
+        break;
+
+    case LBA48_READ_CMD:
+        outb(PORT_DISK0_DEVICE, 0x40);
+
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, (nsect >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_LOW, (sector >> 24) & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 32) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 40) & 0xff);
+
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, nsect & 0xff);
+        outb(PORT_DISK0_SECTOR_LOW, sector & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 16) & 0xff);
+
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
+        outb(PORT_DISK0_STATUS_CMD, LBA48_READ_CMD);
+
+        break;
+    case IDEN_CMD:
+        outb(PORT_DISK0_DEVICE, 0xe0 | ((sector >> 24) & 0x0f));
+        outb(PORT_DISK0_ERR_FEATURE, 0);
+        outb(PORT_DISK0_SECTOR_CNT, nsect);
+        outb(PORT_DISK0_SECTOR_LOW, sector & 0xff);
+        outb(PORT_DISK0_SECTOR_MID, (sector >> 8) & 0xff);
+        outb(PORT_DISK0_SECTOR_HIGH, (sector >> 16) & 0xff);
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
+        outb(PORT_DISK0_STATUS_CMD, cmd);
+    default:
+        return -1;
+        break;
+    }
+    return 0;
+}
+
+static int disk_read(void)
+{
+    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
+        dprintf("read_handler: disk read error\n");
+    } else {
+        innb(PORT_DISK0_DATA, req.buf, dinfo.secsz);
+    }
+    if (--req.nsect) {
+        /* 若当前请求未读完，则继续等待下一个中断进行处理 */
+        req.buf += dinfo.secsz;
+        return UNDONE;
+    }
+    return DONE;
+}
+
+static int disk_write(void)
+{
+    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
+        dprintf("write_handler: disk write error\n");
+    }
+
+    if (--req.nsect) {
+        req.buf += dinfo.secsz;
+        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
+        outnb(PORT_DISK0_DATA, req.buf, dinfo.secsz);
+        return UNDONE;
+    }
+    return DONE;
+}
+
+static int disk_iden(void)
+{
+    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
+        dprintf("identify_handler: disk read error\n");
+    } else {
+        innb(PORT_DISK0_DATA, req.buf, dinfo.secsz);
+    }
+    return DONE;
+}
+
+unsigned short buf[256];
+
+int init_disk(void)
+{
+    message msg;
+
     outb(PORT_DISK0_ALT_STA_CTL, 0);
     outb(PORT_DISK0_ERR_FEATURE, 0);
     outb(PORT_DISK0_SECTOR_CNT, 0);
@@ -33,212 +157,108 @@ void disk_init(void)
     outb(PORT_DISK0_SECTOR_MID, 0);
     outb(PORT_DISK0_SECTOR_HIGH, 0);
     outb(PORT_DISK0_DEVICE, 0xe0); /* sector模式 */
+
+    msg.type = MSG_IRQ;
+    msg.m_irq.type = IRQ_REGISTER;
+    msg.m_irq.irq_no = 0x2e;
+    sys_send(IPC_INTR, &msg);
+
+    req.buf = buf;
+    do_request(IDEN_CMD, 0, 0, NULL);
+    sys_recv(IPC_INTR, &msg);
+    disk_iden();
+
+    if (msg.type == MSG_CFM && msg.m_cfm.type == CFM_OK)
+        ;
+    else {
+        dprintf("msg error %d %d\n", msg.type, msg.m_cfm.type);
+        return -1;
+    }
+
+    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR)
+        dprintf("disk read error\n");
+    else
+        innb(PORT_DISK0_DATA, buf, 512);
+
+    if (!(buf[49] & 0x0100)) {
+        dprintf("unsupport LBA");
+        return -1;
+    }
+    if (buf[83] & 0x0200)
+        dinfo.lba48 = 1;
+
+    dinfo.secsz = 512;
+    return 0;
 }
 
-void disk_exit(void)
+static int to_disk_cmd(int type)
 {
-    unregister_irq(0x2e);
-}
-
-/**
- * disk_handler - 硬盘中断处理函数
- * 硬盘会在写完一个扇区或者读完一个扇区后进行中断，所以一次硬盘设备请求可能会触发不止一次中断
- */
-void disk_handler(frame_t *regs, unsigned nr)
-{
-    disk_request_head.use->end_handler();
-}
-
-static void do_request(void)
-{
-    /*
-     * do_request被调用时，可能已经没有了请求或者其他请求还没有执行完，若出现此类情况，
-     * 则直接返回
-     */
-    if (!disk_request_head.count || disk_request_head.use)
-        return;
-    request_queue_t *r = list_first_entry(&disk_request_head.list, request_queue_t, list);
-    disk_request_head.use = r;
-
-    while (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_BUSY) nop();
-
-    switch (r->cmd) {
-    case ATA_WRITE_CMD:
-        outb(PORT_DISK0_DEVICE, 0xe0 | ((r->sector >> 24) & 0x0f));
-        outb(PORT_DISK0_ERR_FEATURE, 0);
-        outb(PORT_DISK0_SECTOR_CNT, r->nsect);
-        outb(PORT_DISK0_SECTOR_LOW, r->sector & 0xff);
-        outb(PORT_DISK0_SECTOR_MID, (r->sector >> 8) & 0xff);
-        outb(PORT_DISK0_SECTOR_HIGH, (r->sector >> 16) & 0xff);
-
-        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
-        outb(PORT_DISK0_STATUS_CMD, r->cmd);
-        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
-        outnw(PORT_DISK0_DATA, r->buf, SECTOR_SIZE / 2);
+    int cmd;
+    switch (type) {
+    case DISK_READ:
+        if (dinfo.lba48)
+            cmd = LBA48_READ_CMD;
+        else
+            cmd = LBA28_READ_CMD;
         break;
-
-    case ATA_READ_CMD:
-        outb(PORT_DISK0_DEVICE, 0xe0 | ((r->sector >> 24) & 0x0f));
-        outb(PORT_DISK0_ERR_FEATURE, 0);
-        outb(PORT_DISK0_SECTOR_CNT, r->nsect);
-        outb(PORT_DISK0_SECTOR_LOW, r->sector & 0xff);
-        outb(PORT_DISK0_SECTOR_MID, (r->sector >> 8) & 0xff);
-        outb(PORT_DISK0_SECTOR_HIGH, (r->sector >> 16) & 0xff);
-        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
-        outb(PORT_DISK0_STATUS_CMD, r->cmd);
+    case DISK_WRITE:
+        if (dinfo.lba48)
+            cmd = LBA48_WRITE_CMD;
+        else
+            cmd = LBA28_WRITE_CMD;
         break;
-    case GET_IDENTIFY_DISK_CMD:
-        outb(PORT_DISK0_DEVICE, 0xe0 | ((r->sector >> 24) & 0x0f));
-        outb(PORT_DISK0_ERR_FEATURE, 0);
-        outb(PORT_DISK0_SECTOR_CNT, r->nsect);
-        outb(PORT_DISK0_SECTOR_LOW, r->sector & 0xff);
-        outb(PORT_DISK0_SECTOR_MID, (r->sector >> 8) & 0xff);
-        outb(PORT_DISK0_SECTOR_HIGH, (r->sector >> 16) & 0xff);
-        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
-        outb(PORT_DISK0_STATUS_CMD, r->cmd);
+    case DISK_IDEN:
+        cmd = IDEN_CMD;
+        break;
     default:
-        printk("ATA CMD Error\n");
+        cmd = -1;
         break;
     }
+    return cmd;
 }
 
-static void end_request(void)
-{
-    list_del(&disk_request_head.use->list);
-    disk_request_head.count--;
-    kfree(disk_request_head.use);
-    disk_request_head.use = NULL;
-}
-
-static void read_handler(void)
-{
-    request_queue_t *r = disk_request_head.use;
-    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printk("read_handler: disk read error\n");
-    } else {
-        innw(PORT_DISK0_DATA, r->buf, SECTOR_SIZE / 2);
-    }
-    if (--r->nsect) {
-        /* 若当前请求未读完，则继续等待下一个中断进行处理 */
-        r->buf += SECTOR_SIZE;
-        r->sector++;
-        return;
-    }
-    wake_up(&disk_wait_queue_head);
-    end_request();
-    do_request();
-}
-
-static void write_handler(void)
-{
-    request_queue_t *r = disk_request_head.use;
-    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printk("write_handler: disk write error\n");
-    }
-    if (--r->nsect) {
-        r->buf += SECTOR_SIZE;
-        r->sector++;
-        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
-        outnw(PORT_DISK0_DATA, r->buf, SECTOR_SIZE / 2);
-        return;
-    }
-    wake_up(&disk_wait_queue_head);
-    end_request();
-    do_request();
-}
-
-static void identify_handler(void)
-{
-    request_queue_t *r = disk_request_head.use;
-    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printk("identify_handler: disk read error\n");
-    } else {
-        innw(PORT_DISK0_DATA, r->buf, SECTOR_SIZE / 2);
-    }
-    if (--r->nsect) {
-        /* 若当前请求未读完，则继续等待下一个中断进行处理 */
-        r->buf += SECTOR_SIZE;
-        r->sector++;
-        return;
-    }
-    wake_up(&disk_wait_queue_head);
-    end_request();
-    do_request();
-}
-
-static request_queue_t *make_request(long cmd, unsigned long sector, unsigned long nsect, void *buf)
-{
-    request_queue_t *r = (request_queue_t *)kmalloc(sizeof(request_queue_t), 0);
-
-    switch (cmd) {
-    case ATA_READ_CMD:
-        r->end_handler = read_handler;
-        r->cmd = ATA_READ_CMD;
-        break;
-    case ATA_WRITE_CMD:
-        r->end_handler = write_handler;
-        r->cmd = ATA_WRITE_CMD;
-        break;
-    case GET_IDENTIFY_DISK_CMD:
-        r->end_handler = identify_handler;
-        r->cmd = GET_IDENTIFY_DISK_CMD;
-    default:
-        r->end_handler = NULL;
-        r->cmd = cmd;
-        break;
-    }
-
-    r->sector = sector;
-    r->nsect = nsect;
-    r->buf = buf;
-
-    return r;
-}
-
-static void put_request(request_queue_head_t *head, request_queue_t *r)
-{
-    list_add_tail(&r->list, &head->list);
-    head->count++;
-}
-
-static long IDE_open(void)
-{
-    printk("open disk device: no operation\n");
-    return 0;
-}
-
-static long IDE_release(void)
-{
-    printk("release disk device: no operation\n");
-    return 0;
-}
-
-static long IDE_ioctl(long cmd, long arg)
-{
-    printk("ioctl disk device: no operation\n");
-    return 0;
-}
-
-static long IDE_transfer(long cmd, unsigned long sector, unsigned long nsect, void *buf)
-{
-    request_queue_t *r = NULL;
-    if (cmd == ATA_READ_CMD || cmd == ATA_WRITE_CMD) {
-        r = make_request(cmd, sector, nsect, buf);
-        put_request(&disk_request_head, r);
-        /*
-         * do_request不一定执行当前的请求，而是根据请求队列来执行
-         * do_request添加到等待队列上后才能睡眠，防止在睡眠前有磁盘已完成操作触发中断。
-         * 此时，若进程再进行睡眠的话，将造成进程僵死，无法被调度
-         */
-        after_interruptible_sleep_on(&disk_wait_queue_head, do_request);
-    } else
-        return 0;
-    return 1;
-}
-
-struct block_device_operations IDE_device_operation = {
-    .open = IDE_open,
-    .release = IDE_release,
-    .ioctl = IDE_ioctl,
-    .transfer = IDE_transfer,
+static int (*handler[])(void) = {
+    [DISK_READ] = disk_read,
+    [DISK_WRITE] = disk_write,
+    [DISK_IDEN] = disk_iden,
 };
+
+int main(int argc, char *argv[])
+{
+    if (init_disk() == -1)
+        goto fail;
+
+    dprintf("LBA48: %d, secsz %d\n", dinfo.lba48, dinfo.secsz);
+
+    int     type, cmd;
+    message msg;
+    while (1) {
+        sys_recv(IPC_BOTH, &msg);
+        if (msg.type != MSG_DISK) {
+            dprintf("disk: unknow msg\n");
+            continue;
+        }
+        req.nsect = msg.m_disk.nsect;
+        req.buf = msg.m_disk.buf;
+        type = msg.m_disk.type;
+        if ((cmd = to_disk_cmd(msg.m_disk.type)) == -1) {
+            dprintf("disk: unknow msg_disk type\n");
+            continue;
+        }
+        do_request(cmd, msg.m_disk.nsect, msg.m_disk.sector, buf);
+
+        while (1) {
+            sys_recv(IPC_INIT, &msg);
+            if (msg.type == MSG_CFM && msg.m_cfm.type == CFM_OK) {
+                if (handler[type] == DONE)
+                    break;
+            } else {
+                dprintf("msg confim error\n");
+                break;
+            }
+        }
+    }
+fail:
+    dprintf("disk init error\n");
+    while (1) nop();
+}
