@@ -107,22 +107,34 @@ static void do_timer(frame_t *reg)
 {
     ticks_plus();
     update_alarm();
-    current->flags |= NEED_SCHEDULE;
+    message msg = {.type = MSG_INTR,
+                   .src = IPC_INTR,
+                   .m_intr = {
+                       .type = INTR_OK,
+                   }};
+
     for (int i = 0; i < NR_HW_IRQ; i++) {
-        if (has_hw_intr[i] && set_intr(hw_proc[i]) == 0) {
+        if (has_hw_intr[i] && try_send(reg, IPC_INTR, hw_proc[i], &msg) == 0) {
             has_hw_intr[i] = 0;
         }
     }
+    current->flags |= NEED_SCHEDULE;
 }
 
 static void do_hwint(frame_t *reg, unsigned nr)
 {
-    int ind = nr - 0x20;
+    int     ind = nr - 0x20;
+    message msg = {.type = MSG_INTR,
+                   .src = IPC_INTR,
+                   .m_intr = {
+                       .type = INTR_OK,
+                   }};
+
     if (hw_proc[ind] == 0) {
         printk("no register hw intr\n");
         return;
     }
-    if (set_intr(hw_proc[ind]) == -1)
+    if (try_send(reg, IPC_INTR, hw_proc[ind], &msg) == -1)
         has_hw_intr[ind] = 1;
 }
 

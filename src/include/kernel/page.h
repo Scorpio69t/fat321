@@ -17,5 +17,6 @@
 
 uint64 setup_page_table(uint64 memsize);
 uint64 map_page(proc_t *proc, uint64 ustart);
+void * kmap(void *uaddr);
 
 #endif

@@ -1,6 +1,30 @@
 #ifndef _BOOT_CPU_H_
 #define _BOOT_CPU_H_
 
+#define SF_R15    0x00
+#define SF_R14    0x08
+#define SF_R13    0x10
+#define SF_R12    0x18
+#define SF_RBP    0x20
+#define SF_RBX    0x28
+#define SF_R11    0x30
+#define SF_R10    0x38
+#define SF_R9     0x40
+#define SF_R8     0x48
+#define SF_RAX    0x50
+#define SF_RCX    0x58
+#define SF_RDX    0x60
+#define SF_RSI    0x68
+#define SF_RDI    0x70
+#define SF_ORIG   0x78
+#define SF_RIP    0x80
+#define SF_CS     0x88
+#define SF_EFLAGS 0x90
+#define SF_RSP    0x98
+#define SF_SS     0x100
+
+#ifndef __ASSEMBLY__
+
 #include <kernel/types.h>
 
 #define load_tss(tss_desc) asm volatile("ltr %%ax" ::"a"((uint16)tss_desc))
@@ -131,5 +155,12 @@ void cpu_idle(void);
 #define RING1 1
 #define RING2 2
 #define RING3 3
+
+#define barrier()                            \
+    do {                                     \
+        asm volatile("mfence" ::: "memory"); \
+    } while (0)
+
+#endif /* __ASSEMBLY__ */
 
 #endif

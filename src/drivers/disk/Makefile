@@ -5,7 +5,7 @@ OBJS := disk.o
 LIBS := ../../libc/libc.a
 LDFLAGS := -T ../../../scripts/proc.lds
 
-disk.out: $(OBJS) $(LIBS)
+disk.mod: $(OBJS) $(LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 -include Makefile.dep

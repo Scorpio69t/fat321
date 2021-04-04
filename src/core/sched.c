@@ -111,20 +111,6 @@ same_process:
     enable_interrupt();
 }
 
-int set_intr(pid_t pid)
-{
-    assert(pid != 0);
-    proc_t *proc = map_proc(pid);
-    assert(proc != NULL);
-    if (proc->wait == IPC_INTR) {
-        proc->msg.type = MSG_CFM;
-        proc->msg.m_cfm.type = CFM_OK;
-        proc->state = PROC_RUNNABLE;
-        return 0;
-    }
-    return -1;
-}
-
 /**
  * sys_sleep - 进程睡眠
  * 该进程实现了秒级睡眠和毫秒级睡眠的中断处理，对应sleep和msleep两个系统调用的用户态接口，根
@@ -191,6 +177,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
 
     /* create process */
     proc = (proc_t *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
+    memset(proc, 0x00, PAGE_SIZE * (1 << KERNEL_STACK_ORDER));
     proc->state = PROC_SENDING;
     proc->pid = parse_cmdline(module->cmdline);
     proc->counter = 1;

@@ -2,6 +2,7 @@
 
 mdir=/mnt
 cmds=(xorriso grub-mkrescue)
+mods=$(find src -name "*.mod")
 
 function check_cmd() {
     if [[ ! -x "$(command -v $1)" ]]; then
@@ -39,8 +40,7 @@ sudo mount "$map_dev"p1 $mdir
 
 sudo cp -r config/grub $mdir/boot
 sudo cp src/kernel.bin $mdir/boot
-sudo cp src/init/init.out $mdir/boot
-sudo cp src/drivers/disk/disk.out $mdir/boot
+sudo cp $mods $mdir/boot
 
 if [[ -d img.tmp ]]; then
         sudo cp -r img.tmp/* $mdir

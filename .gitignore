@@ -1,6 +1,7 @@
 *.o
 *.a
 *.out
+*.mod
 *.txt
 !docs/*.txt
 *.log

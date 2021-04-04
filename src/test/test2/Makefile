@@ -1,11 +1,11 @@
 
-HEADER:=../include/libc
+HEADER:=../../include/libc
 SOURCE := $(wildcard *.c)
-OBJS := main.o
-LIBS := ../libc/libc.a
-LDFLAGS := -T ../../scripts/proc.lds
+OBJS := test2.o
+LIBS := ../../libc/libc.a
+LDFLAGS := -T ../../../scripts/proc.lds
 
-init.mod: $(OBJS) $(LIBS)
+test2.mod: $(OBJS) $(LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 -include Makefile.dep

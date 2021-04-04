@@ -6,6 +6,7 @@
 #include <kernel/sched.h>
 #include <kernel/fork.h>
 #include <boot/boot.h>
+#include <boot/cpu.h>
 
 .section .text
 
@@ -43,8 +44,6 @@
 	popq	%rdx;	\
 	popq	%rsi;	\
 	popq	%rdi
-
-PT_EAX = 0x18
 
 #define GET_CURRENT(reg)	\
 	movq	$-KERNEL_STACK_SIZE, reg;	\
@@ -118,7 +117,7 @@ ret_from_int:
 	re_sched:
 	call    schedule
 	int_ret:
-	testq $3, 136(%rsp)
+	testq $3, SF_CS(%rsp)
 	je 1f
 	swapgs
 1:  	RESTOR_ALL
@@ -263,10 +262,13 @@ exception:
 system_call:
 	pushq   %rax    /* 压入功能号 */
 	SAVE_ALL
-	pushq	%rbx
-	leaq	syscall_table(%rip), %rbx
+	cmpl	$3, %eax
+	je	1f
+	movq	%rsp, %rdi
+	call	pre_syscall
+1:	leaq	syscall_table(%rip), %rbx
+	movq	SF_ORIG(%rsp), %rax
 	movq	(%rbx,%rax,8), %rax
-	popq	%rbx
 	movq	%rsp, %rdi
 	call	*%rax
 	RESTOR_ALL

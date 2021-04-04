@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 
-int dprintf(const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
     static char buf[1024];
     va_list     args;

@@ -10,6 +10,30 @@
 #include <kernel/slab.h>
 #include <kernel/string.h>
 
+void *kmap(void *uaddr)
+{
+    uint64  paddr;
+    uint64 *pml4, *pdpt, *pd, *pt;
+    uint64  pml4_ind, pdpt_ind, pd_ind, pt_ind;
+    uint64  addr = (uint64)uaddr;
+    if ((addr & ((uint64)0xffff << 48)) != 0)
+        return uaddr;
+
+    pml4 = (uint64 *)current->mm.pgd;
+    pml4_ind = addr / ((uint64)1 << 39);
+    pdpt = (uint64 *)to_vir(pml4[pml4_ind] & -((uint64)1 << 12));
+    addr = addr & (((uint64)1 << 39) - 1);
+    pdpt_ind = addr / ((uint64)1 << 30);
+    pd = (uint64 *)to_vir(pdpt[pdpt_ind] & -((uint64)1 << 12));
+    addr = addr & (((uint64)1 << 30) - 1);
+    pd_ind = addr / ((uint64)1 << 21);
+    pt = (uint64 *)to_vir(pd[pd_ind] & -((uint64)1 << 12));
+    addr = addr & (((uint64)1 << 21) - 1);
+    pt_ind = addr / ((uint64)1 << 12);
+    paddr = (pt[pt_ind] & -((uint64)1 << 12)) | (addr % ((uint64)1 << 12));
+    return (void *)to_vir(paddr);
+}
+
 uint64 map_page(proc_t *proc, uint64 ustart)
 {
     assert(proc->mm.pgd != NULL);

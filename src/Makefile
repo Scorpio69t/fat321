@@ -20,6 +20,10 @@ libdir := libc
 moddir := init drivers
 HEADER := ./include
 
+ifdef DEBUG
+	moddir += test
+endif
+
 .PHONY: all iso clean qemu debug $(kendir) $(libdir) $(moddir)
 
 _all: all
