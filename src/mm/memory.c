@@ -2,8 +2,6 @@
 #include <boot/io.h>
 #include <boot/memory.h>
 #include <kernel/bugs.h>
-#include <kernel/config.h>
-#include <kernel/console.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
 #include <kernel/mm.h>

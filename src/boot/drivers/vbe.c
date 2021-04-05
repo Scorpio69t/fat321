@@ -1,5 +1,5 @@
-#include <kernel/config.h>
-#include <kernel/console.h>
+
+
 #include <kernel/fontdata.h>
 #include <kernel/string.h>
 

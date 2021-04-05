@@ -1,5 +1,4 @@
 #include <boot/console.h>
-#include <kernel/console.h>
 #include <kernel/kernel.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>

@@ -10,13 +10,15 @@
 
 #include <sys/ipc.h>
 
-extern int sys_send(int, message *);
-extern int sys_recv(int, message *);
-extern int sys_sendrecv(int, message *);
-extern int sys_debug(char *);
+extern int _send(int, message *);
+extern int _recv(int, message *);
+extern int _sendrecv(int, message *);
+extern int _debug(char *);
 
 int   brk(void *addr);
 void *sbrk(long size);
+
+int register_irq(int no_intr);
 
 #endif
 

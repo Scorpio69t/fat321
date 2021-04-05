@@ -6,7 +6,6 @@
 #include <kernel/blkdev.h>
 #include <kernel/bugs.h>
 #include <kernel/fat32.h>
-#include <kernel/fs.h>
 #include <kernel/kernel.h>
 #include <kernel/slab.h>
 #include <kernel/stdio.h>

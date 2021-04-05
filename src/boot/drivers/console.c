@@ -3,8 +3,6 @@
 #include <boot/io.h>
 #include <boot/irq.h>
 #include <boot/string.h>
-#include <kernel/config.h>
-#include <kernel/console.h>
 #include <kernel/mm.h>
 
 #define ROW 25

@@ -28,7 +28,6 @@
 #include <boot/atomic.h>
 #include <boot/cpu.h>
 #include <boot/sched.h>
-#include <kernel/fs.h>
 #include <kernel/ipc.h>
 #include <kernel/list.h>
 #include <kernel/stdio.h>

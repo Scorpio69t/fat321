@@ -1,19 +1,10 @@
 
-.PHONY: default dep
 
-HEADER := ../include
-SOURCE := $(wildcard *.c)
-OBJS := $(patsubst %.c, %.o, $(SOURCE))
+subdir :=
 
-default: $(OBJS)
+.PHONY: default $(subdir)
 
--include Makefile.dep
+default: $(subdir)
 
-%.o: %.c
-	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
-
-Makefile.dep: $(SOURCE)
-	$(CC) -I$(HEADER) -MM $^ > Makefile.dep
-
-debug:
-	echo $(OBJS)
+$(subdir):
+	@$(MAKE) -C $@

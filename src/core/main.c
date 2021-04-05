@@ -8,14 +8,11 @@
 #include <boot/irq.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
-#include <kernel/console.h>
 #include <kernel/fat32.h>
 #include <kernel/fcntl.h>
 #include <kernel/fork.h>
-#include <kernel/fs.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
-#include <kernel/keyboard.h>
 #include <kernel/mm.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>

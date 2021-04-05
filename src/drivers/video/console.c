@@ -2,10 +2,7 @@
 #include <boot/div64.h>
 #include <boot/io.h>
 #include <kernel/bugs.h>
-#include <kernel/config.h>
-#include <kernel/console.h>
 #include <kernel/fontdata.h>
-#include <kernel/fs.h>
 #include <kernel/slab.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>

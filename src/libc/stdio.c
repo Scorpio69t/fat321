@@ -11,6 +11,6 @@ int printf(const char *fmt, ...)
     va_start(args, fmt);
     len = vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    sys_debug(buf);
+    _debug(buf);
     return len;
 }

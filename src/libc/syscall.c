@@ -6,7 +6,7 @@ int _syscall(int who, int type, message *msg)
     int status;
 
     msg->type = type;
-    if ((status = sys_sendrecv(who, msg)) != 0) {
+    if ((status = _sendrecv(who, msg)) != 0) {
         return status;
     }
     return msg->type;
@@ -35,3 +35,5 @@ void *sbrk(long size)
     _brk = new_brk;
     return old_brk;
 }
+
+int register_irq(int no_intr) {}

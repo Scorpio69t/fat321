@@ -3,7 +3,6 @@
 #include <boot/irq.h>
 #include <boot/memory.h>
 #include <boot/sched.h>
-#include <kernel/compiler.h>
 #include <kernel/kernel.h>
 #include <kernel/mm.h>
 #include <kernel/sched.h>

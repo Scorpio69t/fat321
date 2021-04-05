@@ -7,27 +7,27 @@ _start:
 	call	__libc_init
 	call 	main
 
-.global sys_send
-sys_send:
+.global _send
+_send:
 	movq	$NR_SEND, %rax
 	int	$0x80
 	retq
 
 
-.global sys_recv
-sys_recv:
+.global _recv
+_recv:
 	movq	$NR_RECV, %rax
 	int	$0x80
 	retq
 
-.global sys_sendrecv
-sys_sendrecv:
+.global _sendrecv
+_sendrecv:
 	movq	$NR_SENDRECV, %rax
 	int	$0x80
 	retq
 
-.global sys_debug
-sys_debug:
+.global _debug
+_debug:
 	movq	$NR_DEBUG, %rax
 	int	$0x80
 	retq

@@ -1,6 +1,5 @@
 
 #include <boot/io.h>
-#include <kernel/keyboard.h>
 
 /**
  * read_scancode - 从键盘控制器缓冲区读取扫描码

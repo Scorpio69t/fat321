@@ -1,7 +1,6 @@
 #ifndef _KERNEL_KEYBOARD_H_
 #define _KERNEL_KEYBOARD_H_
 
-#include <kernel/fs.h>
 #include <kernel/types.h>
 
 void keyboard_init(void);

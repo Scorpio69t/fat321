@@ -5,7 +5,7 @@
  * stdarg.h是GCC的一部分，其中的va_list也是GCC的内建类型，且定义了一组宏用于处理具有可变参
  * 数的函数。该头文件可以直接使用，无需特别处理编译和链接
  */
-#include <kernel/fs.h>
+
 #include <kernel/types.h>
 #include <stdarg.h>
 

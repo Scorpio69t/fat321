@@ -162,11 +162,11 @@ int init_disk(void)
     msg.type = MSG_IRQ;
     msg.m_irq.type = IRQ_REGISTER;
     msg.m_irq.irq_no = 0x2e;
-    sys_send(IPC_INTR, &msg);
+    _send(IPC_INTR, &msg);
 
     req.buf = buf;
     do_request(IDEN_CMD, 0, 0, NULL);
-    sys_recv(IPC_INTR, &msg);
+    _recv(IPC_INTR, &msg);
     disk_iden();
 
     if (!(msg.type == MSG_INTR && msg.m_intr.type == INTR_OK)) {
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
     int     err, src, type, cmd;
     message msg;
     while (1) {
-        sys_recv(IPC_INIT, &msg);
+        _recv(IPC_INIT, &msg);
         if (msg.type != MSG_DISK) {
             printf("disk: unknow msg\n");
             continue;
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
         err = 0;
         while (1) {
-            sys_recv(IPC_INTR, &msg);
+            _recv(IPC_INTR, &msg);
             if (msg.type == MSG_INTR && msg.m_intr.type == INTR_OK) {
                 if (handler[type]() == DONE) {
                     printf("disk done\n");
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
         else
             msg.m_cfm.type = CFM_OK;
         printf("send...%d\n", src);
-        sys_send(src, &msg);
+        _send(src, &msg);
 
         printf("send done\n");
     }
