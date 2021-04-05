@@ -3,7 +3,8 @@
 
 .global _start
 _start:
-	movq	$1, %rdi
+	push 	%rax
+	call	__libc_init
 	call 	main
 
 .global sys_send
@@ -21,10 +22,16 @@ sys_recv:
 
 .global sys_sendrecv
 sys_sendrecv:
-
+	movq	$NR_SENDRECV, %rax
+	int	$0x80
+	retq
 
 .global sys_debug
 sys_debug:
 	movq	$NR_DEBUG, %rax
 	int	$0x80
 	retq
+
+.data
+.global _brk
+_brk: .quad 0x700000000000

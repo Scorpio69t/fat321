@@ -7,6 +7,7 @@
 #include <kernel/kernel.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>
+#include <kernel/syscalls.h>
 #include <kernel/types.h>
 #include <kernel/unistd.h>
 #include <stdarg.h>
@@ -48,15 +49,35 @@ void sys_recv(frame_t *regs)
     }
 }
 
+int deal_mm(frame_t *regs, message *msg)
+{
+    switch (msg->type) {
+    case MSG_BRK:
+        msg->type = do_brk(msg->m_brk.addr);
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
 void sys_sendrecv(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
-    pid_t    to = regs->rdi;
-    regs->rax = do_sendrecv(regs, to, msg);
+    pid_t    who = regs->rdi;
+    switch (who) {
+    case IPC_MM:
+        regs->rax = deal_mm(regs, msg);
+        break;
+    default:
+        regs->rax = do_sendrecv(regs, who, msg);
+        break;
+    }
 }
 
 void sys_debug(frame_t *regs)
 {
+    printk("%s", regs->rdi);
     return 0;
 }
 

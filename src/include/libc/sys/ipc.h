@@ -9,11 +9,14 @@
 #define IPC_DISK   3
 #define IPC_INPUT  4
 #define IPC_TTY    5
+#define IPC_MM     6
 #define IPC_INTR   0x0ffffffe
 #define IPC_BOTH   0x0fffffff
 
 #define MSG_READ  1
 #define MSG_WRITE 2
+#define MSG_BRK   32
+
 /* the aborve are syscall type */
 #define MSG_CFM  256
 #define MSG_DISK 257
@@ -63,8 +66,12 @@ typedef struct {
 } msg_intr;
 
 typedef struct {
-    int src;
-    int type;
+    unsigned long addr;
+} msg_brk;
+
+typedef struct {
+    int  src;
+    long type;
     union {
         msg_read  m_read;
         msg_write m_write;
@@ -72,8 +79,8 @@ typedef struct {
         msg_disk  m_disk;
         msg_irq   m_irq;
         msg_intr  m_intr;
+        msg_brk   m_brk;
     };
-
 } message;
 
 #endif

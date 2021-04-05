@@ -6,6 +6,7 @@
 
 #define USER_STACK_END   0x7ffffffff000 /* 用户栈的用户空间地址 */
 #define USER_STACK_ORDER 1
+#define USER_BRK_START   0x700000000000 /* 用户brk起始地址 */
 
 /* 进程状态 */
 #define PROC_RUNNABLE  (1 << 0) /* 可运行状态 */

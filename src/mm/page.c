@@ -86,6 +86,11 @@ uint64 map_page(proc_t *proc, uint64 ustart)
     return (uint64)page;
 }
 
+uint64 unmap_page(proc_t *proc, uint64 ustart)
+{
+    return 0;
+}
+
 static void fill_pml4(uint64 base, uint64 addr, uint32 nr)
 {
     uint64 *pml4e = (uint64 *)base;

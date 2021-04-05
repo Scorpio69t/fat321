@@ -197,6 +197,9 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
         map_page(proc, proc->mm.start_stack);
     }
 
+    proc->mm.start_brk = USER_BRK_START;
+    proc->mm.brk = USER_BRK_START;
+
     setup_module_context(proc, ehdr->e_entry);
 
     phdr_table = (Elf64_Phdr *)(module_start + ehdr->e_phoff);

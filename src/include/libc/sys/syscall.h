@@ -15,6 +15,9 @@ extern int sys_recv(int, message *);
 extern int sys_sendrecv(int, message *);
 extern int sys_debug(char *);
 
+int   brk(void *addr);
+void *sbrk(long size);
+
 #endif
 
 #endif
