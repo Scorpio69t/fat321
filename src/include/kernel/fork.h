@@ -17,12 +17,11 @@
 
 #ifndef __ASSEMBLY__
 
-long do_fork(int clone_flags, unsigned long stack_start, frame_t *regs, unsigned long stack_size);
+long do_fork(frame_t *);
 
 extern void  ret_from_fork(void);
+extern void module_ret(void);
 extern pid_t kernel_proc(int (*fn)(void), void *args, unsigned long flags);
-
-pid_t sys_fork(void);
 
 #endif /* __ASSEMBLY__ */
 

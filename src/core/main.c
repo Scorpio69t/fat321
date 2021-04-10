@@ -17,7 +17,6 @@
 #include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
-#include <kernel/stdio.h>
 #include <kernel/syscalls.h>
 #include <kernel/types.h>
 #include <kernel/unistd.h>

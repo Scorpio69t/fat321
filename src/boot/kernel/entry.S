@@ -125,10 +125,19 @@ ret_from_int:
 
 .global ret_from_fork
 ret_from_fork:
-    cli
-    RESTOR_ALL
-    addq $8, %rsp	/* skip orgi_rax */
-    iretq
+	cli
+	RESTOR_ALL
+	addq 	$8, %rsp	/* skip orgi_rax */
+	xorq	%rax, %rax
+	movq	$0, 0x8(%rsi) 	/* The return value of the child process in message struct */
+	iretq
+
+.global module_ret
+module_ret:
+	cli
+	RESTOR_ALL
+	addq	$8, %rsp
+	iretq
 
 ENTRY(hwint0x20) RING0_HW_IRQ_FREAM(0x20); END(hwint0x20)
 ENTRY(hwint0x21) RING0_HW_IRQ_FREAM(0x21); END(hwint0x21)

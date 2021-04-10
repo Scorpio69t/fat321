@@ -90,7 +90,7 @@ typedef struct {
     Elf64_Word  p_flags;  /* segment flags */
     Elf64_Off   p_offset; /* the offset from the beginning of the file */
     Elf64_Addr  p_vaddr;  /* virtual start address */
-    Elf64_Addr  p_paddr;  /*physical start addressing*/
+    Elf64_Addr  p_paddr;  /* physical start addressing */
     Elf64_Xword p_filesz; /* size in the file */
     Elf64_Xword p_memsz;  /* size in the memory */
     Elf64_Xword p_align;

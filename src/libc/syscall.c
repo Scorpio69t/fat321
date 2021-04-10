@@ -1,5 +1,6 @@
 #include <sys/ipc.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 int _syscall(int who, int type, message *msg)
 {
@@ -28,6 +29,12 @@ ssize_t write(int fd, void *buf, size_t nbytes)
     m.m_write.buf = buf;
     m.m_write.size = nbytes;
     return _syscall(IPC_VFS, MSG_WRITE, &m);
+}
+
+pid_t fork(void)
+{
+    message m;
+    return _syscall(IPC_MM, MSG_FORK, &m);
 }
 
 int brk(void *addr)

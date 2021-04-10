@@ -18,7 +18,6 @@
 #include <kernel/mm.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
-#include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/unistd.h>
 
@@ -198,6 +197,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
         map_page(proc, proc->mm.start_stack);
     }
 
+    proc->mm.nr_seg = 0;
     proc->mm.start_brk = USER_BRK_START;
     proc->mm.brk = USER_BRK_START;
 
@@ -209,6 +209,11 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
         Elf64_Phdr *phdr = &phdr_table[i];
         if (phdr->p_type != PT_LOAD)
             continue;
+        proc->mm.psegs[proc->mm.nr_seg].vstart = phdr->p_vaddr;
+        proc->mm.psegs[proc->mm.nr_seg].vend = phdr->p_vaddr + phdr->p_memsz;
+        proc->mm.psegs[proc->mm.nr_seg].flags = phdr->p_flags;
+        proc->mm.nr_seg++;
+
         uint64 seg_start = PAGE_LOWER_ALIGN(phdr->p_vaddr);
         uint64 seg_end = PAGE_UPPER_ALIGN(phdr->p_vaddr + phdr->p_memsz);
         int64  page_num = (seg_end - seg_start) / PAGE_SIZE;
@@ -247,8 +252,6 @@ void proc_init(void)
     init_proc = &init_proc_union.proc;
     /* init_proc 中的一些属性缺失的，在这里进行补充 */
     init_proc->mm.pgd = kinfo.global_pgd_start;
-    init_proc->mm.start_code = kinfo.kernrl_start;
-    init_proc->mm.end_code = kinfo.kernel_end;
 
     scheduler.idle = init_proc;
 

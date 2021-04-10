@@ -10,6 +10,7 @@
 #include <kernel/syscalls.h>
 #include <kernel/types.h>
 #include <kernel/unistd.h>
+#include <kernel/fork.h>
 #include <stdarg.h>
 
 long sys_send(frame_t *regs)
@@ -45,6 +46,8 @@ int deal_mm(frame_t *regs, message *msg)
     case MSG_BRK:
         msg->ret = do_brk(msg->m_brk.addr);
         break;
+    case MSG_FORK:
+        msg->ret = do_fork(regs);
     default:
         break;
     }

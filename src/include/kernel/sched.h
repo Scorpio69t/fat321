@@ -30,7 +30,6 @@
 #include <boot/sched.h>
 #include <kernel/ipc.h>
 #include <kernel/list.h>
-#include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/types.h>
 
@@ -65,9 +64,7 @@ extern unsigned long volatile ticks;
 extern pid_t volatile pid;
 
 #define PROC_COMM_LEN 32 /* 进程名的长度 */
-#define PROC_MAX_FILE 64 /* 一个进程最多打开的文件数 */
-/* 进程优先级 */
-#define LOWEST_PRIO 9999 /* 进程的最低优先级 */
+#define PROC_MM_SEG_SIZE 8
 
 /* 进程标示和状态标示的前面不可在定义任何变量，因为这两个变量需要在entry.S中借助偏移来访问 */
 typedef struct proc_struct {
@@ -92,11 +89,13 @@ typedef struct proc_struct {
 
     struct {
         unsigned long flags;
-
         unsigned long pgd; /* 页目录所在的起始逻辑地址 */
-
-        unsigned long start_code, end_code;
-        unsigned long start_data, end_data;
+        struct {
+            unsigned int flags;
+            unsigned long vstart;
+            unsigned long vend;
+        } psegs[PROC_MM_SEG_SIZE]; /* ELF Programe Segment */
+        unsigned char nr_seg;
         unsigned long start_brk, brk;
         unsigned long start_stack, end_stack;
     } mm; /* 进程用户空间描述 */

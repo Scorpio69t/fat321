@@ -3,6 +3,7 @@
 
 #include <kernel/multiboot.h>
 #include <kernel/types.h>
+#include <stdarg.h>
 
 #define KINFO_MEMMAP_SIZE 16
 #define KINFO_MODULE_SIZE 8
@@ -30,8 +31,9 @@ extern kinfo_t kinfo;
 #define KERN_INFO    "<6>" /* informational            */
 #define KERN_DEBUG   "<7>" /* debug-level messages            */
 
+int vsprintf(char *buf, const char *fmt, va_list args);
+int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
+int sprintf(char *buf, const char *fmt, ...);
 int printk(const char *fmt, ...);
-
-extern void hlt();
 
 #endif

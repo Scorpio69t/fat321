@@ -1,6 +1,5 @@
 #include <boot/console.h>
 #include <kernel/kernel.h>
-#include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/unistd.h>
 #include <stdarg.h>

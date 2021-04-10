@@ -11,119 +11,94 @@
 #include <kernel/types.h>
 #include <kernel/unistd.h>
 
-volatile pid_t global_pid = 0;
+volatile pid_t global_pid = 128;
 
 static inline pid_t alloc_pid(void)
 {
     return ++global_pid;
 }
 
-static int copy_flags(struct proc_struct *p, int clone_flags)
+static int copy_mm(proc_t *proc)
 {
-    p->flags = current->flags;
-    return 0;
-}
+    proc_t *cur;
+    int i;
+    unsigned long vstart, vend;
+    unsigned long start, end;
+    unsigned long kstart;
 
-// static int copy_fs(struct proc_struct *p, int clone_flags)
-// {
-//     p->cwd = current->cwd;
-//     return 0;
-// }
+    cur = current;
+    proc->mm.flags = cur->mm.flags;
 
-static int copy_signal(struct proc_struct *p, int clone_flags)
-{
-    p->signal = current->signal;
-    return 0;
-}
-
-static int copy_mm(struct proc_struct *p, int clone_flags)
-{
-    /* 一些旧代码还无法废除 */
-    // p->stack = (void *)__get_free_pages(GFP_USER, USER_STACK_ORDER);
-    // if (!p->stack)
-    //     return -1;
-    // if (!(p->flags & PF_KTHREAD))
-    //     memcpy(p->stack, current->stack, USER_STACK_SIZE);
-
-    // if (clone_flags & CLONE_VM) {
-    //     p->mm = current->mm;
-    //     goto _ret;
-    // }
-
-_ret:
-    return 0;
-}
-
-// static int copy_files(struct proc_struct *new, int clone_flags)
-// {
-//     struct files_struct *files;
-
-//     if (clone_flags & CLONE_FS) {
-//         files = current->files;
-//         goto _ret;
-//     }
-
-//     files = (struct files_struct *)kmalloc(sizeof(struct files_struct), 0);
-//     assert(files != 0);
-//     if (!files)
-//         return -1;
-//     memcpy(files, current->files, sizeof(struct files_struct));
-
-// _ret:
-//     new->files = files;
-//     return 0;
-// }
-
-static struct proc_struct *copy_process(int clone_flags, unsigned long stack_start, frame_t *regs,
-                                        unsigned long stack_size)
-{
-    struct proc_struct *p;
-    frame_t *           childregs;
-
-    p = (struct proc_struct *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
-    if (!p)
-        return NULL;
-    p->state = PROC_SENDING;
-    p->counter = 1;
-    p->alarm = 0;
-    p->parent = current;
-
-    copy_flags(p, clone_flags);
-    copy_signal(p, clone_flags);
-    // copy_fs(p, clone_flags);
-
-    // if (copy_files(p, clone_flags))
-    //     goto copy_failed;
-    if (copy_mm(p, clone_flags))
-        goto copy_failed;
-
-    copy_context(p, regs, clone_flags);
-
-    return p;
-copy_failed:
-    free_page((unsigned long)p);
-    return 0;
-}
-
-long do_fork(int clone_flags, unsigned long stack_start, frame_t *regs, unsigned long stack_size)
-{
-    struct proc_struct *p;
-
-    p = copy_process(clone_flags, stack_start, regs, stack_size);
-    if (!p)
+    /* copy level4 page table */
+    proc->mm.pgd = get_zeroed_page(GFP_KERNEL);
+    if (!proc->mm.pgd)
         return -1;
 
-    p->pid = alloc_pid();
+    memcpy((void *)proc->mm.pgd, (void *)cur->mm.pgd, PAGE_SIZE);
+    memset((void *)proc->mm.pgd, 0x00, PAGE_SIZE / 2);
 
-    disable_interrupt();
-    list_add_tail(&p->proc, &scheduler.proc_head);
-    enable_interrupt();
-    p->state = PROC_RUNNABLE;
-    return p->pid;
+    /* copy page segment */
+    proc->mm.nr_seg = cur->mm.nr_seg;
+    memcpy((void *)proc->mm.psegs, (void *)cur->mm.psegs, sizeof(proc->mm.psegs));
+
+    for (i = 0; i < cur->mm.nr_seg; i++) {
+        vstart = cur->mm.psegs[i].vstart;
+        vend = cur->mm.psegs[i].vend;
+
+        start = PAGE_LOWER_ALIGN(vstart);
+        end = PAGE_UPPER_ALIGN(vend);
+        while(start != end) {
+            kstart = map_page(proc, start);
+            memcpy((void *)kstart, (void *)start, PAGE_SIZE);
+            start += PAGE_SIZE;
+        }
+    }
+
+    /* copy user stack */
+    start = proc->mm.start_stack = cur->mm.start_stack;
+    end = proc->mm.end_stack = cur->mm.end_stack;
+    while (start != end) {
+        kstart = map_page(proc, start);
+        memcpy((void *)kstart, (void *)start, PAGE_SIZE);
+        start += PAGE_SIZE;
+    }
+
+    /* copy heap */
+    start = proc->mm.start_brk = cur->mm.start_brk;
+    end = proc->mm.brk = cur->mm.brk;
+    while (start != end) {
+        kstart = map_page(proc, start);
+        memcpy((void *)kstart, (void *)start, PAGE_SIZE);
+        start += PAGE_SIZE;
+    }
+    return 0;
 }
 
-int sys_fork(void)
+long do_fork(frame_t *regs)
 {
-    frame_t *regs = (frame_t *)current->context.rsp0 - 1;
-    return do_fork(0, 0, regs, 0);
+    proc_t *proc;
+
+    proc = (proc_t *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
+    if (!proc)
+        return NULL;
+    memset(proc, 0x00, PAGE_SIZE * (1 << KERNEL_STACK_ORDER));
+    proc->state = PROC_SENDING;
+    proc->pid = alloc_pid();
+    proc->counter = 1;
+    proc->alarm = 0;
+    proc->parent = current;
+
+    if (copy_mm(proc))
+        goto faild;
+
+    copy_context(proc, regs);
+    disable_interrupt();
+    list_add_tail(&proc->proc, &scheduler.proc_head);
+    enable_interrupt();
+    proc->state = PROC_RUNNABLE;
+    return proc->pid;
+
+faild:
+    free_pages((unsigned long)proc, KERNEL_STACK_ORDER);
+    return -1;
 }

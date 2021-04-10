@@ -8,7 +8,6 @@
 #include <kernel/fat32.h>
 #include <kernel/kernel.h>
 #include <kernel/slab.h>
-#include <kernel/stdio.h>
 #include <kernel/string.h>
 
 /*

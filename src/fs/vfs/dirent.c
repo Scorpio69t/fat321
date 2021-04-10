@@ -1,7 +1,6 @@
 #include <kernel/bugs.h>
 #include <kernel/dirent.h>
 #include <kernel/fcntl.h>
-#include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/types.h>
 #include <kernel/unistd.h>

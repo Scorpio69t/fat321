@@ -16,6 +16,10 @@
 
 #define MSG_READ  1
 #define MSG_WRITE 2
+#define MSG_OPEN  3
+#define MSG_CLOSE 4
+#define MSG_FORK  5 /* no message struct */
+#define MSG_EXEC  6
 #define MSG_BRK   32
 
 /* the aborve are syscall type */

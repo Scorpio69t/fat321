@@ -8,16 +8,14 @@
 #include <kernel/linkage.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
+#include <kernel/ipc.h>
 #include <kernel/types.h>
 
-int copy_context(struct proc_struct *p, frame_t *regs, int flags)
+int copy_context(struct proc_struct *p, frame_t *regs)
 {
     frame_t *newregs;
     newregs = (frame_t *)kernel_stack_top(p) - 1;
     *newregs = *regs;
-
-    newregs->rsp = (uint64)newregs; /* 只对内核进程有用 */
-    newregs->rax = 0;
 
     p->context.rsp0 = (uint64)newregs; /* ignore some stack space */
     p->context.rsp = (uint64)newregs;
@@ -40,6 +38,6 @@ int setup_module_context(proc_t *proc, uint64 entry)
 
     proc->context.rsp0 = (uint64)newregs;
     proc->context.rsp = (uint64)newregs;
-    proc->context.rip = (uint64)ret_from_fork;
+    proc->context.rip = (uint64)module_ret;
     return 0;
 }
