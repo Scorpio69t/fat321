@@ -15,10 +15,16 @@ extern int _recv(int, message *);
 extern int _sendrecv(int, message *);
 extern int _debug(char *);
 
-int   brk(void *addr);
-void *sbrk(long size);
+ssize_t read(int fd, void *buf, size_t nbytes);
+ssize_t write(int fd, void *buf, size_t nbytes);
+int     brk(void *addr);
+void *  sbrk(long size);
 
-int register_irq(int no_intr);
+int register_irq(int);
+int unregister_irq(int);
+
+int storage_read(unsigned char nsect, unsigned long sector, void *);
+int storage_write(unsigned char nsect, unsigned long sector, void *);
 
 #endif
 

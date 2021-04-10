@@ -7,8 +7,7 @@
 #include <kernel/sched.h>
 
 #define NR_HW_IRQ 0x10
-static unsigned char has_hw_intr[NR_HW_IRQ];
-static pid_t         hw_proc[NR_HW_IRQ];
+static pid_t hw_proc[NR_HW_IRQ];
 
 static void setup_idt_desc(int nr, uint64 addr, uint8 dpl)
 {
@@ -79,8 +78,7 @@ void irq_init(void)
     setup_idtr();
     memset(hw_proc, 0x00, sizeof(hw_proc));
     hw_proc[0x20] = 0xffffffff; /* clock irq */
-    memset(has_hw_intr, 0x00, sizeof(has_hw_intr));
-    enable_irq(0x00); /* open clock intr pin */
+    enable_irq(0x00);           /* open clock intr pin */
 }
 
 int register_irq(unsigned vector, pid_t pid)
@@ -107,21 +105,10 @@ static void do_timer(frame_t *reg)
 {
     ticks_plus();
     update_alarm();
-    message msg = {.type = MSG_INTR,
-                   .src = IPC_INTR,
-                   .m_intr = {
-                       .type = INTR_OK,
-                   }};
-
-    for (int i = 0; i < NR_HW_IRQ; i++) {
-        if (has_hw_intr[i] && try_send(reg, IPC_INTR, hw_proc[i], &msg) == 0) {
-            has_hw_intr[i] = 0;
-        }
-    }
     current->flags |= NEED_SCHEDULE;
 }
 
-static void do_hwint(frame_t *reg, unsigned nr)
+static void do_hwint(frame_t *regs, unsigned nr)
 {
     int     ind = nr - 0x20;
     message msg = {.type = MSG_INTR,
@@ -134,8 +121,7 @@ static void do_hwint(frame_t *reg, unsigned nr)
         printk("no register hw intr\n");
         return;
     }
-    if (try_send(reg, IPC_INTR, hw_proc[ind], &msg) == -1)
-        has_hw_intr[ind] = 1;
+    do_send(regs, hw_proc[ind], &msg);
 }
 
 /* 异常的统一处理函数 */

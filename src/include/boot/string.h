@@ -82,11 +82,11 @@ static inline size_t strlen(const char *s)
 {
     int d0, d1;
     asm volatile(
-        "xor %%ecx, %%ecx\n\t"
-        "1:\tcmpb $0, (%%esi)\n\t"
+        "xor %%rcx, %%rcx\n\t"
+        "1:\tcmpb $0, (%%rsi)\n\t"
         "jz 2f\n\t"
-        "inc %%ecx\n\t"
-        "inc %%esi\n\t"
+        "inc %%rcx\n\t"
+        "inc %%rsi\n\t"
         "jmp 1b\n\t"
         "2:"
         : "=c"(d0), "=&S"(d1)

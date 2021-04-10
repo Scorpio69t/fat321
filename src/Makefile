@@ -17,7 +17,7 @@ export CC LD CFLAGS KCFLAGS ARFLAGS
 
 kendir := boot core mm
 libdir := libc
-moddir := init drivers
+moddir := init drivers fs
 HEADER := ./include
 
 ifdef DEBUG

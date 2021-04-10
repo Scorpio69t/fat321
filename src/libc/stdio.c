@@ -14,3 +14,16 @@ int printf(const char *fmt, ...)
     _debug(buf);
     return len;
 }
+
+int debug(const char *fmt, ...)
+{
+    static char buf[1024];
+    va_list     args;
+    int         len;
+
+    va_start(args, fmt);
+    len = vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    _debug(buf);
+    return len;
+}

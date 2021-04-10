@@ -1,6 +1,6 @@
 
 
-subdir :=
+subdir := vfs
 
 .PHONY: default $(subdir)
 

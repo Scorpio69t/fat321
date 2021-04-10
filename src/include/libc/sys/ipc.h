@@ -7,11 +7,12 @@
 #define IPC_INIT   1
 #define IPC_VFS    2
 #define IPC_DISK   3
-#define IPC_INPUT  4
-#define IPC_TTY    5
+#define IPC_KB     4
+#define IPC_VIDEO  5
 #define IPC_MM     6
-#define IPC_INTR   0x0ffffffe
-#define IPC_BOTH   0x0fffffff
+#define IPC_INTR   0x0ffffffd
+#define IPC_ALL    0x0ffffffe
+#define IPC_KERNEL 0x0fffffff
 
 #define MSG_READ  1
 #define MSG_WRITE 2
@@ -34,13 +35,6 @@ typedef struct {
     void*  buf;
     size_t size;
 } msg_write;
-
-typedef struct {
-#define CFM_OK    0
-#define CFM_ERROR 1
-    int type;
-    int errno;
-} msg_cfm;
 
 typedef struct {
     unsigned char type;
@@ -70,12 +64,14 @@ typedef struct {
 } msg_brk;
 
 typedef struct {
-    int  src;
-    long type;
+    int src;
+    union {
+        int  type;
+        long ret;
+    };
     union {
         msg_read  m_read;
         msg_write m_write;
-        msg_cfm   m_cfm;
         msg_disk  m_disk;
         msg_irq   m_irq;
         msg_intr  m_intr;

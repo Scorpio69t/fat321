@@ -112,11 +112,13 @@ static int disk_read(void)
     } else {
         innw(PORT_DISK0_DATA, req.buf, dinfo.secsz / 2);
     }
+    printf("disk buf: %p\n", req.buf);
     if (--req.nsect) {
         /* 若当前请求未读完，则继续等待下一个中断进行处理 */
         req.buf += dinfo.secsz;
         return UNDONE;
     }
+
     return DONE;
 }
 
@@ -159,10 +161,9 @@ int init_disk(void)
     outb(PORT_DISK0_SECTOR_HIGH, 0);
     outb(PORT_DISK0_DEVICE, 0xe0); /* sector模式 */
 
-    msg.type = MSG_IRQ;
-    msg.m_irq.type = IRQ_REGISTER;
-    msg.m_irq.irq_no = 0x2e;
-    _send(IPC_INTR, &msg);
+    if (register_irq(0x2e) != 0) {
+        printf("disk register irq error\n");
+    }
 
     req.buf = buf;
     do_request(IDEN_CMD, 0, 0, NULL);
@@ -232,7 +233,7 @@ int main(int argc, char *argv[])
     int     err, src, type, cmd;
     message msg;
     while (1) {
-        _recv(IPC_INIT, &msg);
+        _recv(IPC_VFS, &msg);
         if (msg.type != MSG_DISK) {
             printf("disk: unknow msg\n");
             continue;
@@ -251,25 +252,17 @@ int main(int argc, char *argv[])
         while (1) {
             _recv(IPC_INTR, &msg);
             if (msg.type == MSG_INTR && msg.m_intr.type == INTR_OK) {
-                if (handler[type]() == DONE) {
-                    printf("disk done\n");
+                if (handler[type]() == DONE)
                     break;
-                }
             } else {
                 printf("msg confim error\n");
-                err = 1;
+                err = -1;
                 break;
             }
         }
 
-        msg.type = MSG_CFM;
-        if (err)
-            msg.m_cfm.type = CFM_ERROR;
-        else
-            msg.m_cfm.type = CFM_OK;
-        printf("send...%d\n", src);
+        msg.ret = err;
         _send(src, &msg);
-
         printf("send done\n");
     }
 fail:

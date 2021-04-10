@@ -179,7 +179,7 @@ unsigned long sys_getpid(void)
 
 long sys_reboot(void)
 {
-    __sys_reboot();
+    // __sys_reboot();
     return 0;
 }
 

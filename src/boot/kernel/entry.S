@@ -271,6 +271,7 @@ system_call:
 	movq	(%rbx,%rax,8), %rax
 	movq	%rsp, %rdi
 	call	*%rax
+	movq	%rax, SF_RAX(%rsp)
 	RESTOR_ALL
 	INTERRUPT_RETURN
 

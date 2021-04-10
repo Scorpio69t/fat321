@@ -1,88 +1,121 @@
 #include <boot/cpu.h>
+#include <boot/irq.h>
 #include <kernel/bugs.h>
 #include <kernel/ipc.h>
 #include <kernel/kernel.h>
 #include <kernel/sched.h>
 
-/**
- * try to send message
- * @regs: stack frame pointer
- * @from: source process, maybe a interrupt
- * @to: target process
- * @msg: IPC message
- * Return:
- *  - 0: send message successfully
- *  - -1: send message failed
- * Please DO NOT block or schedule in this function
- */
-int64 try_send(frame_t *regs, pid_t from, pid_t to, message *msg)
+long do_send(frame_t *regs, pid_t to, message *msg)
 {
-    proc_t *proc = map_proc(to);
-    assert(proc != NULL);
-    if (proc == NULL)
-        return -1;
-    barrier();
-    if (proc->state == PROC_RECEIVING && (proc->wait == from || proc->wait == IPC_BOTH)) {
-        memcpy(&proc->msg, msg, sizeof(message));
-        proc->state = PROC_RUNNABLE;
+    proc_t *dest = map_proc(to);
+
+    if (msg->src == IPC_INTR) {
+        dest->has_intr = 1;
+        if (dest->state == PROC_RECEIVING && (dest->wait == IPC_INTR || dest->wait == IPC_ALL))
+            dest->state = PROC_RUNNABLE;
         return 0;
     }
-    return -1;
-}
 
-/**
- * no test receive
- */
-int64 nt_recv(frame_t *regs, pid_t from, message *msg)
-{
-    current->wait = from;
-    current->state = PROC_RECEIVING;
-    barrier();
-    schedule();
-    memcpy(msg, &current->msg, sizeof(message));
-    return 0;
-}
-
-int64 do_send(frame_t *regs, pid_t to, message *msg)
-{
-    proc_t *proc = map_proc(to);
-
-    if (proc == NULL)
-        return -1;
     memcpy(&current->msg, msg, sizeof(message));
-    printk("do_send: pid: %d, to: %d s: %d w: %d\n", current->pid, to, proc->state, proc->wait);
-    if (!(proc->state == PROC_RECEIVING && (proc->wait == current->pid || proc->wait == IPC_BOTH))) {
-        current->wait = to;
-        current->state = PROC_SENDING;
-        schedule();
-    } else {
-        /* 当为BOTH时可能存在并发问题 */
-        memcpy(&proc->msg, msg, sizeof(message));
-        current->wait = IPC_NOWAIT;
-        proc->state = PROC_RUNNABLE;
+    current->wait = to;
+    current->state = PROC_SENDING;
+    list_add_tail(&current->wait_list, &dest->wait_proc);
+
+    if (dest->state == PROC_RECEIVING && (dest->wait == current->pid || dest->wait == IPC_ALL)) {
+        dest->state = PROC_RUNNABLE;
     }
+    schedule();
     return 0;
 }
 
-int64 do_recv(frame_t *regs, pid_t from, message *msg)
+long do_recv(frame_t *regs, pid_t from, message *msg)
 {
-    proc_t *proc = map_proc(from);
-    if (proc == NULL)
-        return -1;
-    printk("do_recv: pid: %d, from: %d s: %d, w: %d\n", current->pid, from, proc->state, proc->wait);
-    if (!(proc->state == PROC_SENDING && proc->wait == current->pid)) {
+    proc_t *source;
+
+    /* receive all type message */
+    if (from == IPC_ALL) {
+    recv_all:
+        if (current->has_intr) {
+            msg->type = MSG_INTR;
+            msg->m_intr.type = INTR_OK;
+            current->has_intr = 0;
+            return 0;
+        }
+
+        if (!list_is_null(&current->wait_proc)) {
+            source = list_first_entry(&current->wait_proc, proc_t, wait_list);
+            list_del(&source->wait_list);
+            memcpy(msg, &source->msg, sizeof(message));
+            current->wait = IPC_NOWAIT;
+            source->state = PROC_RUNNABLE;
+            return 0;
+        }
+
+        current->wait = IPC_ALL;
+        current->state = PROC_RECEIVING;
+        schedule();
+        goto recv_all;
+    }
+
+    /* receive intrrupter type message */
+    if (from == IPC_INTR) {
+        if (!current->has_intr) {
+            current->wait = IPC_INTR;
+            current->state = PROC_RECEIVING;
+            schedule();
+        }
+
+        current->has_intr = 0;
+        msg->type = MSG_INTR;
+        msg->m_intr.type = INTR_OK;
+        return 0;
+    }
+
+    /* receive other type message */
+    source = map_proc(from);
+    assert(source != NULL);
+
+    if (!(source->state == PROC_SENDING && source->wait == current->pid)) {
         current->wait = from;
         current->state = PROC_RECEIVING;
         schedule();
-    } else {
-        memcpy(msg, &proc->msg, sizeof(message));
-        current->wait = IPC_NOWAIT;
-        proc->state = PROC_RUNNABLE;
     }
+    list_del(&source->wait_list);
+    memcpy(msg, &source->msg, sizeof(message));
+    current->wait = IPC_NOWAIT;
+    source->state = PROC_RUNNABLE;
+
     return 0;
 }
 
-int64 do_sendrecv(frame_t *regs, pid_t to, message *msg)
+long do_sendrecv(frame_t *regs, pid_t to, message *msg)
 {
+    int status;
+
+    if ((status = do_send(regs, to, msg)) != 0)
+        return status;
+    if ((status = do_recv(regs, to, msg)) != 0)
+        return status;
+    return 0;
+}
+
+long process_kernel_message(message *msg)
+{
+    long ret;
+
+    switch (msg->type) {
+    case MSG_IRQ:
+        if (msg->m_irq.type == IRQ_REGISTER)
+            ret = register_irq(msg->m_irq.irq_no, current->pid);
+        else if (msg->m_irq.type == IRQ_UNREGISTER)
+            ret = unregister_irq(msg->m_irq.irq_no);
+        else
+            return -1;
+        break;
+    default:
+        break;
+    }
+
+    msg->ret = ret;
     return 0;
 }

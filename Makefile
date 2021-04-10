@@ -5,6 +5,9 @@ default: _all
 _all:
 	cd src && $(MAKE) $@
 
+clean:
+	cd src && $(MAKE) $@
+
 bochs:
 	./scripts/mkimg.sh
 	bochs -f config/bochsrc

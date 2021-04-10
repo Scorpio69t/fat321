@@ -71,9 +71,8 @@ extern pid_t volatile pid;
 
 /* 进程标示和状态标示的前面不可在定义任何变量，因为这两个变量需要在entry.S中借助偏移来访问 */
 typedef struct proc_struct {
-    volatile long         state; /* 进程状态，-1不可运行，0可运行 */
-    unsigned long         flags; /* 状态标识 */
-    volatile long         wait;
+    volatile long         state;               /* 进程状态，-1不可运行，0可运行 */
+    unsigned long         flags;               /* 状态标识 */
     void *                stack;               /* 用户栈 */
     pid_t                 pid;                 /* 进程id */
     unsigned long         counter;             /* 进程可用时间片 */
@@ -84,7 +83,13 @@ typedef struct proc_struct {
     struct context_struct context;             /* 进程的上下文信息 */
     struct list_head      proc;                /* 进程链表 */
     struct list_head      hash_map;
-    message               msg;
+
+    volatile long    wait;      /* 记录正在等待哪个进程发送/接收消息 */
+    struct list_head wait_proc; /* 等待当前进程接收自身消息的进程 */
+    struct list_head wait_list; /* 连接到wait_proc */
+    unsigned char    has_intr;  /* 是否有中断消息 */
+    message          msg;
+
     struct {
         unsigned long flags;
 

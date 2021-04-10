@@ -12,48 +12,38 @@
 #include <kernel/unistd.h>
 #include <stdarg.h>
 
-void sys_send(frame_t *regs)
+long sys_send(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
     pid_t    to = regs->rdi;
+    long     status;
 
     switch (to) {
-    case IPC_INTR:
-        if (msg->m_irq.type == IRQ_REGISTER)
-            regs->rax = register_irq(msg->m_irq.irq_no, current->pid);
-        else if (msg->m_irq.type == IRQ_UNREGISTER)
-            regs->rax = unregister_irq(msg->m_irq.irq_no);
-        else
-            regs->rax = -1;
+    case IPC_KERNEL:
+        status = process_kernel_message(msg);
         break;
     default:
-        regs->rax = do_send(regs, to, msg);
+        status = do_send(regs, to, msg);
         break;
     }
+    return status;
 }
 
-void sys_recv(frame_t *regs)
+long sys_recv(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
     pid_t    from = regs->rdi;
-    switch (from) {
-    case IPC_INTR:
-        regs->rax = nt_recv(regs, from, msg);
-        break;
-    case IPC_BOTH:
-        regs->rax = nt_recv(regs, from, msg);
-        break;
-    default:
-        regs->rax = do_recv(regs, from, msg);
-        break;
-    }
+    long     status;
+
+    status = do_recv(regs, from, msg);
+    return status;
 }
 
 int deal_mm(frame_t *regs, message *msg)
 {
     switch (msg->type) {
     case MSG_BRK:
-        msg->type = do_brk(msg->m_brk.addr);
+        msg->ret = do_brk(msg->m_brk.addr);
         break;
     default:
         break;
@@ -61,21 +51,24 @@ int deal_mm(frame_t *regs, message *msg)
     return 0;
 }
 
-void sys_sendrecv(frame_t *regs)
+long sys_sendrecv(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
     pid_t    who = regs->rdi;
+    long     status;
+
     switch (who) {
     case IPC_MM:
-        regs->rax = deal_mm(regs, msg);
+        status = deal_mm(regs, msg);
         break;
     default:
-        regs->rax = do_sendrecv(regs, who, msg);
+        status = do_sendrecv(regs, who, msg);
         break;
     }
+    return status;
 }
 
-void sys_debug(frame_t *regs)
+long sys_debug(frame_t *regs)
 {
     printk("%s", regs->rdi);
     return 0;

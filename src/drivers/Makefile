@@ -1,6 +1,6 @@
 
 
-subdir := disk
+subdir := disk keyboard
 
 .PHONY: default $(subdir)
 

@@ -2,10 +2,11 @@
 #define _KERNEL_VFS_H_
 
 #include <boot/atomic.h>
-#include <kernel/blkdev.h>
 #include <kernel/dirent.h>
 #include <kernel/list.h>
 #include <kernel/spinlock.h>
+#include <sys/list.h>
+#include <sys/types.h>
 
 /* lseek调用选项 */
 #define SEEK_SET (1 << 0)
@@ -124,5 +125,13 @@ struct file *  make_file(struct dentry *, int, int);
 struct dentry *make_dentry(struct dentry *, char *, size_t);
 
 struct dentry *path_walk(const char *path, int flags);
+
+#define NR_FILES 128
+
+typedef struct file_struct {
+    pid_t            pid;
+    struct list_head list;
+    struct file      files[NR_FILES];
+} file_t;
 
 #endif

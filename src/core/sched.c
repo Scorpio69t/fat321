@@ -184,6 +184,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc->alarm = 0;
     proc->signal = 0;
     proc->parent = &init_proc_union.proc;
+    list_head_init(&proc->wait_proc);
 
     /* TODO: 耦合太高，重构这个部分 */
     proc->mm.pgd = get_zeroed_page(GFP_KERNEL);
