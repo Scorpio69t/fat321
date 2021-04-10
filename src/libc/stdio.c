@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/syscall.h>
 
 int printf(const char *fmt, ...)
@@ -11,8 +12,12 @@ int printf(const char *fmt, ...)
     va_start(args, fmt);
     len = vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-    _debug(buf);
-    return len;
+    return write(1, buf, len);
+}
+
+void perror(const char *s)
+{
+    write(2, s, strlen(s));
 }
 
 int debug(const char *fmt, ...)

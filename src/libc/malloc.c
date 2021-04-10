@@ -24,7 +24,7 @@ static m_node *alloc_node(void)
     if (list_is_null(&m_free_node)) {
         m_node *newnodes = sbrk(NODE_INC_SIZE * sizeof(m_node));
         if (newnodes == NULL) {
-            printf("alloc_node sbrk faild\n");
+            debug("alloc_node sbrk faild\n");
             return NULL;
         }
         for (int i = 0; i < NODE_INC_SIZE; i++) {
@@ -45,7 +45,6 @@ static void free_node(m_node *node)
 
 void __malloc_init(void)
 {
-    printf("init malloc\n");
     m_node *nodes, *n;
     int     i;
 
@@ -55,7 +54,7 @@ void __malloc_init(void)
 
     nodes = (m_node *)sbrk(NODE_INC_SIZE * sizeof(m_node));
     if (nodes == NULL) {
-        printf("__init_malloc sbrk faild\n");
+        debug("__init_malloc sbrk faild\n");
         return;
     }
 
@@ -67,8 +66,6 @@ void __malloc_init(void)
     n->size = EACH_BRK;
     n->ptr = sbrk(EACH_BRK);
     list_add(&n->list, &m_free);
-
-    printf("malloc start %p\n", n->ptr);
 }
 
 static void merge_free(m_node *node)
@@ -102,7 +99,6 @@ static void merge_free(m_node *node)
     {
         count++;
     }
-    printf("block size: %d\n", count);
 }
 
 void *malloc(size_t size)
@@ -121,11 +117,11 @@ void *malloc(size_t size)
 
     if (node == NULL) {
         if ((node = alloc_node()) == NULL) {
-            printf("malloc alloc_node failed\n");
+            debug("malloc alloc_node failed\n");
         }
         node->size = size > EACH_BRK ? size : EACH_BRK;
         if (!(node->ptr = sbrk(node->size))) {
-            printf("malloc sbrk failed\n");
+            debug("malloc sbrk failed\n");
             return NULL;
         }
     } else {
@@ -134,7 +130,7 @@ void *malloc(size_t size)
 
     if (node->size > size) {
         if ((reminder = alloc_node()) == NULL) {
-            printf("malloc alloc_node failed\n");
+            debug("malloc alloc_node failed\n");
             return NULL;
         }
         reminder->size = node->size - size;

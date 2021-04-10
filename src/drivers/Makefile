@@ -1,6 +1,6 @@
 
 
-subdir := disk keyboard
+subdir := disk keyboard video
 
 .PHONY: default $(subdir)
 
