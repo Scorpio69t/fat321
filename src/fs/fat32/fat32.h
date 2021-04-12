@@ -1,12 +1,10 @@
-#ifndef _KERNEL_FAT32_H_
-#define _KERNEL_FAT32_H_
-
-#define __packed __attribute__((packed))
+#ifndef _FAT32_H_
+#define _FAT32_H_
 
 void fat32_init(void);
 
 /* 引导扇区(DBR) */
-struct fat32_boot_sector {
+struct fat32_DBR {
     unsigned char  BS_jmpBoot[3];
     unsigned char  BS_OEMName[8];
     unsigned short BPB_BytesPerSec;
@@ -40,13 +38,13 @@ struct fat32_boot_sector {
     unsigned char BootCode[420];
 
     unsigned short BS_TrailSig;
-} __packed;
-typedef struct fat32_boot_sector fat32_boot_sector_t;
+} __attribute__((packed));
+typedef struct fat32_DBR DBR_t;
 
 /* FAT32文件系统的FSInfo扇区结构
  * 为FAT32文件系统在计算和索引空闲簇号的过程提供参考值，其值并非实时更新
  */
-struct fat32_fs_info {
+struct fat32_FSInfo {
     unsigned int  FSI_LeadSig;
     unsigned char FSI_Reserved1[480];
     unsigned int  FSI_StrucSig;
@@ -55,7 +53,7 @@ struct fat32_fs_info {
     unsigned char FSI_Reserved2[12];
     unsigned int  FSI_TrailSig;
 };
-typedef struct fat32_fs_info fat32_fs_info_t;
+typedef struct fat32_FSInfo FSInfo_t;
 
 #define ATTR_READ_ONLY (1 << 0)
 #define ATTR_HIDDEN    (1 << 1)
@@ -78,8 +76,8 @@ struct fat32_directory {
     unsigned short DIR_WrtDate;
     unsigned short DIR_FstClusLO;
     unsigned int   DIR_FileSize;
-} __packed;
-typedef struct fat32_directory fat32_directory_t;
+} __attribute__((packed));
+typedef struct fat32_directory dir_t;
 
 #define LOWERCASE_BASE (8)
 #define LOWERCASE_EXT  (16)
@@ -93,10 +91,10 @@ struct fat32_long_directory {
     unsigned short LDIR_Name2[6];
     unsigned short LDIR_FstClusLO;
     unsigned short LDIR_Name3[2];
-} __packed;
-typedef struct fat32_long_directory fat32_long_directory_t;
+} __attribute__((packed));
+typedef struct fat32_long_directory ldir_t;
 
-struct fat32_private_info {
+struct fat32_superblock {
     unsigned long start_sector;
     unsigned long sector_count;
     unsigned int  sector_per_clus;
@@ -117,6 +115,10 @@ struct fat32_private_info {
     unsigned short creat_time;
     unsigned short write_date;
     unsigned short write_time;
+
+    DBR_t *   dbr;
+    FSInfo_t *fsinfo;
 };
+typedef struct fat32_superblock superblock_t;
 
 #endif

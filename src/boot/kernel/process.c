@@ -4,11 +4,11 @@
 #include <kernel/bugs.h>
 #include <kernel/fork.h>
 #include <kernel/gfp.h>
+#include <kernel/ipc.h>
 #include <kernel/kernel.h>
 #include <kernel/linkage.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
-#include <kernel/ipc.h>
 #include <kernel/types.h>
 
 int copy_context(struct proc_struct *p, frame_t *regs)

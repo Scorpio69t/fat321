@@ -115,27 +115,4 @@ static inline int strcmp(const char *str1, const char *str2)
     return d0;
 }
 
-#define __HAVE_ARCH_STRNCMP
-static inline int strncmp(const char *str1, const char *str2, size_t n)
-{
-    int d0, d1, d2, d3;
-    asm volatile(
-        "0:\t decl %%ecx\n\t"
-        "js 3f\n\t"
-        "lodsb\n\t"
-        "scasb\n\t"
-        "jne 1f\n\t"
-        "testb %%al, %%al\n\t"
-        "jne 0b\n\t"
-        "3:\t xorl %%eax, %%eax\n\t"
-        "jmp 2f\n\t"
-        "1:\t sbbl %%eax, %%eax\n\t"
-        "orb $1, %%al\n\t"
-        "2:\t"
-        : "=a"(d0), "=&S"(d1), "=&D"(d2), "=&c"(d3)
-        : "1"(str1), "2"(str2), "3"(n)
-        : "memory");
-    return d0;
-}
-
 #endif

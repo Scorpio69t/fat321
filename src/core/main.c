@@ -8,7 +8,6 @@
 #include <boot/irq.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
-#include <kernel/fat32.h>
 #include <kernel/fcntl.h>
 #include <kernel/fork.h>
 #include <kernel/gfp.h>

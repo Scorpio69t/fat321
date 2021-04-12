@@ -27,8 +27,17 @@ extern size_t strlen(const char *s);
 extern int strcmp(const char *str1, const char *str2);
 #endif
 
-#ifndef __HAVE_ARCH_STRNCMP
-extern int strncmp(const char *str1, const char *str2, size_t n);
-#endif
+static inline int strncmp(const char *str1, const char *str2, size_t n)
+{
+    size_t i;
+    int    retval;
+
+    for (i = 0; i < n; i++, str1++, str2++) {
+        retval = *str1 - *str2;
+        if (retval)
+            break;
+    }
+    return retval;
+}
 
 #endif

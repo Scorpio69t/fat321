@@ -4,18 +4,18 @@
 #include <sys/list.h>
 #include <sys/types.h>
 
-struct ventry {
-    pid_t            v_fs_pid;    /* 文件系统进程 */
-    unsigned long    v_ino;       /* inode号 */
-    int              v_count;     /* 引用计数 */
-    size_t           v_size;      /* 文件大小 */
-    mode_t           v_mode;      /* 文件属性 */
-    loff_t           v_pread;     /* 读取位置 */
-    loff_t           v_pwrite;    /* 写入位置 */
-    char             v_name[128]; /* 文件名称 */
-    struct ventry *  v_parent;    /* 父entry */
-    struct list_head v_list;      /* 挂载到父entry的v_children */
-    struct list_head v_children;
+struct fentry {
+    pid_t            f_fs_pid;    /* 文件系统进程 */
+    unsigned long    f_ino;       /* inode号 */
+    int              f_count;     /* 引用计数 */
+    size_t           f_size;      /* 文件大小 */
+    mode_t           f_mode;      /* 文件属性 */
+    loff_t           f_pread;     /* 读取位置 */
+    loff_t           f_pwrite;    /* 写入位置 */
+    char             f_name[128]; /* 文件名称 */
+    struct fentry *  f_parent;    /* 父entry */
+    struct list_head f_list;      /* 挂载到父entry的f_children */
+    struct list_head f_children;  /* 子entry */
 };
 
 struct file {
@@ -25,10 +25,12 @@ struct file {
 };
 
 struct vmount {
-    pid_t          m_fs_pid;
-    char           m_path[128];
-    struct ventry *m_entry;
+    pid_t            m_fs_pid;
+    struct fentry *  m_entry;
+    struct list_head list;
 };
+
+extern struct list_head mount_head;
 
 #define NR_FILES 64
 typedef struct proc_file {

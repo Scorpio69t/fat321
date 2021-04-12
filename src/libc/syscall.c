@@ -10,7 +10,7 @@ int _syscall(int who, int type, message *msg)
     if ((status = _sendrecv(who, msg)) != 0) {
         return -1;
     }
-    return msg->ret;
+    return msg->retval;
 }
 
 ssize_t read(int fd, void *buf, size_t nbytes)
@@ -41,7 +41,7 @@ int brk(void *addr)
 {
     message msg;
 
-    msg.m_brk.addr = addr;
+    msg.m_brk.addr = (unsigned long)addr;
     return _syscall(IPC_MM, MSG_BRK, &msg);
 }
 
@@ -69,7 +69,7 @@ int register_irq(int no_intr)
     m.m_irq.irq_no = no_intr;
     if (_send(IPC_KERNEL, &m) != 0)
         return -1;
-    return m.ret;
+    return m.retval;
 }
 
 int unregister_irq(int no_intr)
@@ -80,7 +80,7 @@ int unregister_irq(int no_intr)
     m.m_irq.irq_no = no_intr;
     if (_send(IPC_KERNEL, &m) != 0)
         return -1;
-    return m.ret;
+    return m.retval;
 }
 
 int storage_read(unsigned char nsect, unsigned long sector, void *buf)
@@ -93,7 +93,7 @@ int storage_read(unsigned char nsect, unsigned long sector, void *buf)
     m.m_disk.buf = buf;
     if (_sendrecv(IPC_DISK, &m) != 0)
         return -1;
-    return m.ret;
+    return m.retval;
 }
 
 int storage_write(unsigned char nsect, unsigned long sector, void *buf)
@@ -106,5 +106,5 @@ int storage_write(unsigned char nsect, unsigned long sector, void *buf)
     m.m_disk.buf = buf;
     if (_sendrecv(IPC_DISK, &m) != 0)
         return -1;
-    return m.ret;
+    return m.retval;
 }

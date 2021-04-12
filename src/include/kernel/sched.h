@@ -63,7 +63,7 @@ extern unsigned long volatile ticks;
  */
 extern pid_t volatile pid;
 
-#define PROC_COMM_LEN 32 /* 进程名的长度 */
+#define PROC_COMM_LEN    32 /* 进程名的长度 */
 #define PROC_MM_SEG_SIZE 8
 
 /* 进程标示和状态标示的前面不可在定义任何变量，因为这两个变量需要在entry.S中借助偏移来访问 */
@@ -91,7 +91,7 @@ typedef struct proc_struct {
         unsigned long flags;
         unsigned long pgd; /* 页目录所在的起始逻辑地址 */
         struct {
-            unsigned int flags;
+            unsigned int  flags;
             unsigned long vstart;
             unsigned long vend;
         } psegs[PROC_MM_SEG_SIZE]; /* ELF Programe Segment */

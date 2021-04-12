@@ -1,6 +1,6 @@
 
 
-subdir := vfs
+subdir := vfs fat32
 
 .PHONY: default $(subdir)
 

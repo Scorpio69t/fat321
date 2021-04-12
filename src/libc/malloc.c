@@ -125,7 +125,7 @@ void *malloc(size_t size)
             return NULL;
         }
     } else {
-        list_del(node);
+        list_del(&node->list);
     }
 
     if (node->size > size) {

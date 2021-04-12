@@ -41,7 +41,7 @@ static void put_char(char c)
 
 static int read_char(char *buf, size_t size)
 {
-    int i, sz = 0;
+    int sz = 0;
     while (kb_buf.head != kb_buf.tail && sz <= size) {
         buf[sz++] = kb_buf.buf[kb_buf.head];
         kb_buf.head++;
@@ -58,7 +58,7 @@ static void annlysis_scancode(void)
     static char   pre_code = 0;
     static int    skip = 0;
     unsigned char code;
-    int           i, key, make;
+    int           key, make;
 
     key = make = 0;
     code = inb(0x60);
@@ -159,7 +159,7 @@ int main(void)
                 }
                 annlysis_scancode();
             }
-            m.ret = read_char(m.m_read.buf, m.m_read.size);
+            m.retval = read_char(m.m_read.buf, m.m_read.size);
             if (_send(m.src, &m) != 0) {
                 debug("kb send msg error\n");
             }
@@ -167,7 +167,7 @@ int main(void)
         }
         debug("kb: unsupport message\n");
     failed:
-        m.ret = -1;
+        m.retval = -1;
         _send(m.src, &m);
     }
     return 0;

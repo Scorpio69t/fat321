@@ -108,11 +108,10 @@ static int do_request(int cmd, unsigned short nsect, unsigned long sector, void 
 static int disk_read(void)
 {
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printf("read_handler: disk read error\n");
+        debug("read_handler: disk read error\n");
     } else {
         innw(PORT_DISK0_DATA, req.buf, dinfo.secsz / 2);
     }
-    printf("disk buf: %p\n", req.buf);
     if (--req.nsect) {
         /* 若当前请求未读完，则继续等待下一个中断进行处理 */
         req.buf += dinfo.secsz;
@@ -125,7 +124,7 @@ static int disk_read(void)
 static int disk_write(void)
 {
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printf("write_handler: disk write error\n");
+        debug("write_handler: disk write error\n");
     }
 
     if (--req.nsect) {
@@ -140,7 +139,7 @@ static int disk_write(void)
 static int disk_iden(void)
 {
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
-        printf("identify_handler: disk read error\n");
+        debug("identify_handler: disk read error\n");
     } else {
         innw(PORT_DISK0_DATA, req.buf, 256);
     }
@@ -162,7 +161,7 @@ int init_disk(void)
     outb(PORT_DISK0_DEVICE, 0xe0); /* sector模式 */
 
     if (register_irq(0x2e) != 0) {
-        printf("disk register irq error\n");
+        debug("disk register irq error\n");
     }
 
     req.buf = buf;
@@ -171,17 +170,17 @@ int init_disk(void)
     disk_iden();
 
     if (!(msg.type == MSG_INTR && msg.m_intr.type == INTR_OK)) {
-        printf("msg error %d %d\n", msg.type, msg.m_intr.type);
+        debug("msg error %d %d\n", msg.type, msg.m_intr.type);
         return -1;
     }
 
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR)
-        printf("disk read error\n");
+        debug("disk read error\n");
     else
         innb(PORT_DISK0_DATA, buf, 512);
 
     if (!(buf[49] & 0x0100)) {
-        printf("unsupport LBA");
+        debug("unsupport LBA");
         return -1;
     }
     if (buf[83] & 0x0200)
@@ -228,14 +227,14 @@ int main(int argc, char *argv[])
     if (init_disk() == -1)
         goto fail;
 
-    printf("LBA48: %d, secsz %d\n", dinfo.lba48, dinfo.secsz);
+    debug("LBA48: %d, secsz %d\n", dinfo.lba48, dinfo.secsz);
 
     int     err, src, type, cmd;
     message msg;
     while (1) {
-        _recv(IPC_VFS, &msg);
+        _recv(IPC_ALL, &msg);
         if (msg.type != MSG_DISK) {
-            printf("disk: unknow msg\n");
+            debug("disk: unknow msg\n");
             continue;
         }
         req.nsect = msg.m_disk.nsect;
@@ -243,7 +242,7 @@ int main(int argc, char *argv[])
         src = msg.src;
         type = msg.m_disk.type;
         if ((cmd = to_disk_cmd(msg.m_disk.type)) == -1) {
-            printf("disk: unknow msg_disk type\n");
+            debug("disk: unknow msg_disk type\n");
             continue;
         }
         do_request(cmd, msg.m_disk.nsect, msg.m_disk.sector, buf);
@@ -255,17 +254,16 @@ int main(int argc, char *argv[])
                 if (handler[type]() == DONE)
                     break;
             } else {
-                printf("msg confim error\n");
+                debug("msg confim error\n");
                 err = -1;
                 break;
             }
         }
 
-        msg.ret = err;
+        msg.retval = err;
         _send(src, &msg);
-        printf("send done\n");
     }
 fail:
-    printf("disk init error\n");
+    debug("disk init error\n");
     while (1) nop();
 }

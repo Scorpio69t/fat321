@@ -9,6 +9,8 @@ long do_send(frame_t *regs, pid_t to, message *msg)
 {
     proc_t *dest = map_proc(to);
 
+    // printk("%x send to %x\n", msg->src, to);
+
     if (msg->src == IPC_INTR) {
         dest->has_intr = 1;
         if (dest->state == PROC_RECEIVING && (dest->wait == IPC_INTR || dest->wait == IPC_ALL))
@@ -31,6 +33,8 @@ long do_send(frame_t *regs, pid_t to, message *msg)
 long do_recv(frame_t *regs, pid_t from, message *msg)
 {
     proc_t *source;
+
+    // printk("%x recv from %x\n", msg->src, from);
 
     /* receive all type message */
     if (from == IPC_ALL) {
@@ -101,14 +105,14 @@ long do_sendrecv(frame_t *regs, pid_t to, message *msg)
 
 long process_kernel_message(message *msg)
 {
-    long ret;
+    long retval;
 
     switch (msg->type) {
     case MSG_IRQ:
         if (msg->m_irq.type == IRQ_REGISTER)
-            ret = register_irq(msg->m_irq.irq_no, current->pid);
+            retval = register_irq(msg->m_irq.irq_no, current->pid);
         else if (msg->m_irq.type == IRQ_UNREGISTER)
-            ret = unregister_irq(msg->m_irq.irq_no);
+            retval = unregister_irq(msg->m_irq.irq_no);
         else
             return -1;
         break;
@@ -116,6 +120,6 @@ long process_kernel_message(message *msg)
         break;
     }
 
-    msg->ret = ret;
+    msg->retval = retval;
     return 0;
 }

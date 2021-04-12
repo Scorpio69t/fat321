@@ -20,8 +20,8 @@ static inline pid_t alloc_pid(void)
 
 static int copy_mm(proc_t *proc)
 {
-    proc_t *cur;
-    int i;
+    proc_t *      cur;
+    int           i;
     unsigned long vstart, vend;
     unsigned long start, end;
     unsigned long kstart;
@@ -47,7 +47,7 @@ static int copy_mm(proc_t *proc)
 
         start = PAGE_LOWER_ALIGN(vstart);
         end = PAGE_UPPER_ALIGN(vend);
-        while(start != end) {
+        while (start != end) {
             kstart = map_page(proc, start);
             memcpy((void *)kstart, (void *)start, PAGE_SIZE);
             start += PAGE_SIZE;

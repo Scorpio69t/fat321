@@ -11,6 +11,7 @@
 #define IPC_KB     4
 #define IPC_VIDEO  5
 #define IPC_MM     6
+#define IPC_FAT    7
 
 #define IPC_INTR   0x0ffffffd
 #define IPC_ALL    0x0ffffffe
@@ -25,10 +26,14 @@
 #define MSG_BRK   32
 
 /* the aborve are syscall type */
-#define MSG_CFM  256
-#define MSG_DISK 257
-#define MSG_IRQ  258
-#define MSG_INTR 259
+#define MSG_CFM      256
+#define MSG_DISK     257
+#define MSG_IRQ      258
+#define MSG_INTR     259
+#define MSG_FSMNT    260
+#define MSG_FSREAD   261
+#define MSG_FSWRITE  262
+#define MSG_FSLOOKUP 263
 
 typedef struct {
     int    fd;
@@ -66,6 +71,51 @@ typedef struct {
 } msg_intr;
 
 typedef struct {
+#define FSMNT_STEP1 1
+#define FSMNT_STEP2 2
+    int type;
+    /* step 1 */
+    int systemid;
+    /* step 2 */
+    unsigned long inode;
+    loff_t        pread;
+    loff_t        pwrite;
+    mode_t        mode;
+    size_t        fsize;
+} msg_fsmnt;
+
+typedef struct {
+    unsigned long inode;
+    size_t        fsize;
+    loff_t        pread;
+    loff_t        offset;
+    void *        buf;
+    size_t        size;
+} msg_fsread;
+
+typedef struct {
+    unsigned long inode;
+    size_t        fsize;
+    loff_t        pwrite;
+    loff_t        offset;
+    void *        buf;
+    size_t        size;
+} msg_fswrite;
+
+typedef struct {
+    unsigned long p_inode;
+    loff_t        p_pread;
+    char *        filename;
+
+    /* retval */
+    unsigned long inode;
+    loff_t        pread;
+    loff_t        pwrite;
+    size_t        fsize;
+    mode_t        mode;
+} msg_fslookup;
+
+typedef struct {
     unsigned long addr;
 } msg_brk;
 
@@ -73,15 +123,19 @@ typedef struct {
     int src;
     union {
         int  type;
-        long ret;
+        long retval;
     };
     union {
-        msg_read  m_read;
-        msg_write m_write;
-        msg_disk  m_disk;
-        msg_irq   m_irq;
-        msg_intr  m_intr;
-        msg_brk   m_brk;
+        msg_read     m_read;
+        msg_write    m_write;
+        msg_disk     m_disk;
+        msg_irq      m_irq;
+        msg_intr     m_intr;
+        msg_fsmnt    m_fsmnt;
+        msg_fsread   m_fsread;
+        msg_fswrite  m_fswrite;
+        msg_fslookup m_fslookup;
+        msg_brk      m_brk;
     };
 } message;
 

@@ -4,13 +4,13 @@
 #include <boot/unistd.h>
 #include <kernel/dirent.h>
 #include <kernel/fcntl.h>
+#include <kernel/fork.h>
 #include <kernel/kernel.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/syscalls.h>
 #include <kernel/types.h>
 #include <kernel/unistd.h>
-#include <kernel/fork.h>
 #include <stdarg.h>
 
 long sys_send(frame_t *regs)
@@ -44,10 +44,10 @@ int deal_mm(frame_t *regs, message *msg)
 {
     switch (msg->type) {
     case MSG_BRK:
-        msg->ret = do_brk(msg->m_brk.addr);
+        msg->retval = do_brk(msg->m_brk.addr);
         break;
     case MSG_FORK:
-        msg->ret = do_fork(regs);
+        msg->retval = do_fork(regs);
     default:
         break;
     }
@@ -90,6 +90,15 @@ void pre_syscall(frame_t *regs)
         break;
     case MSG_DISK:
         msg->m_disk.buf = kmap(msg->m_disk.buf);
+        break;
+    case MSG_FSLOOKUP:
+        msg->m_fslookup.filename = kmap(msg->m_fslookup.filename);
+        break;
+    case MSG_FSREAD:
+        msg->m_fsread.buf = kmap(msg->m_fsread.buf);
+        break;
+    case MSG_FSWRITE:
+        msg->m_fswrite.buf = kmap(msg->m_fswrite.buf);
         break;
     default:
         break;

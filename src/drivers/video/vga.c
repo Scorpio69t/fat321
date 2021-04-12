@@ -127,12 +127,12 @@ int main(int argc, char *argv[])
         }
         if (m.type != MSG_WRITE) {
             debug("vga invalid message type");
-            m.ret = -1;
+            m.retval = -1;
             _send(m.src, &m);
             continue;
         }
 
-        m.ret = vga_write(m.m_write.buf, m.m_write.size, 0x0f);
+        m.retval = vga_write(m.m_write.buf, m.m_write.size, 0x0f);
         _send(m.src, &m);
     }
 }
