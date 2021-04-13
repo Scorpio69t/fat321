@@ -12,44 +12,79 @@
 
 struct list_head      mount_head;
 static struct fentry *root_entry;
+static struct fentry *stdin, *stdout, *stderr;
 
 #define __FILE_MAP_SIZE 1024
 static struct list_head __file_map[__FILE_MAP_SIZE];
 
-file_t *map_file_t(pid_t pid)
+static struct proc_file *map_proc_file(pid_t pid)
 {
     struct list_head *head;
-    file_t *          pos, *entry;
-
-    head = &__file_map[pid % __FILE_MAP_SIZE];
-    list_for_each_entry(pos, head, list)
-    {
-        if (pos->pid == pid) {
-            entry = pos;
-            break;
-        }
-    }
-    return entry;
-}
-
-int append_fild_t(pid_t pid, file_t *fsp)
-{
-    struct list_head *head;
-    file_t *          pos;
+    struct proc_file *pos;
 
     head = &__file_map[pid % __FILE_MAP_SIZE];
     list_for_each_entry(pos, head, list)
     {
         if (pos->pid == pid)
+            return pos;
+    }
+    return NULL;
+}
+
+static int append_proc_file(struct proc_file *fsp)
+{
+    struct list_head *head;
+    struct proc_file *pos;
+
+    assert(fsp->pid != 0);
+
+    head = &__file_map[fsp->pid % __FILE_MAP_SIZE];
+    list_for_each_entry(pos, head, list)
+    {
+        if (pos->pid == fsp->pid)
             return -1;
     }
     list_add_tail(&fsp->list, head);
     return 0;
 }
 
-int create_files(pid_t pid)
+/* 为进程初始化 */
+static struct proc_file *init_proc_file(pid_t pid)
 {
-    return 0;
+    struct proc_file *proc_file;
+    struct file *     filp;
+
+    proc_file = (struct proc_file *)malloc(sizeof(struct proc_file));
+    assert(proc_file != NULL);
+
+    memset(proc_file, 0x00, sizeof(struct proc_file));
+    proc_file->pid = pid;
+
+    /* stdin */
+    filp = (struct file *)malloc(sizeof(struct file));
+    assert(filp != NULL);
+    filp->f_mode = stdin->f_mode;
+    filp->f_entry = stdin;
+    filp->f_pos = 0;
+    proc_file->filp[STDIN_FILENO] = filp;
+
+    /* stdout */
+    filp = (struct file *)malloc(sizeof(struct file));
+    assert(filp != NULL);
+    filp->f_mode = stdout->f_mode;
+    filp->f_entry = stdout;
+    filp->f_pos = 0;
+    proc_file->filp[STDOUT_FILENO] = filp;
+
+    /* stderr */
+    filp = (struct file *)malloc(sizeof(struct file));
+    assert(filp != NULL);
+    filp->f_mode = stderr->f_mode;
+    filp->f_entry = stderr;
+    filp->f_pos = 0;
+    proc_file->filp[STDERR_FILENO] = filp;
+
+    return proc_file;
 }
 
 int copy_files(pid_t parent, pid_t child)
@@ -57,47 +92,69 @@ int copy_files(pid_t parent, pid_t child)
     return 0;
 }
 
-int process_stdin(message *m)
+static struct file *getfilp(pid_t pid, int fd)
 {
-    message kb_m;
-    kb_m.type = MSG_READ;
-    kb_m.m_read.buf = m->m_read.buf;
-    kb_m.m_read.size = m->m_read.size;
-    if (_sendrecv(IPC_KB, &kb_m) != 0) {
-        debug("process_stdin error\n");
+    struct proc_file *proc_file;
+
+    proc_file = map_proc_file(pid);
+    if (proc_file == NULL) {
+        proc_file = init_proc_file(pid);
+        append_proc_file(proc_file);
+    }
+
+    if (!(fd >= 0 && fd < NR_FILES))
+        return NULL;
+    return proc_file->filp[fd];
+}
+
+static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
+{
+    message      mess;
+    int          status;
+    struct file *filp;
+
+    if (!(filp = getfilp(pid, fd)))
+        return -1;
+
+    mess.type = MSG_FSREAD;
+    mess.m_fsread.buf = buf;
+    mess.m_fsread.size = size;
+    mess.m_fsread.inode = filp->f_entry->f_ino;
+    mess.m_fsread.fsize = filp->f_entry->f_size;
+    mess.m_fsread.pread = filp->f_entry->f_pread;
+    mess.m_fsread.offset = filp->f_pos;
+    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
         return -1;
     }
-    return kb_m.retval;
+    if (mess.retval > 0)
+        filp->f_pos += mess.retval;
+
+    return mess.retval;
 }
 
-int process_stdout(message *m)
+int vfs_write(pid_t pid, int fd, void *buf, size_t size)
 {
-    message video_m;
-    video_m.type = MSG_WRITE;
-    video_m.m_write.buf = m->m_write.buf;
-    video_m.m_write.size = m->m_write.size;
-    if (_sendrecv(IPC_VIDEO, &video_m) != 0) {
-        debug("process_stdout error\n");
+    message      mess;
+    int          status;
+    struct file *filp;
+
+    if (!(filp = getfilp(pid, fd)))
+        return -1;
+
+    mess.type = MSG_FSWRITE;
+    mess.m_fswrite.buf = buf;
+    mess.m_fswrite.size = size;
+    mess.m_fswrite.inode = filp->f_entry->f_ino;
+    mess.m_fswrite.fsize = filp->f_entry->f_size;
+    mess.m_fswrite.pwrite = filp->f_entry->f_pwrite;
+    mess.m_fswrite.offset = filp->f_pos;
+    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
         return -1;
     }
-    return video_m.retval;
-}
+    if (mess.retval > 0)
+        filp->f_pos += mess.retval;
 
-int vfs_read(message *m)
-{
-    int fd = m->m_read.fd;
-    if (fd == 0)
-        return process_stdin(m);
-    return -1;
-}
-
-int vfs_write(message *m)
-{
-    int fd = m->m_write.fd;
-
-    if (fd == 1 || fd == 2)
-        return process_stdout(m);
-    return -1;
+    return mess.retval;
 }
 
 int getfilename(char *sptr, char *buffer)
@@ -130,6 +187,7 @@ static struct fentry *vfs_lookup_in_fs(struct fentry *parent, const char *filena
     child = (struct fentry *)malloc(sizeof(struct fentry));
     assert(child != NULL);
     child->f_fs_pid = parent->f_fs_pid;
+    child->f_flags = FE_NORMAL;
     child->f_ino = mess.m_fslookup.inode;
     child->f_count = 1;
     child->f_size = mess.m_fslookup.fsize;
@@ -140,6 +198,7 @@ static struct fentry *vfs_lookup_in_fs(struct fentry *parent, const char *filena
     child->f_parent = parent;
     list_add(&child->f_list, &parent->f_children);
     list_head_init(&child->f_children);
+    parent->f_count++;
 
     return child;
 }
@@ -162,7 +221,6 @@ struct fentry *vfs_lookup(const char *path)
         sptr = sptr + len;
         if (*sptr == '/')
             sptr++;
-
         child = NULL;
         list_for_each_entry(pos, &parent->f_children, f_list)
         {
@@ -171,15 +229,12 @@ struct fentry *vfs_lookup(const char *path)
                 break;
             }
         }
-
         if (!child) {
-            child = vfs_lookup_in_fs(parent, filename);
-            if (!child)
+            if (!(child = vfs_lookup_in_fs(parent, filename)))
                 return NULL;
         } else {
             child->f_count++;
         }
-
         parent = child;
     }
 
@@ -215,6 +270,7 @@ static int mount_root(size_t start_lba)
     root_entry = (struct fentry *)malloc(sizeof(struct fentry));
     assert(root_entry != NULL);
     root_entry->f_fs_pid = IPC_FAT;
+    root_entry->f_flags = FE_NORMAL;
     root_entry->f_count = 1;
     root_entry->f_ino = fsmnt->inode;
     root_entry->f_mode = fsmnt->mode;
@@ -237,6 +293,69 @@ static int mount_root(size_t start_lba)
     status = _send(IPC_FAT, &mess);
     assert(status == 0);
 
+    return 0;
+}
+
+/* TODO: 使用内核传入的设备表 */
+static struct dev_file dev_table[] = {
+    [0] =
+        {
+            "video",
+            IPC_VIDEO,
+            0x92,
+        },
+    [1] =
+        {
+            "keyboard",
+            IPC_KB,
+            0x124,
+        },
+};
+
+static int mount_dev(void)
+{
+    assert(root_entry != NULL);
+
+    struct fentry *  dev_dir, *dev;
+    struct dev_file *dev_file;
+    int              i, nr_dev;
+
+    dev_dir = (struct fentry *)malloc(sizeof(struct fentry));
+    assert(dev_dir != NULL);
+
+    memset(dev_dir, 0x00, sizeof(struct fentry));
+    dev_dir->f_fs_pid = IPC_KERNEL;
+    dev_dir->f_flags = FE_DEV;
+    dev_dir->f_mode = 0x1b6;
+    strcpy(dev_dir->f_name, "dev");
+    list_head_init(&dev_dir->f_children);
+
+    list_add_tail(&dev_dir->f_list, &root_entry->f_children);
+    root_entry->f_count++;
+
+    nr_dev = sizeof(dev_table) / sizeof(struct dev_file);
+    for (i = 0; i < nr_dev; i++) {
+        dev_file = &dev_table[i];
+        dev = (struct fentry *)malloc(sizeof(struct fentry));
+        assert(dev != NULL);
+        memset(dev, 0x00, sizeof(struct fentry));
+        dev->f_fs_pid = dev_file->driver_pid;
+        dev->f_flags = FE_DEV;
+        dev->f_ino = i;
+        dev->f_count = 1;
+        dev->f_mode = dev_file->mode;
+        strcpy(dev->f_name, dev_file->name);
+        list_head_init(&dev->f_children);
+        list_add_tail(&dev->f_list, &dev_dir->f_children);
+        dev_dir->f_count++;
+
+        /* TODO: */
+        if (dev_file->driver_pid == IPC_VIDEO) {
+            stdout = stderr = dev;
+        } else if (dev_file->driver_pid == IPC_KB) {
+            stdin = dev;
+        }
+    }
     return 0;
 }
 
@@ -265,9 +384,9 @@ static void do_process(void)
             continue;
         }
         if (m.type == MSG_READ)
-            retval = vfs_read(&m);
+            retval = vfs_read(m.src, m.m_read.fd, m.m_read.buf, m.m_read.size);
         else if (m.type == MSG_WRITE)
-            retval = vfs_write(&m);
+            retval = vfs_write(m.src, m.m_read.fd, m.m_read.buf, m.m_read.size);
         else {
             debug("vfs: unsupport message\n");
             retval = -1;
@@ -278,32 +397,6 @@ static void do_process(void)
             debug("vfs: send error\n");
         }
     }
-}
-
-void test()
-{
-    struct fentry *e = vfs_lookup("/home/a.txt");
-    assert(e != NULL);
-    debug("inode %d fsize %d\n", e->f_ino, e->f_size);
-
-    message mess;
-    char *  buffer;
-    int     status;
-
-    buffer = (char *)malloc(512);
-
-    mess.type = MSG_FSREAD;
-    mess.m_fsread.buf = buffer;
-    mess.m_fsread.size = 512;
-    mess.m_fsread.inode = e->f_ino;
-    mess.m_fsread.fsize = e->f_size;
-    mess.m_fsread.pread = e->f_pread;
-    mess.m_fsread.offset = 0;
-    status = _sendrecv(e->f_fs_pid, &mess);
-    assert(status == 0);
-
-    buffer[mess.retval] = 0;
-    debug("read size %d  %s\n", mess.retval, buffer);
 }
 
 int main(int argc, char *argv[])
@@ -340,9 +433,7 @@ int main(int argc, char *argv[])
     }
 
     mount_root(start_lba);
-    debug("vfs main\n");
-
-    test();
+    mount_dev();
 
     do_process();
 

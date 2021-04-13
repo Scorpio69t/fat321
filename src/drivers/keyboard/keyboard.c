@@ -150,7 +150,7 @@ int main(void)
             continue;
         }
 
-        if (m.type == MSG_READ) {
+        if (m.type == MSG_FSREAD) {
             message tmp;
             while (!kb_buf.count) {
                 if (_recv(IPC_INTR, &tmp) != 0) {
@@ -159,7 +159,7 @@ int main(void)
                 }
                 annlysis_scancode();
             }
-            m.retval = read_char(m.m_read.buf, m.m_read.size);
+            m.retval = read_char(m.m_fsread.buf, m.m_fsread.size);
             if (_send(m.src, &m) != 0) {
                 debug("kb send msg error\n");
             }

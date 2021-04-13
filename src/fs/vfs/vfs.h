@@ -4,8 +4,12 @@
 #include <sys/list.h>
 #include <sys/types.h>
 
+#define FE_NORMAL 1
+#define FE_DEV    2
+
 struct fentry {
     pid_t            f_fs_pid;    /* 文件系统进程 */
+    unsigned int     f_flags;     /* entry标识 */
     unsigned long    f_ino;       /* inode号 */
     int              f_count;     /* 引用计数 */
     size_t           f_size;      /* 文件大小 */
@@ -18,9 +22,13 @@ struct fentry {
     struct list_head f_children;  /* 子entry */
 };
 
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+
 struct file {
     mode_t         f_mode; /* 文件打开属性 */
-    struct ventry *f_entry;
+    struct fentry *f_entry;
     loff_t         f_pos;
 };
 
@@ -33,10 +41,16 @@ struct vmount {
 extern struct list_head mount_head;
 
 #define NR_FILES 64
-typedef struct proc_file {
-    pid_t            pid; /* 进程pid */
-    struct list_head list;
+struct proc_file {
+    pid_t            pid;  /* 进程pid */
+    struct list_head list; /* 用于__file_map中处理hash冲突 */
     struct file *    filp[NR_FILES];
-} file_t;
+};
+
+struct dev_file {
+    char   name[128];
+    pid_t  driver_pid; /* 驱动pid */
+    mode_t mode;
+};
 
 #endif

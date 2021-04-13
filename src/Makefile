@@ -49,6 +49,8 @@ $(moddir):
 	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
 
 clean:
-	find $(subdir) -name "*.o" -or -name "*.dep" | xargs rm
-	find $(subdir) -name "*.a" -or -name "*.out" | xargs rm
+	find . -name "*.o" | xargs rm
+	find . -name "*.dep" | xargs rm
+	find . -name "*.a" | xargs rm
+	find . -name "*.mod" | xargs rm
 	test -e $(TARGET) && rm $(TARGET)

@@ -125,14 +125,14 @@ int main(int argc, char *argv[])
         if (_recv(IPC_VFS, &m) != 0) {
             debug("vga recv error\n");
         }
-        if (m.type != MSG_WRITE) {
+        if (m.type != MSG_FSWRITE) {
             debug("vga invalid message type");
             m.retval = -1;
             _send(m.src, &m);
             continue;
         }
 
-        m.retval = vga_write(m.m_write.buf, m.m_write.size, 0x0f);
+        m.retval = vga_write(m.m_fswrite.buf, m.m_fswrite.size, 0x0f);
         _send(m.src, &m);
     }
 }

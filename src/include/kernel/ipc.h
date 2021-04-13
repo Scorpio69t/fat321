@@ -34,6 +34,7 @@
 #define MSG_FSREAD   261
 #define MSG_FSWRITE  262
 #define MSG_FSLOOKUP 263
+#define MSG_KREAD    264
 
 typedef struct {
     int    fd;
@@ -116,6 +117,13 @@ typedef struct {
 } msg_fslookup;
 
 typedef struct {
+    char * filepath;
+    loff_t offset;
+    void * buf;
+    size_t size;
+} msg_kread;
+
+typedef struct {
     unsigned long addr;
 } msg_brk;
 
@@ -135,6 +143,7 @@ typedef struct {
         msg_fsread   m_fsread;
         msg_fswrite  m_fswrite;
         msg_fslookup m_fslookup;
+        msg_kread    m_kread;
         msg_brk      m_brk;
     };
 } message;
