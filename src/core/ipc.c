@@ -3,7 +3,9 @@
 #include <kernel/bugs.h>
 #include <kernel/ipc.h>
 #include <kernel/kernel.h>
+#include <kernel/page.h>
 #include <kernel/sched.h>
+#include <kernel/syscalls.h>
 
 long do_send(frame_t *regs, pid_t to, message *msg)
 {
@@ -103,7 +105,7 @@ long do_sendrecv(frame_t *regs, pid_t to, message *msg)
     return 0;
 }
 
-long process_kernel_message(message *msg)
+long process_kernel_message(frame_t *regs, message *msg)
 {
     long retval;
 
@@ -119,7 +121,38 @@ long process_kernel_message(message *msg)
     default:
         break;
     }
-
     msg->retval = retval;
+    return 0;
+}
+
+long process_mm_message(frame_t *regs, message *msg)
+{
+    long retval;
+
+    switch (msg->type) {
+    case MSG_BRK:
+        retval = do_brk(msg->m_brk.addr);
+        break;
+    case MSG_FORK:
+        retval = do_fork(regs);
+        break;
+    case MSG_KMAP:
+        retval = ipc_kmap(msg);
+        break;
+    default:
+        break;
+    }
+    msg->retval = retval;
+    return 0;
+}
+
+long ipc_kmap(message *m)
+{
+    if (m->m_kmap.addr1)
+        m->m_kmap.addr1 = kmap(m->m_kmap.addr1);
+    if (m->m_kmap.addr2)
+        m->m_kmap.addr2 = kmap(m->m_kmap.addr2);
+    if (m->m_kmap.addr3)
+        m->m_kmap.addr3 = kmap(m->m_kmap.addr3);
     return 0;
 }

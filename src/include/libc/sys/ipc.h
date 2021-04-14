@@ -21,7 +21,9 @@
 #define MSG_CLOSE 4
 #define MSG_FORK  5 /* no message struct */
 #define MSG_EXEC  6
-#define MSG_BRK   32
+#define MSG_LSEEK 7
+
+#define MSG_BRK 32
 
 /* the aborve are syscall type */
 #define MSG_CFM      256
@@ -32,7 +34,9 @@
 #define MSG_FSREAD   261
 #define MSG_FSWRITE  262
 #define MSG_FSLOOKUP 263
-#define MSG_KREAD    264
+#define MSG_COPYFS   264
+#define MSG_FREEFS   265 /* no message struct */
+#define MSG_KMAP     266
 
 typedef struct {
     int    fd;
@@ -45,6 +49,26 @@ typedef struct {
     void*  buf;
     size_t size;
 } msg_write;
+
+typedef struct {
+    char*  filepath;
+    int    oflag;
+    mode_t mode;
+} msg_open;
+
+typedef struct {
+    int fd;
+} msg_close;
+
+typedef struct {
+    int   fd;
+    off_t offset;
+    int   whence;
+} msg_lseek;
+
+typedef struct {
+    unsigned long addr;
+} msg_brk;
 
 typedef struct {
     unsigned char type;
@@ -82,6 +106,7 @@ typedef struct {
     mode_t        mode;
     size_t        fsize;
 } msg_fsmnt;
+
 typedef struct {
     unsigned long inode;
     size_t        fsize;
@@ -114,15 +139,14 @@ typedef struct {
 } msg_fslookup;
 
 typedef struct {
-    char*  filepath;
-    loff_t offset;
-    void*  buf;
-    size_t size;
-} msg_kread;
+    pid_t pid; /* child pid */
+} msg_copyfs;
 
 typedef struct {
-    unsigned long addr;
-} msg_brk;
+    void* addr1;
+    void* addr2;
+    void* addr3;
+} msg_kmap;
 
 typedef struct {
     int src;
@@ -131,8 +155,13 @@ typedef struct {
         long retval;
     };
     union {
-        msg_read     m_read;
-        msg_write    m_write;
+        msg_read  m_read;
+        msg_write m_write;
+        msg_open  m_open;
+        msg_close m_close;
+        msg_lseek m_lseek;
+        msg_brk   m_brk;
+
         msg_disk     m_disk;
         msg_irq      m_irq;
         msg_intr     m_intr;
@@ -140,8 +169,8 @@ typedef struct {
         msg_fsread   m_fsread;
         msg_fswrite  m_fswrite;
         msg_fslookup m_fslookup;
-        msg_kread    m_kread;
-        msg_brk      m_brk;
+        msg_copyfs   m_copyfs;
+        msg_kmap     m_kmap;
     };
 } message;
 

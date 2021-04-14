@@ -2,7 +2,6 @@
 #define _KERNEL_VFS_H_
 
 #include <boot/atomic.h>
-#include <kernel/dirent.h>
 #include <kernel/list.h>
 #include <kernel/spinlock.h>
 #include <sys/list.h>

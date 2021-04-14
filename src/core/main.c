@@ -8,7 +8,6 @@
 #include <boot/irq.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
-#include <kernel/fcntl.h>
 #include <kernel/fork.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
@@ -18,7 +17,6 @@
 #include <kernel/slab.h>
 #include <kernel/syscalls.h>
 #include <kernel/types.h>
-#include <kernel/unistd.h>
 
 kinfo_t kinfo;
 

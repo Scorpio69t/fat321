@@ -1,7 +1,5 @@
-#ifndef _KERNEL_FCNTL_H_
-#define _KERNEL_FCNTL_H_
-
-int open(const char *path, int oflag);
+#ifndef _FCNTL_H_
+#define _FCNTL_H_
 
 #define O_RDONLY  00000000 /* Open read-only */
 #define O_WRONLY  00000001 /* Open write-only */
@@ -11,9 +9,10 @@ int open(const char *path, int oflag);
 #define O_CREAT  00000100 /* Create file if it does not exist */
 #define O_EXCL   00000200 /* Fail if file already exists */
 #define O_NOCTTY 00000400 /* Do not assign controlling terminal */
-#define O_TRUNC                                                                                                       \
-    00001000 /* If the file exists and is a regular file, and the file is successfully opened O_RDWR or O_WRONLY, its \
-                length shall be truncated to 0 */
+
+/* If the file exists and is a regular file, and the file is successfully opened O_RDWR or O_WRONLY, its
+   length shall be truncated to 0 */
+#define O_TRUNC    00001000
 #define O_APPEND   00002000 /* the file offset shall be set to the end of the file */
 #define O_NONBLOCK 00004000 /* Non-blocking I/O mode */
 
@@ -21,6 +20,8 @@ int open(const char *path, int oflag);
 #define O_SEARCH    00020000 /* Open directory for search only */
 #define O_DIRECTORY 00040000 /* must be a directory */
 #define O_NOFOLLOW  00100000 /* Do not follow symbolic links */
+
+int open(const char *path, int oflag, ... /* mode_t mode */);
 
 #define EOF 0
 

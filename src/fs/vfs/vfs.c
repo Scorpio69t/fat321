@@ -7,6 +7,7 @@
 #include <sys/list.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "blkdev.h"
 
@@ -29,6 +30,17 @@ static struct proc_file *map_proc_file(pid_t pid)
             return pos;
     }
     return NULL;
+}
+
+static int unmap_proc_file(pid_t pid)
+{
+    struct proc_file *file;
+
+    if ((file = map_proc_file(pid)) == NULL)
+        return 0;
+
+    list_del(&file->list);
+    return 0;
 }
 
 static int append_proc_file(struct proc_file *fsp)
@@ -87,11 +99,6 @@ static struct proc_file *init_proc_file(pid_t pid)
     return proc_file;
 }
 
-int copy_files(pid_t parent, pid_t child)
-{
-    return 0;
-}
-
 static struct file *getfilp(pid_t pid, int fd)
 {
     struct proc_file *proc_file;
@@ -105,56 +112,6 @@ static struct file *getfilp(pid_t pid, int fd)
     if (!(fd >= 0 && fd < NR_FILES))
         return NULL;
     return proc_file->filp[fd];
-}
-
-static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
-{
-    message      mess;
-    int          status;
-    struct file *filp;
-
-    if (!(filp = getfilp(pid, fd)))
-        return -1;
-
-    mess.type = MSG_FSREAD;
-    mess.m_fsread.buf = buf;
-    mess.m_fsread.size = size;
-    mess.m_fsread.inode = filp->f_entry->f_ino;
-    mess.m_fsread.fsize = filp->f_entry->f_size;
-    mess.m_fsread.pread = filp->f_entry->f_pread;
-    mess.m_fsread.offset = filp->f_pos;
-    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
-        return -1;
-    }
-    if (mess.retval > 0)
-        filp->f_pos += mess.retval;
-
-    return mess.retval;
-}
-
-int vfs_write(pid_t pid, int fd, void *buf, size_t size)
-{
-    message      mess;
-    int          status;
-    struct file *filp;
-
-    if (!(filp = getfilp(pid, fd)))
-        return -1;
-
-    mess.type = MSG_FSWRITE;
-    mess.m_fswrite.buf = buf;
-    mess.m_fswrite.size = size;
-    mess.m_fswrite.inode = filp->f_entry->f_ino;
-    mess.m_fswrite.fsize = filp->f_entry->f_size;
-    mess.m_fswrite.pwrite = filp->f_entry->f_pwrite;
-    mess.m_fswrite.offset = filp->f_pos;
-    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
-        return -1;
-    }
-    if (mess.retval > 0)
-        filp->f_pos += mess.retval;
-
-    return mess.retval;
 }
 
 int getfilename(char *sptr, char *buffer)
@@ -171,6 +128,10 @@ static struct fentry *vfs_lookup_in_fs(struct fentry *parent, const char *filena
     struct fentry *child;
     message        mess;
 
+    if (_kmap((void **)&filename, NULL, NULL) != 0) {
+        debug("vfs_lookup_in_fs kmap failed\n");
+        return NULL;
+    }
     mess.type = MSG_FSLOOKUP;
     mess.m_fslookup.filename = (char *)filename;
     mess.m_fslookup.p_inode = parent->f_ino;
@@ -203,12 +164,13 @@ static struct fentry *vfs_lookup_in_fs(struct fentry *parent, const char *filena
     return child;
 }
 
-struct fentry *vfs_lookup(const char *path)
+static struct fentry *vfs_lookup(const char *path)
 {
-    char *         sptr;
-    int            len;
+    char *sptr;
+    int   len;
+    char  filename[256];
+
     struct fentry *parent, *child, *pos;
-    char           filename[256];
 
     if (!strncmp("/", path, 1)) {
         parent = root_entry;
@@ -241,10 +203,195 @@ struct fentry *vfs_lookup(const char *path)
     return child;
 }
 
-static int msg_type_set[] = {
-    MSG_READ,
-    MSG_WRITE,
-};
+static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
+{
+    message      mess;
+    int          status;
+    struct file *filp;
+
+    if (!(filp = getfilp(pid, fd)))
+        return -1;
+
+    if (_kmap(&buf, NULL, NULL) != 0)
+        return -1;
+    mess.type = MSG_FSREAD;
+    mess.m_fsread.buf = buf;
+    mess.m_fsread.size = size;
+    mess.m_fsread.inode = filp->f_entry->f_ino;
+    mess.m_fsread.fsize = filp->f_entry->f_size;
+    mess.m_fsread.pread = filp->f_entry->f_pread;
+    mess.m_fsread.offset = filp->f_pos;
+    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
+        return -1;
+    }
+    if (mess.retval > 0)
+        filp->f_pos += mess.retval;
+
+    return mess.retval;
+}
+
+int vfs_write(pid_t pid, int fd, void *buf, size_t size)
+{
+    message      mess;
+    int          status;
+    struct file *filp;
+
+    if (!(filp = getfilp(pid, fd)))
+        return -1;
+
+    if (_kmap(&buf, NULL, NULL) != 0)
+        return -1;
+    mess.type = MSG_FSWRITE;
+    mess.m_fswrite.buf = buf;
+    mess.m_fswrite.size = size;
+    mess.m_fswrite.inode = filp->f_entry->f_ino;
+    mess.m_fswrite.fsize = filp->f_entry->f_size;
+    mess.m_fswrite.pwrite = filp->f_entry->f_pwrite;
+    mess.m_fswrite.offset = filp->f_pos;
+    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
+        return -1;
+    }
+    if (mess.retval > 0)
+        filp->f_pos += mess.retval;
+
+    return mess.retval;
+}
+
+static int vfs_open(pid_t pid, const char *path, int oflag, mode_t mode)
+{
+    struct fentry *   entry;
+    struct proc_file *proc_file;
+    struct file *     filp;
+    int               fd;
+
+    if ((proc_file = map_proc_file(pid)) == NULL) {
+        proc_file = init_proc_file(pid);
+        assert(proc_file != NULL);
+        append_proc_file(proc_file);
+    }
+
+    entry = vfs_lookup(path);
+    if (entry == NULL) {
+        debug("no such file %s\n", path);
+        return -1;
+    }
+
+    entry->f_count++;
+    filp = (struct file *)malloc(sizeof(struct file));
+    filp->f_entry = entry;
+    filp->f_pos = 0;
+    filp->f_mode = entry->f_mode;
+
+    for (fd = 0; fd < NR_FILES; fd++) {
+        if (proc_file->filp[fd] == NULL) {
+            proc_file->filp[fd] = filp;
+            return fd;
+        }
+    }
+    return -1;
+}
+
+static int vfs_close(pid_t pid, int fd)
+{
+    struct file *     filp;
+    struct proc_file *proc_file;
+
+    proc_file = map_proc_file(pid);
+    assert(proc_file != NULL);
+    filp = proc_file->filp[fd];
+
+    if (filp == NULL)
+        return 0;
+
+    filp->f_entry->f_count--;
+    free(filp);
+    debug("vfs close successfully\n");
+    return 0;
+}
+
+static off_t vfs_lseek(pid_t pid, int fd, off_t offset, int whence)
+{
+    debug("vfs_lseek %d %d %d\n", fd, offset, whence);
+
+    struct file *filp;
+
+    if ((filp = getfilp(pid, fd)) == NULL)
+        return -1;
+
+    switch (whence) {
+    case SEEK_SET:
+        if (offset < 0)
+            return -1;
+        filp->f_pos = offset;
+        break;
+    case SEEK_CUR:
+        if (filp->f_pos + offset < 0)
+            return -1;
+        filp->f_pos = filp->f_pos + offset;
+        break;
+    case SEEK_END:
+        if ((off_t)filp->f_entry->f_size + offset < 0)
+            return -1;
+        filp->f_pos = filp->f_entry->f_size + offset;
+        break;
+    default:
+        return -1;
+    }
+    return filp->f_pos;
+}
+
+static int vfs_copyfs(pid_t ppid, pid_t pid)
+{
+    debug("vfs_copyfs %d %d\n", ppid, pid);
+    int fd;
+
+    struct proc_file *pproc_file, *proc_file;
+    struct file *     pfilp, *filp;
+
+    if ((pproc_file = map_proc_file(ppid)) == NULL) {
+        pproc_file = init_proc_file(ppid);
+        append_proc_file(pproc_file);
+    }
+
+    proc_file = (struct proc_file *)malloc(sizeof(struct proc_file));
+    assert(proc_file != NULL);
+    memset(proc_file, 0x00, sizeof(struct proc_file));
+    proc_file->pid = pid;
+
+    for (fd = 0; fd < NR_FILES; fd++) {
+        if (!(pfilp = pproc_file->filp[fd]))
+            continue;
+        filp = (struct file *)malloc(sizeof(struct file));
+        assert(filp != NULL);
+        memcpy(filp, pfilp, sizeof(struct file));
+        filp->f_entry->f_count++;
+        proc_file->filp[fd] = filp;
+    }
+    return 0;
+}
+
+static int vfs_freefs(pid_t pid)
+{
+    int fd;
+
+    struct proc_file *proc_file;
+    struct file *     filp;
+
+    if ((proc_file = map_proc_file(pid)) == NULL)
+        return 0;
+
+    for (fd = 0; fd < NR_FILES; fd++) {
+        filp = proc_file->filp[fd];
+        if (!filp)
+            continue;
+        filp->f_entry->f_count--;
+        free(filp);
+    }
+
+    unmap_proc_file(pid);
+    free(proc_file);
+    return 0;
+}
 
 static int mount_root(size_t start_lba)
 {
@@ -359,18 +506,6 @@ static int mount_dev(void)
     return 0;
 }
 
-int check_msg_type(int type)
-{
-    int i, len;
-
-    len = sizeof(msg_type_set) / sizeof(int);
-
-    for (i = 0; i < len; i++)
-        if (type == msg_type_set[i])
-            return 1;
-    return 0;
-}
-
 static void do_process(void)
 {
     while (1) {
@@ -379,15 +514,29 @@ static void do_process(void)
         if (_recv(IPC_ALL, &m) == -1) {
             debug("vfs: recv error\n");
         }
-        if (!check_msg_type(m.type)) {
-            debug("vfs: invalid message type\n");
-            continue;
-        }
-        if (m.type == MSG_READ)
+        switch (m.type) {
+        case MSG_READ:
             retval = vfs_read(m.src, m.m_read.fd, m.m_read.buf, m.m_read.size);
-        else if (m.type == MSG_WRITE)
+            break;
+        case MSG_WRITE:
             retval = vfs_write(m.src, m.m_read.fd, m.m_read.buf, m.m_read.size);
-        else {
+            break;
+        case MSG_OPEN:
+            retval = vfs_open(m.src, m.m_open.filepath, m.m_open.oflag, m.m_open.mode);
+            break;
+        case MSG_CLOSE:
+            retval = vfs_close(m.src, m.m_close.fd);
+            break;
+        case MSG_LSEEK:
+            retval = vfs_lseek(m.src, m.m_lseek.fd, m.m_lseek.offset, m.m_lseek.whence);
+            break;
+        case MSG_COPYFS:
+            retval = vfs_copyfs(m.src, m.m_copyfs.pid);
+            break;
+        case MSG_FREEFS:
+            retval = vfs_freefs(m.src);
+            break;
+        default:
             debug("vfs: unsupport message\n");
             retval = -1;
         }

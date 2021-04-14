@@ -1,7 +1,6 @@
 #include <boot/console.h>
 #include <kernel/kernel.h>
 #include <kernel/string.h>
-#include <kernel/unistd.h>
 #include <stdarg.h>
 
 static unsigned char printk_color[] = {

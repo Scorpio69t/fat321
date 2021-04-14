@@ -17,6 +17,7 @@ typedef unsigned int   u32;
 typedef unsigned long long u64;
 
 typedef unsigned long size_t;
+typedef long          off_t;
 typedef long long     loff_t;
 typedef int           pid_t;
 typedef unsigned int  mode_t;

@@ -9,7 +9,6 @@
 #include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/types.h>
-#include <kernel/unistd.h>
 
 volatile pid_t global_pid = 128;
 
@@ -74,6 +73,20 @@ static int copy_mm(proc_t *proc)
     return 0;
 }
 
+static int copy_fs(frame_t *regs, proc_t *proc)
+{
+    message mess;
+
+    assert(proc->pid != 0);
+
+    mess.type = MSG_COPYFS;
+    mess.src = current->pid;
+    mess.m_copyfs.pid = proc->pid;
+    if (do_sendrecv(regs, IPC_VFS, &mess) != 0 || mess.retval != 0)
+        return -1;
+    return 0;
+}
+
 long do_fork(frame_t *regs)
 {
     proc_t *proc;
@@ -90,6 +103,8 @@ long do_fork(frame_t *regs)
 
     if (copy_mm(proc))
         goto faild;
+    if (copy_fs(regs, proc))
+        goto faild;
 
     copy_context(proc, regs);
     disable_interrupt();
@@ -99,6 +114,7 @@ long do_fork(frame_t *regs)
     return proc->pid;
 
 faild:
+    /*TODO: free_mm*/
     free_pages((unsigned long)proc, KERNEL_STACK_ORDER);
     return -1;
 }

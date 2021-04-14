@@ -1,9 +1,6 @@
 #include <kernel/bugs.h>
-#include <kernel/dirent.h>
-#include <kernel/fcntl.h>
 #include <kernel/string.h>
 #include <kernel/types.h>
-#include <kernel/unistd.h>
 
 struct DIR *opendir(const char *path)
 {

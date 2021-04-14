@@ -19,7 +19,6 @@
 #include <kernel/sched.h>
 #include <kernel/slab.h>
 #include <kernel/string.h>
-#include <kernel/unistd.h>
 
 struct list_head __proc_hash_map[PROC_HASH_MAP_SIZE];
 

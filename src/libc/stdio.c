@@ -17,7 +17,7 @@ int printf(const char *fmt, ...)
 
 void perror(const char *s)
 {
-    write(2, s, strlen(s));
+    write(2, (void *)s, strlen(s));
 }
 
 int debug(const char *fmt, ...)

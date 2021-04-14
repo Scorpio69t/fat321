@@ -55,7 +55,6 @@ static int mount_fs()
 
 static void do_lookup(message *msg)
 {
-    debug("fs do_lookup\n");
     int             retval;
     struct fs_entry p_entry, entry;
 
@@ -77,7 +76,6 @@ static void do_lookup(message *msg)
 
 static void do_read(message *msg)
 {
-    debug("fs do_read\n");
     int             retval;
     struct fs_entry entry;
 
