@@ -146,6 +146,7 @@ extern struct sched_struct scheduler;
 #define PROC_HASH_MAP_SIZE 256
 extern struct list_head __proc_hash_map[];
 proc_t *map_proc(pid_t);
+void hash_proc(proc_t *proc);
 
 void ticks_plus(void);
 void update_alarm(void);

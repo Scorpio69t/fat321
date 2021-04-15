@@ -100,6 +100,7 @@ long do_fork(frame_t *regs)
     proc->counter = 1;
     proc->alarm = 0;
     proc->parent = current;
+    list_head_init(&proc->wait_proc);
 
     if (copy_mm(proc))
         goto faild;
@@ -109,6 +110,7 @@ long do_fork(frame_t *regs)
     copy_context(proc, regs);
     disable_interrupt();
     list_add_tail(&proc->proc, &scheduler.proc_head);
+    hash_proc(proc);
     enable_interrupt();
     proc->state = PROC_RUNNABLE;
     return proc->pid;
