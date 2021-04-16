@@ -91,6 +91,44 @@ uint64 unmap_page(proc_t *proc, uint64 ustart)
     return 0;
 }
 
+int free_proc_mm(proc_t *proc)
+{
+    uint64 *      level4, *level3, *level2, *level1;
+    uint64        ind1, ind2, ind3, ind4;
+    unsigned long page;
+    int           nr_entry;
+
+    assert(proc != NULL);
+    nr_entry = PAGE_SIZE / sizeof(uint64);
+    level4 = (uint64 *)proc->mm.pgd;
+    for (ind4 = 0; ind4 < nr_entry / 2; ind4++) {
+        if (level4[ind4] == 0)
+            continue;
+        level3 = (uint64 *)to_vir(level4[ind4] & -((uint64)1 << 12));
+        for (ind3 = 0; ind3 < nr_entry; ind3++) {
+            if (level3[ind3] == 0)
+                continue;
+            level2 = (uint64 *)to_vir(level3[ind3] & -((uint64)1 << 12));
+            for (ind2 = 0; ind2 < nr_entry; ind2++) {
+                if (level2[ind2] == 0)
+                    continue;
+                level1 = (uint64 *)to_vir(level2[ind2] & -((uint64)1 << 12));
+                for (ind1 = 0; ind1 < nr_entry; ind1++) {
+                    if (level1[ind1] == 0)
+                        continue;
+                    page = to_vir(level1[ind1] & -((uint64)1 << 12));
+                    free_page(page);
+                }
+                free_page(level1);
+            }
+            free_page(level2);
+        }
+        free_page(level3);
+    }
+    memset(level4, 0x00, PAGE_SIZE / 2);
+    return 0;
+}
+
 static void fill_pml4(uint64 base, uint64 addr, uint32 nr)
 {
     uint64 *pml4e = (uint64 *)base;

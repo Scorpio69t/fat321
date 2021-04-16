@@ -3,8 +3,10 @@
 
 .global _start
 _start:
-	push 	%rax
+	movq	%rsp, %rbp
 	call	__libc_init
+	movq	(%rbp), %rdi 	/* argc */
+	movq	0x8(%rbp), %rsi /* argv */
 	call 	main
 
 .global _send

@@ -54,4 +54,14 @@
         last = __last;                                                                      \
     } while (0)
 
+#define exec_switch_context(proc)                           \
+    do {                                                    \
+        asm volatile(                                       \
+            "movq %0, %%rsp\n\t"                            \
+            "pushq %1\n\t"                                  \
+            "jmp __switch_to\n\t" ::"m"(proc->context.rsp), \
+            "m"(proc->context.rip), "D"(proc), "S"(proc)    \
+            : "memory", "cc");                              \
+    } while (0)
+
 #endif

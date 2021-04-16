@@ -161,6 +161,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc_t *    proc;
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)module_start;
     Elf64_Phdr *phdr_table;
+    unsigned long end_stack;
 
     /* check header magic */
     if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || ehdr->e_ident[EI_MAG1] != ELFMAG1 || ehdr->e_ident[EI_MAG2] != ELFMAG2 ||
@@ -184,7 +185,6 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc->parent = &init_proc_union.proc;
     list_head_init(&proc->wait_proc);
 
-    /* TODO: 耦合太高，重构这个部分 */
     proc->mm.pgd = get_zeroed_page(GFP_KERNEL);
     memcpy((void *)proc->mm.pgd, (void *)init_proc_union.proc.mm.pgd, PAGE_SIZE);
     memset((void *)proc->mm.pgd, 0x00, PAGE_SIZE / 2);
@@ -200,7 +200,8 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc->mm.start_brk = USER_BRK_START;
     proc->mm.brk = USER_BRK_START;
 
-    setup_module_context(proc, ehdr->e_entry);
+    end_stack = proc->mm.end_stack - 16;
+    setup_proc_context(proc, ehdr->e_entry, end_stack);
 
     phdr_table = (Elf64_Phdr *)(module_start + ehdr->e_phoff);
 

@@ -1,4 +1,4 @@
-# MAKEFLAGS  += --no-print-directory
+MAKEFLAGS  += --no-print-directory
 
 CC			= gcc
 LD			= ld
@@ -42,15 +42,15 @@ $(libdir):
 	@$(MAKE) -C $@
 
 $(moddir):
-	echo "make $@"
+	@echo "\nstart make $@"
 	@$(MAKE) -C $@
 
 %.o: %.c
 	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
 
 clean:
-	find . -name "*.o" | xargs rm
-	find . -name "*.dep" | xargs rm
-	find . -name "*.a" | xargs rm
-	find . -name "*.mod" | xargs rm
-	test -e $(TARGET) && rm $(TARGET)
+	find . -name "*.o" | xargs -r rm
+	find . -name "*.dep" | xargs -r rm
+	find . -name "*.a" | xargs -r rm
+	find . -name "*.mod" | xargs -r rm
+	rm -f $(TARGET)

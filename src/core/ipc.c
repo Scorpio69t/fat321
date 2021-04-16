@@ -1,6 +1,7 @@
 #include <boot/cpu.h>
 #include <boot/irq.h>
 #include <kernel/bugs.h>
+#include <kernel/exec.h>
 #include <kernel/ipc.h>
 #include <kernel/kernel.h>
 #include <kernel/page.h>
@@ -118,6 +119,9 @@ long process_kernel_message(frame_t *regs, message *msg)
         else
             return -1;
         break;
+    case MSG_GETPID:
+        retval = current->pid;
+        break;
     default:
         break;
     }
@@ -135,6 +139,9 @@ long process_mm_message(frame_t *regs, message *msg)
         break;
     case MSG_FORK:
         retval = do_fork(regs);
+        break;
+    case MSG_EXECVE:
+        retval = do_execve(msg->m_execve.pathname, msg->m_execve.argv, msg->m_execve.envp);
         break;
     case MSG_KMAP:
         retval = ipc_kmap(msg);

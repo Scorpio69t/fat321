@@ -132,8 +132,8 @@ ret_from_fork:
 	movq	$0, 0x8(%rsi) 	/* The return value of the child process in message struct */
 	iretq
 
-.global module_ret
-module_ret:
+.global exec_ret
+exec_ret:
 	cli
 	RESTOR_ALL
 	addq	$8, %rsp

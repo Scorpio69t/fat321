@@ -42,9 +42,9 @@ sudo cp -r config/grub $mdir/boot
 sudo cp src/kernel.bin $mdir/boot
 sudo cp $mods $mdir/boot
 
-if [[ -d img.tmp ]]; then
-        sudo cp -r img.tmp/* $mdir
-fi
+mkdir -p img.tmp/bin
+cp -r shell/sh img.tmp/bin
+sudo cp -r img.tmp/* $mdir
 
 sudo grub-install --boot-directory=/mnt/boot "$map_dev"
 

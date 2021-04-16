@@ -105,6 +105,16 @@ pid_t fork(void)
     return _syscall(IPC_MM, MSG_FORK, &m);
 }
 
+int execve(const char *pathname, char *const argv[], char *const envp[])
+{
+    message m;
+
+    m.m_execve.pathname = pathname;
+    m.m_execve.argv = argv;
+    m.m_execve.envp = envp;
+    return _syscall(IPC_MM, MSG_EXECVE, &m);
+}
+
 int brk(void *addr)
 {
     message msg;
@@ -127,6 +137,13 @@ void *sbrk(long size)
     }
     _brk = new_brk;
     return old_brk;
+}
+
+pid_t getpid(void)
+{
+    message m;
+
+    return _syscall(IPC_KERNEL, MSG_GETPID, &m);
 }
 
 int register_irq(int no_intr)

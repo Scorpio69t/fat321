@@ -367,6 +367,19 @@ static int vfs_copyfs(pid_t ppid, pid_t pid)
         filp->f_entry->f_count++;
         proc_file->filp[fd] = filp;
     }
+    append_proc_file(proc_file);
+    return 0;
+}
+
+static int vfs_allocfs(pid_t pid)
+{
+    struct proc_file *proc_file;
+
+    if ((proc_file = map_proc_file(pid)) != NULL)
+        return 0;
+    proc_file = init_proc_file(pid);
+    assert(proc_file != NULL);
+    append_proc_file(proc_file);
     return 0;
 }
 
@@ -532,6 +545,9 @@ static void do_process(void)
             break;
         case MSG_COPYFS:
             retval = vfs_copyfs(m.src, m.m_copyfs.pid);
+            break;
+        case MSG_ALLOCFS:
+            retval = vfs_allocfs(m.src);
             break;
         case MSG_FREEFS:
             retval = vfs_freefs(m.src);

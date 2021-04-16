@@ -27,10 +27,10 @@ void switch_pgd(uint64 pgd)
 
 void flash_tlb(void)
 {
-    // asm volatile(
-    // "movl %%cr3, %%eax\n\t"
-    // "movl %%eax, %%cr3\n\t"
-    // "jmp 1f\n\t"
-    // "1f: \t" ::
-    //     : "eax", "memory");
+    asm volatile(
+        "movq %%cr3, %%rax\n\t"
+        "movq %%rax, %%cr3\n\t"
+        "jmp 1f\n\t"
+        "1: \t" ::
+            : "rax", "memory");
 }

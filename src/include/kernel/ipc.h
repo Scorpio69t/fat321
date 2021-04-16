@@ -17,14 +17,15 @@
 #define IPC_ALL    0x0ffffffe
 #define IPC_KERNEL 0x0fffffff
 
-#define MSG_READ  1
-#define MSG_WRITE 2
-#define MSG_OPEN  3
-#define MSG_CLOSE 4
-#define MSG_FORK  5 /* no message struct */
-#define MSG_EXEC  6
-#define MSG_LSEEK 7
-#define MSG_BRK   32
+#define MSG_READ   1
+#define MSG_WRITE  2
+#define MSG_OPEN   3
+#define MSG_CLOSE  4
+#define MSG_FORK   5 /* no message struct */
+#define MSG_EXECVE 6
+#define MSG_LSEEK  7
+#define MSG_BRK    32
+#define MSG_GETPID 33 /* no message struct */
 
 /* the aborve are syscall type */
 #define MSG_CFM      256
@@ -37,7 +38,8 @@
 #define MSG_FSLOOKUP 263
 #define MSG_COPYFS   264
 #define MSG_FREEFS   265 /* no message struct */
-#define MSG_KMAP     266
+#define MSG_ALLOCFS  266 /* no message struct */
+#define MSG_KMAP     267
 
 typedef struct {
     int    fd;
@@ -66,6 +68,12 @@ typedef struct {
     off_t offset;
     int   whence;
 } msg_lseek;
+
+typedef struct {
+    const char * pathname;
+    char *const *argv;
+    char *const *envp;
+} msg_execve;
 
 typedef struct {
     unsigned long addr;
@@ -157,12 +165,13 @@ typedef struct {
         long retval;
     };
     union {
-        msg_read  m_read;
-        msg_write m_write;
-        msg_open  m_open;
-        msg_close m_close;
-        msg_lseek m_lseek;
-        msg_brk   m_brk;
+        msg_read   m_read;
+        msg_write  m_write;
+        msg_open   m_open;
+        msg_close  m_close;
+        msg_lseek  m_lseek;
+        msg_execve m_execve;
+        msg_brk    m_brk;
 
         msg_disk     m_disk;
         msg_irq      m_irq;

@@ -19,5 +19,6 @@ uint64 setup_page_table(uint64 memsize);
 uint64 map_page(proc_t *proc, uint64 ustart);
 uint64 unmap_page(proc_t *proc, uint64 ustart);
 void * kmap(void *uaddr);
+int    free_proc_mm(proc_t *proc);
 
 #endif

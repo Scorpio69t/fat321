@@ -4,6 +4,7 @@
 #include <sys/types.h>
 
 pid_t fork(void);
+int   execve(const char *pathname, char *const argv[], char *const envp[]);
 
 #define SEEK_SET 0 /* Seek from beginning of file.  */
 #define SEEK_CUR 1 /* Seek from current position.  */
@@ -13,5 +14,6 @@ ssize_t read(int fd, void *buf, size_t nbytes);
 ssize_t write(int fd, void *buf, size_t nbytes);
 int     close(int fd);
 off_t   lseek(int fd, off_t offset, int whence);
+pid_t   getpid(void);
 
 #endif

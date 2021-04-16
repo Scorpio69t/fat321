@@ -24,7 +24,7 @@ int copy_context(struct proc_struct *p, frame_t *regs)
     return 0;
 }
 
-int setup_module_context(proc_t *proc, uint64 entry)
+int setup_proc_context(proc_t *proc, uint64 entry, uint64 stack_bottom)
 {
     frame_t *newregs;
     newregs = (frame_t *)kernel_stack_top(proc) - 1;
@@ -33,11 +33,11 @@ int setup_module_context(proc_t *proc, uint64 entry)
     newregs->rip = entry;
     newregs->cs = USER_CODE_DESC;
     newregs->eflags = (1 << 9) | (3 << 12); /* IF, IOPL */
-    newregs->rsp = proc->mm.end_stack - 8;
+    newregs->rsp = stack_bottom;
     newregs->ss = USER_DATA_DESC;
 
     proc->context.rsp0 = (uint64)newregs;
     proc->context.rsp = (uint64)newregs;
-    proc->context.rip = (uint64)module_ret;
+    proc->context.rip = (uint64)exec_ret;
     return 0;
 }

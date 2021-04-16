@@ -18,3 +18,5 @@ target
 *.dep
 src/include/asm
 .DS_Store
+/include
+/libc
