@@ -67,12 +67,7 @@ static int reallocfs_exec(void)
 {
     message mess;
 
-    mess.type = MSG_FREEFS;
-    mess.src = current->pid;
-    if (do_sendrecv(NULL, IPC_VFS, &mess) != 0)
-        return -1;
-
-    mess.type = MSG_ALLOCFS;
+    mess.type = MSG_EXECFS;
     mess.src = current->pid;
     if (do_sendrecv(NULL, IPC_VFS, &mess) != 0)
         return -1;

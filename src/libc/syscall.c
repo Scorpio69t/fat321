@@ -139,7 +139,8 @@ pid_t wait(int *statloc)
 
     if ((status = _syscall(IPC_KERNEL, MSG_WAIT, &m)) <= 0)
         return status;
-    *statloc = m.m_wait.statloc;
+    if (statloc)
+        *statloc = m.m_wait.statloc;
     return status;
 }
 
@@ -164,6 +165,31 @@ pid_t getpid(void)
     message m;
 
     return _syscall(IPC_KERNEL, MSG_GETPID, &m);
+}
+
+char *getcwd(char *buf, size_t size)
+{
+    message m;
+    char *  oldbuf;
+
+    oldbuf = buf;
+    if (_kmap((void **)&buf, NULL, NULL) != 0)
+        return NULL;
+    m.m_getcwd.buf = buf;
+    m.m_getcwd.size = size;
+    if (_syscall(IPC_VFS, MSG_GETCWD, &m) != 0)
+        return NULL;
+    return oldbuf;
+}
+
+int chdir(const char *pathname)
+{
+    message m;
+
+    if (_kmap((void **)&pathname, NULL, NULL) != 0)
+        return -1;
+    m.m_chdir.pathname = pathname;
+    return _syscall(IPC_VFS, MSG_CHDIR, &m);
 }
 
 int register_irq(int no_intr)

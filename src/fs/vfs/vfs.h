@@ -45,6 +45,7 @@ struct proc_file {
     pid_t            pid;  /* 进程pid */
     struct list_head list; /* 用于__file_map中处理hash冲突 */
     struct file *    filp[NR_FILES];
+    struct fentry *  cwd;
 };
 
 struct dev_file {

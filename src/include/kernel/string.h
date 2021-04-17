@@ -15,9 +15,13 @@ extern void *memset(void *, u8, size_t);
 extern void *strcpy(char *dest, const char *src);
 #endif
 
-#ifndef __HAVE_ARCH_STRNCPY
-extern void *strncpy(char *dest, const char *src, size_t n);
-#endif
+static inline void *strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i;
+
+    for (i = 0; i < n && *src != 0; i++, src++) dest[i] = *src;
+    return dest;
+}
 
 #ifndef __HAVE_ARCH_STRLEN
 extern size_t strlen(const char *s);

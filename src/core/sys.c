@@ -33,6 +33,7 @@ void do_exit(int status)
 {
     proc_t *          proc, *parent;
     struct list_head *pos, *n;
+    message           mess;
 
     proc = current;
     parent = proc->parent;
@@ -45,6 +46,11 @@ void do_exit(int status)
     {
         list_add(pos, &parent->children);
     }
+
+    mess.src = proc->pid;
+    mess.type = MSG_FREEFS;
+    if (do_sendrecv(NULL, IPC_VFS, &mess) != 0)
+        printk("free fs failed: pid %d\n", proc->pid);
 
     proc->exit_status = status;
     send_signal(parent, SIGCHLD);

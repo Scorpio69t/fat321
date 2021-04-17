@@ -27,8 +27,10 @@
 #define MSG_LSEEK  7
 #define MSG_EXIT   8
 #define MSG_WAIT   9
-#define MSG_BRK    32
-#define MSG_GETPID 33 /* no message struct */
+#define MSG_BRK    10
+#define MSG_GETPID 11 /* no message struct */
+#define MSG_GETCWD 12
+#define MSG_CHDIR  13
 
 /* the aborve are syscall type */
 #define MSG_CFM      256
@@ -41,7 +43,7 @@
 #define MSG_FSLOOKUP 263
 #define MSG_COPYFS   264
 #define MSG_FREEFS   265 /* no message struct */
-#define MSG_ALLOCFS  266 /* no message struct */
+#define MSG_EXECFS   266 /* no message struct */
 #define MSG_KMAP     267
 
 typedef struct {
@@ -89,6 +91,16 @@ typedef struct {
 typedef struct {
     unsigned long addr;
 } msg_brk;
+
+typedef struct {
+    char * buf;
+    size_t size;
+} msg_getcwd;
+
+typedef struct {
+    const char *pathname;
+} msg_chdir;
+
 /* the aborve are syscall message */
 
 typedef struct {
@@ -185,6 +197,8 @@ typedef struct {
         msg_exit   m_exit;
         msg_wait   m_wait;
         msg_brk    m_brk;
+        msg_getcwd m_getcwd;
+        msg_chdir  m_chdir;
 
         msg_disk     m_disk;
         msg_irq      m_irq;

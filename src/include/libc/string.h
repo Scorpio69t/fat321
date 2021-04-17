@@ -56,21 +56,9 @@ static inline void *strcpy(char *dest, const char *src)
 
 static inline void *strncpy(char *dest, const char *src, size_t n)
 {
-    int d0, d1, d2;
-    asm volatile(
-        "1:\t dec %%ecx\n\t"
-        "js 2f\n\t"
-        "movb (%%esi), %%al\n\t"
-        "movb %%al, (%%edi)\n\t"
-        "inc %%esi\n\t"
-        "inc %%edi\n\t"
-        "cmp $0, %%al\n\t"
-        "jnz 1b\n\t"
-        "2:\t"
-        : "=&D"(d0), "=&S"(d1), "=&c"(d2)
-        : "0"(dest), "1"(src), "2"(n)
-        : "%eax", "memory");
+    size_t i;
 
+    for (i = 0; i < n && *src != 0; i++, src++) dest[i] = *src;
     return dest;
 }
 

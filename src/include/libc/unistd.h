@@ -15,5 +15,7 @@ ssize_t write(int fd, void *buf, size_t nbytes);
 int     close(int fd);
 off_t   lseek(int fd, off_t offset, int whence);
 pid_t   getpid(void);
+char *  getcwd(char *buf, size_t size);
+int     chdir(const char *pathname);
 
 #endif
