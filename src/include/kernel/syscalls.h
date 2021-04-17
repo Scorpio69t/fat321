@@ -6,5 +6,7 @@
 
 extern long do_fork(frame_t *);
 extern long do_brk(unsigned long);
+extern void do_exit(int);
+extern long do_wait(int *);
 
 #endif

@@ -1,8 +1,10 @@
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/syscall.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 int _syscall(int who, int type, message *msg)
@@ -105,6 +107,13 @@ pid_t fork(void)
     return _syscall(IPC_MM, MSG_FORK, &m);
 }
 
+void exit(int status)
+{
+    message m;
+    m.m_exit.status = status;
+    _syscall(IPC_KERNEL, MSG_EXIT, &m);
+}
+
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
     message m;
@@ -121,6 +130,17 @@ int brk(void *addr)
 
     msg.m_brk.addr = (unsigned long)addr;
     return _syscall(IPC_MM, MSG_BRK, &msg);
+}
+
+pid_t wait(int *statloc)
+{
+    message m;
+    int     status;
+
+    if ((status = _syscall(IPC_KERNEL, MSG_WAIT, &m)) <= 0)
+        return status;
+    *statloc = m.m_wait.statloc;
+    return status;
 }
 
 void *sbrk(long size)

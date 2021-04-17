@@ -1,6 +1,6 @@
 # top makefile
 
-SUBDIR := shell
+SUBDIR := shell app
 
 .PHONY: default all $(SUBDIR) config kernel
 
@@ -13,7 +13,7 @@ all: config kernel $(SUBDIR)
 
 clean:
 	cd src && $(MAKE) $@
-	$(foreach dir, $(SUBDIR), $(MAKE) clean -C $(dir))
+	$(foreach dir, $(SUBDIR), $(MAKE) clean -C $(dir);)
 
 $(SUBDIR):
 	$(MAKE) -C $@

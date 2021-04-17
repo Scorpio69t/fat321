@@ -305,14 +305,11 @@ static int vfs_close(pid_t pid, int fd)
 
     filp->f_entry->f_count--;
     free(filp);
-    debug("vfs close successfully\n");
     return 0;
 }
 
 static off_t vfs_lseek(pid_t pid, int fd, off_t offset, int whence)
 {
-    debug("vfs_lseek %d %d %d\n", fd, offset, whence);
-
     struct file *filp;
 
     if ((filp = getfilp(pid, fd)) == NULL)
@@ -342,7 +339,6 @@ static off_t vfs_lseek(pid_t pid, int fd, off_t offset, int whence)
 
 static int vfs_copyfs(pid_t ppid, pid_t pid)
 {
-    debug("vfs_copyfs %d %d\n", ppid, pid);
     int fd;
 
     struct proc_file *pproc_file, *proc_file;

@@ -119,11 +119,11 @@ int free_proc_mm(proc_t *proc)
                     page = to_vir(level1[ind1] & -((uint64)1 << 12));
                     free_page(page);
                 }
-                free_page(level1);
+                free_page((unsigned long)level1);
             }
-            free_page(level2);
+            free_page((unsigned long)level2);
         }
-        free_page(level3);
+        free_page((unsigned long)level3);
     }
     memset(level4, 0x00, PAGE_SIZE / 2);
     return 0;

@@ -16,4 +16,6 @@ int  printf(const char *fmt, ...);
 void perror(const char *s);
 int  debug(const char *fmt, ...);
 
+char *gets(char *str);
+
 #endif

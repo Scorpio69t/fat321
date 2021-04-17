@@ -60,7 +60,6 @@ static off_t lseek_exec(int fd, off_t offset, int whence)
     mess.m_lseek.whence = whence;
     if (do_sendrecv(NULL, IPC_VFS, &mess) != 0)
         return -1;
-    printk("lseek_exec %d\n", mess.retval);
     return mess.retval;
 }
 
@@ -105,17 +104,17 @@ check_failed:
 static int save_argv(const char *pathname, char **ptr_argv[], char *buf, int bufsz)
 {
     char **newargv, **argv;
-    int argc, len, i;
+    int    argc, len, i;
 
     argv = *ptr_argv;
     argc = count(argv);
     newargv = (char **)buf;
     if (bufsz - (argc + 1) * sizeof(char *) < 0)
         return -1;
-    buf += (argc + 1) * sizeof(char *); // argv中不包含pathname参数
+    buf += (argc + 1) * sizeof(char *);  // argv中不包含pathname参数
     bufsz -= (argc + 1) * sizeof(char *);
 
-    len = strlen(pathname) + 1; // 包括\0
+    len = strlen(pathname) + 1;  // 包括\0
     if (bufsz - len < 0)
         return -1;
     memcpy(buf, (void *)pathname, len);
@@ -128,7 +127,7 @@ static int save_argv(const char *pathname, char **ptr_argv[], char *buf, int buf
         if (bufsz - len < 0)
             return -1;
         memcpy(buf, argv[i], len);
-        newargv[i+1] = buf;
+        newargv[i + 1] = buf;
         buf += len;
         bufsz -= len;
     }
@@ -173,7 +172,6 @@ static void *copy_argv(int argc, char **ptr_argv[], void *bufend, int bufsize)
 
 int do_execve(const char *pathname, char *const argv[], char *const envp[])
 {
-    printk("do_execve\n");
     int           fd, n, i;
     int           argc;
     unsigned long end_stack, entry;

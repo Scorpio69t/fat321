@@ -8,6 +8,8 @@ _start:
 	movq	(%rbp), %rdi 	/* argc */
 	movq	0x8(%rbp), %rsi /* argv */
 	call 	main
+	movq	%rax, %rdi
+	call	exit
 
 .global _send
 _send:

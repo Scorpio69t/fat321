@@ -101,6 +101,8 @@ long do_fork(frame_t *regs)
     proc->alarm = 0;
     proc->parent = current;
     list_head_init(&proc->wait_proc);
+    list_head_init(&proc->children);
+    list_add(&proc->child_list, &current->children);
 
     if (copy_mm(proc))
         goto faild;

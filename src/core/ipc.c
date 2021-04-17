@@ -6,6 +6,7 @@
 #include <kernel/kernel.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>
+#include <kernel/signal.h>
 #include <kernel/syscalls.h>
 
 long do_send(frame_t *regs, pid_t to, message *msg)
@@ -122,6 +123,12 @@ long process_kernel_message(frame_t *regs, message *msg)
     case MSG_GETPID:
         retval = current->pid;
         break;
+    case MSG_EXIT:
+        do_exit(msg->m_exit.status);
+        break;
+    case MSG_WAIT:
+        retval = do_wait(&msg->m_wait.statloc);
+        break;
     default:
         break;
     }
@@ -161,5 +168,14 @@ long ipc_kmap(message *m)
         m->m_kmap.addr2 = kmap(m->m_kmap.addr2);
     if (m->m_kmap.addr3)
         m->m_kmap.addr3 = kmap(m->m_kmap.addr3);
+    return 0;
+}
+
+int send_signal(proc_t *proc, int signal)
+{
+    proc->signal = signal;
+    if (proc->state == PROC_RECEIVING && proc->wait == IPC_SIGNAL) {
+        proc->state = PROC_RUNNABLE;
+    }
     return 0;
 }

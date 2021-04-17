@@ -13,6 +13,7 @@
 #define IPC_MM     6
 #define IPC_FAT    7
 
+#define IPC_SIGNAL 0x0ffffffc
 #define IPC_INTR   0x0ffffffd
 #define IPC_ALL    0x0ffffffe
 #define IPC_KERNEL 0x0fffffff
@@ -24,6 +25,8 @@
 #define MSG_FORK   5 /* no message struct */
 #define MSG_EXECVE 6
 #define MSG_LSEEK  7
+#define MSG_EXIT   8
+#define MSG_WAIT   9
 #define MSG_BRK    32
 #define MSG_GETPID 33 /* no message struct */
 
@@ -74,6 +77,14 @@ typedef struct {
     char *const *argv;
     char *const *envp;
 } msg_execve;
+
+typedef struct {
+    int status;
+} msg_exit;
+
+typedef struct {
+    int statloc;
+} msg_wait;
 
 typedef struct {
     unsigned long addr;
@@ -171,6 +182,8 @@ typedef struct {
         msg_close  m_close;
         msg_lseek  m_lseek;
         msg_execve m_execve;
+        msg_exit   m_exit;
+        msg_wait   m_wait;
         msg_brk    m_brk;
 
         msg_disk     m_disk;

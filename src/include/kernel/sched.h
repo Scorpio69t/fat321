@@ -39,7 +39,6 @@
 
 void proc_init(void);
 void schedule(void);
-int  do_exit(int code);
 void cpu_idle(void);
 
 #define HZ 100 /* 时钟中断频率100hz */
@@ -70,14 +69,16 @@ extern pid_t volatile pid;
 typedef struct proc_struct {
     volatile long         state;               /* 进程状态，-1不可运行，0可运行 */
     unsigned long         flags;               /* 状态标识 */
-    void *                stack;               /* 用户栈 */
     pid_t                 pid;                 /* 进程id */
     unsigned long         counter;             /* 进程可用时间片 */
     unsigned long         alarm;               /* 滴答数定时器 */
     long                  signal;              /* 进程持有的信号 */
+    int                   exit_status;         /* 进程退出状态 */
     char                  comm[PROC_COMM_LEN]; /* 进程名称 */
     struct proc_struct *  parent;              /* 父进程 */
     struct context_struct context;             /* 进程的上下文信息 */
+    struct list_head      children;            /* 子进程链表 */
+    struct list_head      child_list;          /* 挂载到父进程的children上 */
     struct list_head      proc;                /* 进程链表 */
     struct list_head      hash_map;
 
@@ -114,13 +115,13 @@ extern struct files_struct init_files;
 {                                               \
     .state = PROC_RUNNING,                      \
     .flags = PF_KTHREAD | PF_IDLE,              \
-    .stack = NULL,                              \
     .pid = 0,                                   \
     .alarm = 0,                                 \
     .comm = "idle",                             \
     .parent = NULL,                             \
     .context = {},                              \
     .proc = LIST_HEAD_INIT(tsk.proc),           \
+    .children = LIST_HEAD_INIT(tsk.children),  \
     .mm = {},                                   \
     .signal = 0,                                \
 }
@@ -147,6 +148,7 @@ extern struct sched_struct scheduler;
 extern struct list_head __proc_hash_map[];
 proc_t *map_proc(pid_t);
 void hash_proc(proc_t *proc);
+void unmap_proc(pid_t pid);
 
 void ticks_plus(void);
 void update_alarm(void);

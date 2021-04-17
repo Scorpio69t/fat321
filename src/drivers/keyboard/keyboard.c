@@ -44,7 +44,7 @@ static int read_char(char *buf, size_t size)
     int sz = 0;
     while (kb_buf.head != kb_buf.tail && sz <= size) {
         buf[sz++] = kb_buf.buf[kb_buf.head];
-        kb_buf.head++;
+        kb_buf.head = (kb_buf.head + 1) % KEYBOARD_BUF_SIZE;
         kb_buf.count--;
     }
     return sz;

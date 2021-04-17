@@ -44,6 +44,13 @@ void hash_proc(proc_t *proc)
     list_add_tail(&proc->hash_map, &__proc_hash_map[proc->pid % PROC_HASH_MAP_SIZE]);
 }
 
+void unmap_proc(pid_t pid)
+{
+    proc_t *proc;
+    if ((proc = map_proc(pid)) != NULL)
+        list_del(&proc->hash_map);
+}
+
 /**
  * 时钟中断计数器
  */
@@ -136,16 +143,6 @@ int sys_pause(void)
     return 0;
 }
 
-int sys_exit(int status)
-{
-    return status;
-}
-
-int do_exit(int code)
-{
-    return code;
-}
-
 static int parse_cmdline(char *s)
 {
     int num = 0;
@@ -157,10 +154,10 @@ static int parse_cmdline(char *s)
 
 static proc_t *module_proc(multiboot_tag_module_t *module)
 {
-    uint64      module_start = to_vir(module->mod_start);
-    proc_t *    proc;
-    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)module_start;
-    Elf64_Phdr *phdr_table;
+    uint64        module_start = to_vir(module->mod_start);
+    proc_t *      proc;
+    Elf64_Ehdr *  ehdr = (Elf64_Ehdr *)module_start;
+    Elf64_Phdr *  phdr_table;
     unsigned long end_stack;
 
     /* check header magic */
@@ -184,6 +181,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc->signal = 0;
     proc->parent = &init_proc_union.proc;
     list_head_init(&proc->wait_proc);
+    list_head_init(&proc->children);
 
     proc->mm.pgd = get_zeroed_page(GFP_KERNEL);
     memcpy((void *)proc->mm.pgd, (void *)init_proc_union.proc.mm.pgd, PAGE_SIZE);
