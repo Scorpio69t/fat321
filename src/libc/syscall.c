@@ -214,33 +214,33 @@ int unregister_irq(int no_intr)
     return m.retval;
 }
 
-int storage_read(unsigned char nsect, unsigned long sector, void *buf)
+int bdev_read(unsigned long pos, void *buf, size_t size)
 {
     message m;
 
     if (_kmap(&buf, NULL, NULL) != 0)
         return -1;
-    m.type = MSG_DISK;
-    m.m_disk.type = DISK_READ;
-    m.m_disk.nsect = nsect;
-    m.m_disk.sector = sector;
-    m.m_disk.buf = buf;
+    m.type = MSG_BDEV_TRANSFER;
+    m.m_bdev_transfer.buffer = buf;
+    m.m_bdev_transfer.pos = pos;
+    m.m_bdev_transfer.size = size;
+    m.m_bdev_transfer.write = 0;
     if (_sendrecv(IPC_DISK, &m) != 0)
         return -1;
     return m.retval;
 }
 
-int storage_write(unsigned char nsect, unsigned long sector, void *buf)
+int bdev_write(unsigned long pos, void *buf, size_t size)
 {
     message m;
 
     if (_kmap(&buf, NULL, NULL) != 0)
         return -1;
-    m.type = MSG_DISK;
-    m.m_disk.type = DISK_WRITE;
-    m.m_disk.nsect = nsect;
-    m.m_disk.sector = sector;
-    m.m_disk.buf = buf;
+    m.type = MSG_BDEV_TRANSFER;
+    m.m_bdev_transfer.buffer = buf;
+    m.m_bdev_transfer.pos = pos;
+    m.m_bdev_transfer.size = size;
+    m.m_bdev_transfer.write = 1;
     if (_sendrecv(IPC_DISK, &m) != 0)
         return -1;
     return m.retval;

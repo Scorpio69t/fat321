@@ -5,21 +5,21 @@
 
 #include "disk.h"
 
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/io.h>
 #include <sys/ipc.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 
 static struct {
-    int secsz; /* 扇区大小 */
-    int lba48; /* 是否支持LBA48 */
-} dinfo;
+    unsigned long position;
+    size_t        size;
+    void *        buffer;
+} request;
 
-static struct {
-    int   nsect;
-    void *buf;
-} req;
+static unsigned short sector_per_drq;
 
 static int do_request(int cmd, unsigned short nsect, unsigned long sector, void *buf)
 {
@@ -35,7 +35,7 @@ static int do_request(int cmd, unsigned short nsect, unsigned long sector, void 
         while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
         outb(PORT_DISK0_STATUS_CMD, LBA28_WRITE_CMD);
         while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
-        outnw(PORT_DISK0_DATA, buf, dinfo.secsz / 2);
+        outnw(PORT_DISK0_DATA, buf, SECTOR_SIZE / 2);
         break;
     case LBA28_READ_CMD:
         outb(PORT_DISK0_DEVICE, 0xe0 | ((sector >> 24) & 0x0f));
@@ -65,7 +65,7 @@ static int do_request(int cmd, unsigned short nsect, unsigned long sector, void 
         while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_READY)) nop();
         outb(PORT_DISK0_STATUS_CMD, LBA48_WRITE_CMD);
         while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
-        outnw(PORT_DISK0_DATA, buf, dinfo.secsz / 2);
+        outnw(PORT_DISK0_DATA, buf, SECTOR_SIZE / 2);
 
         break;
 
@@ -107,50 +107,65 @@ static int do_request(int cmd, unsigned short nsect, unsigned long sector, void 
 
 static int disk_read(void)
 {
+    static unsigned char buffer[SECTOR_SIZE];
+    unsigned int         copysz, offset;
+
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
         debug("read_handler: disk read error\n");
+        return ERROR;
     } else {
-        innw(PORT_DISK0_DATA, req.buf, dinfo.secsz / 2);
-    }
-    if (--req.nsect) {
-        /* 若当前请求未读完，则继续等待下一个中断进行处理 */
-        req.buf += dinfo.secsz;
-        return UNDONE;
+        innw(PORT_DISK0_DATA, buffer, SECTOR_SIZE / 2);
     }
 
-    return DONE;
+    offset = request.position & (SECTOR_SIZE - 1);
+    copysz = (SECTOR_SIZE - offset) < request.size ? (SECTOR_SIZE - offset) : request.size;
+    memcpy(request.buffer, buffer + offset, copysz);
+    request.position += copysz;
+    request.size -= copysz;
+    request.buffer += copysz;
+    if (request.size == 0)
+        return DONE;
+    return UNDONE;
 }
 
 static int disk_write(void)
 {
+    static unsigned char buffer[SECTOR_SIZE];
+    unsigned int         copysz;
+    memset(buffer, 0x00, SECTOR_SIZE);
+
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
         debug("write_handler: disk write error\n");
+        return ERROR;
     }
 
-    if (--req.nsect) {
-        req.buf += dinfo.secsz;
-        while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
-        outnw(PORT_DISK0_DATA, req.buf, dinfo.secsz / 2);
-        return UNDONE;
-    }
-    return DONE;
+    copysz = request.size > SECTOR_SIZE ? SECTOR_SIZE : request.size;
+    memcpy(buffer, request.buffer, copysz);
+
+    while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
+    outnw(PORT_DISK0_DATA, buffer, SECTOR_SIZE / 2);
+    request.size -= copysz;
+    request.buffer += copysz;
+
+    if (request.size == 0)
+        return DONE;
+    return UNDONE;
 }
 
-static int disk_iden(void)
+static int disk_identify(void)
 {
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
         debug("identify_handler: disk read error\n");
     } else {
-        innw(PORT_DISK0_DATA, req.buf, 256);
+        innw(PORT_DISK0_DATA, request.buffer, 256);
     }
     return DONE;
 }
 
-unsigned short buf[256];
-
 int init_disk(void)
 {
-    message msg;
+    message        msg;
+    unsigned short buffer[512];
 
     outb(PORT_DISK0_ALT_STA_CTL, 0);
     outb(PORT_DISK0_ERR_FEATURE, 0);
@@ -161,107 +176,84 @@ int init_disk(void)
     outb(PORT_DISK0_DEVICE, 0xe0); /* sector模式 */
 
     if (register_irq(0x2e) != 0) {
-        debug("disk register irq error\n");
+        panic("Disk register irq error\n");
+        return -1;
     }
 
-    req.buf = buf;
+    request.buffer = buffer;
     do_request(IDEN_CMD, 0, 0, NULL);
     _recv(IPC_INTR, &msg);
-    disk_iden();
+    disk_identify();
 
-    if (!(msg.type == MSG_INTR && msg.m_intr.type == INTR_OK)) {
-        debug("msg error %d %d\n", msg.type, msg.m_intr.type);
+    sector_per_drq = buffer[59];
+    debug("Sector per drq: %d\n", sector_per_drq);
+
+    if (!(buffer[49] & 0x0100) || buffer[83] & 0x0200) {
+        panic("Disk not support LBA48\n");
         return -1;
     }
-
-    if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR)
-        debug("disk read error\n");
-    else
-        innb(PORT_DISK0_DATA, buf, 512);
-
-    if (!(buf[49] & 0x0100)) {
-        debug("unsupport LBA");
-        return -1;
-    }
-    if (buf[83] & 0x0200)
-        dinfo.lba48 = 1;
-
-    dinfo.secsz = SECTOR_SIZE;
     return 0;
 }
 
-static int to_disk_cmd(int type)
+static int transfer(unsigned long pos, void *buf, size_t size, int write)
 {
-    int cmd;
-    switch (type) {
-    case DISK_READ:
-        if (dinfo.lba48)
-            cmd = LBA48_READ_CMD;
-        else
-            cmd = LBA28_READ_CMD;
-        break;
-    case DISK_WRITE:
-        if (dinfo.lba48)
-            cmd = LBA48_WRITE_CMD;
-        else
-            cmd = LBA28_WRITE_CMD;
-        break;
-    case DISK_IDEN:
-        cmd = IDEN_CMD;
-        break;
-    default:
-        cmd = -1;
-        break;
-    }
-    return cmd;
-}
+    unsigned long sector, nsect, pos_base, pos_high;
+    message       mess;
+    int           cmd, retval;
 
-static int (*handler[])(void) = {
-    [DISK_READ] = disk_read,
-    [DISK_WRITE] = disk_write,
-    [DISK_IDEN] = disk_iden,
-};
+    if (write && pos % SECTOR_SIZE) {
+        debug("Position must sector-aligned for write\n");
+        return ERROR;
+    }
+
+    pos_base = lower_div(pos, SECTOR_SIZE) * SECTOR_SIZE;
+    pos_high = upper_div(pos + size, SECTOR_SIZE) * SECTOR_SIZE;
+
+    nsect = (pos_high - pos_base) / SECTOR_SIZE;
+    if (nsect > sector_per_drq) {
+        debug("transfer: to many sector %d\n", nsect);
+        return ERROR;
+    }
+
+    sector = pos_base / SECTOR_SIZE;
+    cmd = write ? LBA48_WRITE_CMD : LBA48_READ_CMD;
+
+    request.buffer = buf;
+    request.position = pos;
+    request.size = size;
+    do_request(cmd, nsect, sector, buf);
+
+    do {
+        if ((_recv(IPC_INTR, &mess)) != 0) {
+            debug("transfer recive intr message failed\n");
+            return ERROR;
+        }
+        retval = write ? disk_write() : disk_read();
+    } while (retval == UNDONE);
+    return retval;
+}
 
 int main(int argc, char *argv[])
 {
+    message mess;
+
     if (init_disk() == -1)
         goto fail;
 
-    debug("LBA48: %d, secsz %d\n", dinfo.lba48, dinfo.secsz);
-
-    int     err, src, type, cmd;
-    message msg;
     while (1) {
-        _recv(IPC_ALL, &msg);
-        if (msg.type != MSG_DISK) {
-            debug("disk: unknow msg\n");
+        if (_recv(IPC_ALL, &mess) != 0) {
+            debug("disk recive message failed\n");
             continue;
         }
-        req.nsect = msg.m_disk.nsect;
-        req.buf = msg.m_disk.buf;
-        src = msg.src;
-        type = msg.m_disk.type;
-        if ((cmd = to_disk_cmd(msg.m_disk.type)) == -1) {
-            debug("disk: unknow msg_disk type\n");
+        if (mess.type != MSG_BDEV_TRANSFER) {
+            debug("disk: unknow msg, src %d type %x\n", mess.src, mess.type);
             continue;
         }
-        do_request(cmd, msg.m_disk.nsect, msg.m_disk.sector, buf);
-
-        err = 0;
-        while (1) {
-            _recv(IPC_INTR, &msg);
-            if (msg.type == MSG_INTR && msg.m_intr.type == INTR_OK) {
-                if (handler[type]() == DONE)
-                    break;
-            } else {
-                debug("msg confim error\n");
-                err = -1;
-                break;
-            }
+        mess.retval = transfer(mess.m_bdev_transfer.pos, mess.m_bdev_transfer.buffer, mess.m_bdev_transfer.size,
+                               mess.m_bdev_transfer.write);
+        if (_send(mess.src, &mess) != 0) {
+            debug("disk send message failed\n");
         }
-
-        msg.retval = err;
-        _send(src, &msg);
     }
 fail:
     debug("disk init error\n");

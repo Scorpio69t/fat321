@@ -1,67 +1,35 @@
 
-#include <bugs.h>
+#include <assert.h>
 #include <malloc.h>
 #include <string.h>
 #include <sys/fs.h>
-#include <sys/syscall.h>
 #include <sys/list.h>
-#include "cache.h"
+#include <sys/syscall.h>
 
+#include "cache.h"
 #include "ext2.h"
 
-#define __INDOE_HASH_MAP_SIZE 1024
-
 static struct super_block *super_block;
-static struct list_head __inode_hash_map[__INDOE_HASH_MAP_SIZE];
 
-static void __put_inode_map(unsigned int ino, struct inode *inode)
+static int ext2_bdev_read(unsigned long pos, void *buf, size_t size)
 {
-    inode_hash_map_t *node;
-
-    node = (inode_hash_map_t *)malloc(sizeof(inode_hash_map_t));
-    assert(node != NULL);
-    node->inode = inode;
-    node->ino = ino;
-    list_add(&node->list, &__inode_hash_map[ino % __INDOE_HASH_MAP_SIZE]);
-}
-
-static struct inode *__get_inode_map(unsigned int ino)
-{
-    struct inode *inode;
-    inode_hash_map_t *pos;
-
-    inode = NULL;
-    list_for_each_entry(pos, &__inode_hash_map[ino % __INDOE_HASH_MAP_SIZE], list) {
-        if (pos->ino == ino) {
-            inode = pos->inode;
-            break;
-        }
-    }
-    return inode;
-}
-
-static int bdev_read(unsigned long offset, void *buf, size_t size)
-{
-    unsigned char nsect;
-    unsigned long sector;
-
-    nsect = size / 512;
-    sector = (super_block->partition_offset + offset) / 512;
-    debug("bdev_read nsect %d sector %d\n", nsect, sector);
-    int x = storage_read(nsect, sector, buf);
-    return x;
+    if (bdev_read(super_block->partition_offset + pos, buf, size) != 0)
+        return -1;
+    return 0;
 }
 
 static struct inode *getinode(uint32 ino)
 {
-    int                group, index;
-    int                inode_per_block;
-    int                itable, itable_index;
+    int   group, index;
+    int   inode_per_block;
+    int   itable, itable_index;
+    void *buffer;
+
     struct group_desc *gd;
     struct inode *     inode;
-    void *             buffer;
+    block_buffer_t *   block_buffer;
 
-    if ((inode = __get_inode_map(ino)) != NULL)
+    if ((inode = get_inode_map(ino)) != NULL)
         return inode;
 
     group = (ino - 1) / super_block->s_inodes_per_group;
@@ -70,33 +38,31 @@ static struct inode *getinode(uint32 ino)
     itable = index / inode_per_block;
     itable_index = index % inode_per_block;
     gd = &super_block->group_desc_table[group];
+
     inode = (struct inode *)malloc(super_block->s_inode_size);
     assert(inode != NULL);
-    buffer = malloc(super_block->block_size);
-    assert(buffer != NULL);
-    bdev_read((gd->bg_inode_table + itable) * super_block->block_size, buffer, super_block->block_size);
+
+    block_buffer = get_block_buffer();
+    buffer = block_buffer->buffer;
+    ext2_bdev_read((gd->bg_inode_table + itable) * super_block->block_size, buffer, super_block->block_size);
     *inode = *(struct inode *)(buffer + sizeof(struct inode) * itable_index);
-    __put_inode_map(ino, inode);
+    put_inode_map(ino, inode);
+    put_block_buffer(block_buffer);
     return inode;
 }
 
 static int ext2_init(unsigned long partition_offset, struct fs_entry *entry)
 {
-    int i;
-
     struct group_desc *group_desc_table;
     struct inode *     inode;
 
-    debug("ext2_init offset %d\n", partition_offset);
-
-    for (i = 0; i < __INDOE_HASH_MAP_SIZE; i++)
-        list_head_init(&__inode_hash_map[i]);
+    init_inode_map();
 
     super_block = (struct super_block *)malloc(sizeof(struct super_block));
     assert(super_block != NULL);
 
     super_block->partition_offset = partition_offset;
-    bdev_read(1024, super_block, 1024);
+    ext2_bdev_read(1024, super_block, 1024);
     if (super_block->s_magic != EXT2_SUPER_MAGIC) {
         debug("ext2: magic not match\n");
         return -1;
@@ -106,13 +72,12 @@ static int ext2_init(unsigned long partition_offset, struct fs_entry *entry)
     if (super_block->s_blocks_count % super_block->s_blocks_per_group)
         super_block->nr_group++;
 
-    // TODO: 读取大小需要改进
-    unsigned int size =
-        upper_div(sizeof(struct group_desc) * super_block->nr_group, super_block->block_size) * super_block->block_size;
+    init_buffer_pool(super_block->block_size);
 
-    group_desc_table = (struct group_desc *)malloc(size);
+    group_desc_table = (struct group_desc *)malloc(sizeof(struct group_desc) * super_block->nr_group);
     assert(group_desc_table != NULL);
-    bdev_read((super_block->s_first_data_block + 1) * super_block->block_size, group_desc_table, size);
+    ext2_bdev_read((super_block->s_first_data_block + 1) * super_block->block_size, group_desc_table,
+                   sizeof(struct group_desc) * super_block->nr_group);
     super_block->group_desc_table = group_desc_table;
 
     inode = getinode(EXT2_ROOT_INO);
@@ -129,12 +94,14 @@ static int ext2_init(unsigned long partition_offset, struct fs_entry *entry)
  */
 static int getblock(unsigned int n, struct inode *inode, void *data)
 {
-    unsigned int block, block_array_len;
-    uint32 *     block_array;
+    unsigned int    block, block_array_len;
+    uint32 *        block_array;
+    block_buffer_t *block_buffer;
 
     block_array_len = super_block->block_size / sizeof(uint32);
 
     block_array = NULL;
+
     if (n < 12) {
         if ((block = inode->i_block[n]) == 0)
             goto failed;
@@ -143,22 +110,20 @@ static int getblock(unsigned int n, struct inode *inode, void *data)
         if (inode->i_block[n] == 0) {
             goto failed;
         }
-        block_array = (uint32 *)malloc(super_block->block_size);
-        assert(block_array != NULL);
-        bdev_read(inode->i_block[n], block_array, super_block->block_size);
+        block_buffer = get_block_buffer();
+        block_array = (uint32 *)block_buffer->buffer;
+        ext2_bdev_read(inode->i_block[n], block_array, super_block->block_size);
         block = block_array[n];
-        free(block_array);
+        put_block_buffer(block_buffer);
     } else {
         debug("ext2 getblock not support\n");
         goto failed;
     }
 
-    bdev_read(block * super_block->block_size, data, super_block->block_size);
+    ext2_bdev_read(block * super_block->block_size, data, super_block->block_size);
     return 0;
 
 failed:
-    if (block_array != NULL)
-        free(block_array);
     return -1;
 }
 
@@ -166,12 +131,14 @@ static int ext2_lookup(const char *filename, struct fs_entry *p_entry, struct fs
 {
     struct inode *           pinode, *inode;
     struct linked_directory *dir;
-    unsigned int             block, ino, filename_len;
-    void *                   buffer;
+    block_buffer_t *         block_buffer;
+
+    unsigned int block, ino, filename_len;
+    void *       buffer;
 
     filename_len = strlen(filename);
-    buffer = malloc(super_block->block_size);
-    assert(buffer != NULL);
+    block_buffer = get_block_buffer();
+    buffer = block_buffer->buffer;
     pinode = getinode(p_entry->inode);
     block = 0;
     ino = 0;
@@ -190,7 +157,6 @@ static int ext2_lookup(const char *filename, struct fs_entry *p_entry, struct fs
         block++;
     }
 
-    free(buffer);
     return -1;
 
 founded:
@@ -205,18 +171,19 @@ founded:
 
 static ssize_t ext2_read(const struct fs_entry *entry, void *buf, loff_t pos, size_t size)
 {
-    struct inode *inode;
-    unsigned long block, offset;
-    ssize_t       readsz, copysz;
-    void *        buffer;
+    struct inode *  inode;
+    block_buffer_t *block_buffer;
+    unsigned long   block, offset;
+    ssize_t         readsz, copysz;
+    void *          buffer;
 
     inode = getinode(entry->inode);
     assert(inode != NULL);
     if (pos < 0 || pos >= inode->i_size)
         return 0;
 
-    buffer = malloc(super_block->block_size);
-    assert(buffer != NULL);
+    block_buffer = get_block_buffer();
+    buffer = block_buffer->buffer;
 
     readsz = 0;
     block = pos / super_block->block_size;
@@ -234,7 +201,7 @@ static ssize_t ext2_read(const struct fs_entry *entry, void *buf, loff_t pos, si
         offset = 0;
     }
 
-    free(buffer);
+    put_block_buffer(block_buffer);
     return readsz;
 }
 

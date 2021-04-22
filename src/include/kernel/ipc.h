@@ -33,18 +33,18 @@
 #define MSG_CHDIR  13
 
 /* the aborve are syscall type */
-#define MSG_CFM      256
-#define MSG_DISK     257
-#define MSG_IRQ      258
-#define MSG_INTR     259
-#define MSG_FSMNT    260
-#define MSG_FSREAD   261
-#define MSG_FSWRITE  262
-#define MSG_FSLOOKUP 263
-#define MSG_COPYFS   264
-#define MSG_FREEFS   265 /* no message struct */
-#define MSG_EXECFS   266 /* no message struct */
-#define MSG_KMAP     267
+#define MSG_CFM           256
+#define MSG_BDEV_TRANSFER 257
+#define MSG_IRQ           258
+#define MSG_INTR          259
+#define MSG_FSMNT         260
+#define MSG_FSREAD        261
+#define MSG_FSWRITE       262
+#define MSG_FSLOOKUP      263
+#define MSG_COPYFS        264
+#define MSG_FREEFS        265 /* no message struct */
+#define MSG_EXECFS        266 /* no message struct */
+#define MSG_KMAP          267
 
 typedef struct {
     int    fd;
@@ -104,15 +104,11 @@ typedef struct {
 /* the aborve are syscall message */
 
 typedef struct {
-    unsigned char type;
-/* type */
-#define DISK_READ  0
-#define DISK_WRITE 1
-#define DISK_IDEN  3
-    unsigned char nsect;
-    unsigned long sector;
-    void *        buf;
-} msg_disk;
+    unsigned long pos;
+    void *        buffer;
+    size_t        size;
+    int           write;
+} msg_bdev_transfer;
 
 typedef struct {
 #define IRQ_REGISTER   1
@@ -200,15 +196,15 @@ typedef struct {
         msg_getcwd m_getcwd;
         msg_chdir  m_chdir;
 
-        msg_disk     m_disk;
-        msg_irq      m_irq;
-        msg_intr     m_intr;
-        msg_fsmnt    m_fsmnt;
-        msg_fsread   m_fsread;
-        msg_fswrite  m_fswrite;
-        msg_fslookup m_fslookup;
-        msg_copyfs   m_copyfs;
-        msg_kmap     m_kmap;
+        msg_bdev_transfer m_bdev_transfer;
+        msg_irq           m_irq;
+        msg_intr          m_intr;
+        msg_fsmnt         m_fsmnt;
+        msg_fsread        m_fsread;
+        msg_fswrite       m_fswrite;
+        msg_fslookup      m_fslookup;
+        msg_copyfs        m_copyfs;
+        msg_kmap          m_kmap;
     };
 } message;
 

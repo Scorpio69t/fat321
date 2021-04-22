@@ -26,6 +26,7 @@
 
 #define SECTOR_SIZE 512
 
+#define ERROR  -1
 #define DONE   0
 #define UNDONE 1
 

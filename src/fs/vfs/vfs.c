@@ -1,6 +1,6 @@
 #include "vfs.h"
 
-#include <bugs.h>
+#include <assert.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -381,7 +381,6 @@ static int vfs_chdir(pid_t pid, const char *pathname)
     struct proc_file *proc_file;
     struct fentry *   newcwd;
 
-    debug("vfs_chdir %s\n", pathname);
     if ((proc_file = map_proc_file(pid)) == NULL)
         return -1;
     if ((newcwd = vfs_lookup(proc_file->cwd, pathname)) == NULL)
@@ -646,7 +645,7 @@ int main(int argc, char *argv[])
     list_head_init(&mount_head);
 
     struct mbr_sector *mbr = (struct mbr_sector *)malloc(512);
-    if (storage_read(1, 0, mbr) != 0) {
+    if (bdev_read(0, mbr, 512) != 0) {
         debug("vfs storage read error\n");
         goto faild;
     }

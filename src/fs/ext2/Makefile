@@ -1,7 +1,7 @@
 
 HEADER:=../../include/libc
 SOURCE := $(wildcard *.c)
-OBJS := main.o
+OBJS := main.o cache.o
 LIBS := ../../libc/libc.a
 LDFLAGS := -T ../../../scripts/proc.lds
 

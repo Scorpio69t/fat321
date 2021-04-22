@@ -6,7 +6,7 @@
 
 #include "fat32.h"
 
-#include <bugs.h>
+#include <assert.h>
 #include <malloc.h>
 #include <string.h>
 #include <sys/fs.h>

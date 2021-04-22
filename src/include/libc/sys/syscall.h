@@ -24,8 +24,8 @@ void *  sbrk(long size);
 int register_irq(int);
 int unregister_irq(int);
 
-int storage_read(unsigned char nsect, unsigned long sector, void *);
-int storage_write(unsigned char nsect, unsigned long sector, void *);
+int bdev_read(unsigned long pos, void *buf, size_t size);
+int bdev_write(unsigned long pos, void *buf, size_t size);
 
 #endif
 
