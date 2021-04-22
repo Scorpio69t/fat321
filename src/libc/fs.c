@@ -5,7 +5,6 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 
-static void *         fs_superblock;
 static struct fs_ops *fs_ops;
 
 static int mount_fs()
@@ -26,10 +25,9 @@ static int mount_fs()
         return -1;
     }
 
-    start_lba = m.retval;
+    start_lba = m.retval * 512;
 
-    fs_superblock = fs_ops->fs_setsb(start_lba, &entry);
-    assert(fs_superblock != NULL);
+    fs_ops->fs_init(start_lba, &entry);
 
     m.type = MSG_FSMNT;
     m.m_fsmnt.type = FSMNT_STEP2;
@@ -60,7 +58,7 @@ static void do_lookup(message *msg)
 
     p_entry.inode = msg->m_fslookup.p_inode;
     p_entry.pread = msg->m_fslookup.p_pread;
-    retval = fs_ops->fs_lookup(msg->m_fslookup.filename, &p_entry, &entry, fs_superblock);
+    retval = fs_ops->fs_lookup(msg->m_fslookup.filename, &p_entry, &entry);
     if (retval != 0) {
         msg->retval = retval;
         return;
@@ -83,7 +81,7 @@ static void do_read(message *msg)
     entry.fsize = msg->m_fsread.fsize;
     entry.pread = msg->m_fsread.pread;
 
-    retval = fs_ops->fs_read(&entry, msg->m_fsread.buf, msg->m_fsread.offset, msg->m_fsread.size, fs_superblock);
+    retval = fs_ops->fs_read(&entry, msg->m_fsread.buf, msg->m_fsread.offset, msg->m_fsread.size);
 
     msg->retval = retval;
 }

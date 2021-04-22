@@ -480,22 +480,22 @@ static int mount_root(size_t start_lba)
     msg_fsmnt *    fsmnt;
     int            status;
 
-    status = _recv(IPC_FAT, &mess);
+    status = _recv(IPC_EXT2, &mess);
     assert(status == 0);
     assert(mess.type == MSG_FSMNT);
     assert(mess.m_fsmnt.type == FSMNT_STEP1 && mess.m_fsmnt.systemid == 0xc);
 
     mess.retval = start_lba;
-    status = _send(IPC_FAT, &mess);
+    status = _send(IPC_EXT2, &mess);
     assert(status == 0);
 
-    status = _recv(IPC_FAT, &mess);
+    status = _recv(IPC_EXT2, &mess);
     assert(status == 0 && mess.m_fsmnt.type == FSMNT_STEP2);
 
     fsmnt = &mess.m_fsmnt;
     root_entry = (struct fentry *)malloc(sizeof(struct fentry));
     assert(root_entry != NULL);
-    root_entry->f_fs_pid = IPC_FAT;
+    root_entry->f_fs_pid = IPC_EXT2;
     root_entry->f_flags = FE_NORMAL;
     root_entry->f_count = 1;
     root_entry->f_ino = fsmnt->inode;
@@ -511,12 +511,12 @@ static int mount_root(size_t start_lba)
     assert(root_mount != NULL);
 
     root_mount->m_entry = root_entry;
-    root_mount->m_fs_pid = IPC_FAT;
+    root_mount->m_fs_pid = IPC_EXT2;
     list_add_tail(&root_mount->list, &mount_head);
 
     mess.type = MSG_FSMNT;
     mess.retval = 0;
-    status = _send(IPC_FAT, &mess);
+    status = _send(IPC_EXT2, &mess);
     assert(status == 0);
 
     return 0;
@@ -659,7 +659,7 @@ int main(int argc, char *argv[])
     start_lba = ~(size_t)0;
     for (i = 0; i < 4; i++) {
         struct mbr_dpte *dpte = &mbr->dpte[i];
-        if (dpte->type == 0xc && dpte->flags == 0x80) {
+        if (dpte->flags == 0x80) {
             start_lba = dpte->start_LBA;
             break;
         }

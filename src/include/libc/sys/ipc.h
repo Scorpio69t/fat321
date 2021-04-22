@@ -10,7 +10,7 @@
 #define IPC_KB     4
 #define IPC_VIDEO  5
 #define IPC_MM     6
-#define IPC_FAT    7
+#define IPC_EXT2   7
 #define IPC_SIGNAL 0x0ffffffc
 #define IPC_INTR   0x0ffffffd
 #define IPC_ALL    0x0ffffffe
