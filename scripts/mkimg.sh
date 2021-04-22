@@ -48,7 +48,7 @@ cp -r shell/sh img.tmp/bin
 cp -r app/hello/hello img.tmp/usr/bin
 sudo cp -r img.tmp/* $mdir
 
-sudo grub-install --boot-directory=/mnt/boot "$map_dev"
+sudo grub-install --target=i386-pc --boot-directory=/mnt/boot "$map_dev"
 
 sudo umount "$map_dev"p1
 sudo losetup -d "$map_dev"
