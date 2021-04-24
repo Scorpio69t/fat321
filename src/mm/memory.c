@@ -51,7 +51,6 @@ static inline void setup_pages_flags(struct page *begin, struct page *end, unsig
 
 static void setup_pages_reserved(uint32 nr_page)
 {
-    uint64 base, limit;
     uint32 i_begin, i_end;
 
     /* unavailable memory */
@@ -59,12 +58,19 @@ static void setup_pages_reserved(uint32 nr_page)
         multiboot_memory_map_t *mmap = &kinfo.mmap[i];
         if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
             continue;
-        base = PAGE_UPPER_ALIGN(mmap->addr);
-        limit = PAGE_LOWER_ALIGN(mmap->addr + mmap->len - base);
-        i_begin = base / PAGE_SIZE;
-        i_end = i_begin + limit / PAGE_SIZE;
+        i_begin = mmap->addr / PAGE_SIZE;
+        i_end = (mmap->addr + mmap->len) / PAGE_SIZE;
         if (i_begin >= nr_page)
             continue;
+        if (i_end >= nr_page)
+            i_end = nr_page - 1;
+        setup_pages_flags(mem_map + i_begin, mem_map + i_end, PF_RESERVE);
+    }
+
+    /* mmio reserved */
+    i_begin = kinfo.mmio_start / PAGE_SIZE;
+    i_end = kinfo.mmio_end / PAGE_SIZE;
+    if (i_begin < nr_page) {
         if (i_end >= nr_page)
             i_end = nr_page - 1;
         setup_pages_flags(mem_map + i_begin, mem_map + i_end, PF_RESERVE);
@@ -75,7 +81,7 @@ static void setup_pages_reserved(uint32 nr_page)
      * and in addition, we do not use low 1M memory
      */
     i_begin = 0;
-    i_end = PAGE_UPPER_ALIGN(to_phy(kinfo.mem_map_end)) / PAGE_SIZE;
+    i_end = to_phy(kinfo.mem_map_end) / PAGE_SIZE;
     printk("kernel and page table reserved index: %d %d\n", i_begin, i_end);
     setup_pages_flags(mem_map + i_begin, mem_map + i_end, PF_RESERVE);
 }
@@ -85,6 +91,10 @@ void mm_init()
     uint64 memsize;
     uint32 nr_pages;
     int    i;
+
+    kinfo.mmio_start = 0xc0000000;
+    kinfo.mmio_end = 0xffffffff;
+
     /* 计算内存总大小，包括不可用内存 */
     for (memsize = 0, i = 0; i < kinfo.mmap_size; i++) {
         memsize += kinfo.mmap[i].len;

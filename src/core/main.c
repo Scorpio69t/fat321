@@ -52,14 +52,10 @@ static void check_boot_info(uint64 addr)
             strcpy(kinfo.module[kinfo.module_size].cmdline, module->cmdline);
             printk("boot module: start: 0x%08llx, end: 0x%08llx, cmd: %s\n", kinfo.module[kinfo.module_size].mod_start,
                    kinfo.module[kinfo.module_size].mod_end, kinfo.module[kinfo.module_size].cmdline);
+
+            kinfo.module_mmap[kinfo.module_size].addr = module->mod_start;
+            kinfo.module_mmap[kinfo.module_size].len = module->mod_end - module->mod_end;
             kinfo.module_size++;
-
-            assert(kinfo.mmap_size < KINFO_MEMMAP_SIZE);
-
-            kinfo.mmap[kinfo.mmap_size].addr = module->mod_start;
-            kinfo.mmap[kinfo.mmap_size].len = module->mod_end - module->mod_end;
-            kinfo.mmap[kinfo.mmap_size].type = MULTIBOOT_MEMORY_RESERVED;
-            kinfo.mmap_size++;
         }
     }
 }

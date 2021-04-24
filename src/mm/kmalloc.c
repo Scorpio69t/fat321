@@ -86,8 +86,7 @@ void kfree(void *addr)
 
     phy = (unsigned long)to_phy(addr);
     ind = phy / PAGE_SIZE;
-    // FIXME:
-    // kmem_cache_free(mem_map[ind].slab, addr);
+    kmem_cache_free(mem_map[ind].slab, addr);
 }
 
 void kmalloc_cache_init(void)
