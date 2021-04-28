@@ -1,3 +1,4 @@
+#include <boot/apic.h>
 #include <boot/boot.h>
 #include <boot/cpu.h>
 #include <boot/i8259.h>
@@ -42,7 +43,7 @@ static void setup_irq(void)
     setup_idt_desc(0x10, (uint64)copr_error, 0);
 
     /* hardware intr */
-    setup_idt_desc(0x20, (uint64)hwint0x20, 0);
+    setup_idt_desc(0x20, (uint64)apic_timer, 0);
     setup_idt_desc(0x21, (uint64)hwint0x21, 0);
     setup_idt_desc(0x22, (uint64)hwint0x22, 0);
     setup_idt_desc(0x23, (uint64)hwint0x23, 0);
@@ -59,6 +60,8 @@ static void setup_irq(void)
     setup_idt_desc(0x2e, (uint64)hwint0x2e, 0);
     setup_idt_desc(0x2f, (uint64)hwint0x2f, 0);
 
+    setup_idt_desc(APIC_IRQ_SPURIOUS, (uint64)spurious_intr, 0);
+    setup_idt_desc(APIC_IRQ_ERROR, (uint64)apic_error, 0);
     /* sysytem call */
     setup_idt_desc(0x80, (uint64)system_call, 3);
 }
@@ -73,35 +76,36 @@ static inline void setup_idtr(void)
 
 void irq_init(void)
 {
-    init_8259A();
     setup_irq();
     setup_idtr();
     memset(hw_proc, 0x00, sizeof(hw_proc));
-    hw_proc[0x20] = 0xffffffff; /* clock irq */
-    enable_irq(0x00);           /* open clock intr pin */
 }
 
 int register_irq(unsigned vector, pid_t pid)
 {
-    if (vector >= NR_IRQ || vector <= 0x20)
+    if (vector >= IOAPIC_IRQ_BASE + ioapic_maxintr || vector <= IOAPIC_IRQ_BASE)
         return -1;
-    if (hw_proc[vector - 0x20] != 0)
+    if (hw_proc[vector - IOAPIC_IRQ_BASE] != 0)
         return -1;
-    hw_proc[vector - 0x20] = pid;
-    enable_irq(vector - 0x20);
+    hw_proc[vector - IOAPIC_IRQ_BASE] = pid;
+    ioapic_write(IOAPIC_REDTBL + (vector - IOAPIC_IRQ_BASE) * 2 + 1, 0);  // TODO: 考虑投递到哪个CPU
+    ioapic_write(IOAPIC_REDTBL + (vector - IOAPIC_IRQ_BASE) * 2,
+                 vector); /* 使用边沿触发，也就不用IOAPIC发送EOI消息了 */
     return 0;
 }
 
 int unregister_irq(unsigned vector)
 {
-    if (vector >= NR_IRQ || vector <= 0x20)
+    if (vector >= IOAPIC_IRQ_BASE + ioapic_maxintr || vector <= IOAPIC_IRQ_BASE)
         return -1;
-    hw_proc[vector - 0x20] = 0;
+    hw_proc[vector - IOAPIC_IRQ_BASE] = 0;
     disable_irq(vector - 0x20);
+    ioapic_write(IOAPIC_REDTBL + (vector - IOAPIC_IRQ_BASE) * 2 + 1, 0);
+    ioapic_write(IOAPIC_REDTBL + (vector - IOAPIC_IRQ_BASE) * 2, IOAPIC_RED_MASK);
     return 0;
 }
 
-static void do_timer(frame_t *reg)
+void do_timer(frame_t *reg)
 {
     ticks_plus();
     update_alarm();
@@ -125,9 +129,11 @@ static void do_hwint(frame_t *regs, unsigned nr)
 }
 
 /* 异常的统一处理函数 */
-static void exception_handler(frame_t *regs, unsigned nr)
+void exception_handler(frame_t *regs, unsigned nr)
 {
-    printk("Exception ---> %d\n", nr);
+    unsigned long addr;
+    asm volatile("movq %%cr2, %0" : "=r"(addr)::"memory");
+    printk("Exception ---> %d addr %llx\n", nr, regs->rip);
 }
 
 void do_IRQ(frame_t *regs)
@@ -136,9 +142,6 @@ void do_IRQ(frame_t *regs)
     switch (vector) {
     case 0x00 ... 0x10:
         exception_handler(regs, vector);
-        break;
-    case 0x20:
-        do_timer(regs);
         break;
     case 0x21 ... 0x2f:
         do_hwint(regs, vector);

@@ -8,7 +8,8 @@
 
 struct cpu           cpu[NR_CPUS];
 int                  nr_cpu = 0;
-extern unsigned char ioapicid; /* defined in apic.c */
+extern unsigned long ioapic_base; /* defined in apic.c */
+extern unsigned char ioapicid;    /* defined in apic.c */
 
 static unsigned char checksum(unsigned char *addr, unsigned long length)
 {
@@ -86,6 +87,7 @@ void mp_init(void)
         case MP_IOAPIC:
             ioapic = (struct mpc_config_ioapic *)addr;
             ioapicid = ioapic->mpc_apicid;
+            ioapic_base = to_vir(ioapic->mpc_apicaddr);
             addr += sizeof(struct mpc_config_ioapic);
             continue;
         case MP_BUS:

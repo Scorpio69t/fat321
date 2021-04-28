@@ -7,6 +7,7 @@
 #include <boot/cpu.h>
 #include <boot/io.h>
 #include <boot/irq.h>
+#include <boot/mptable.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
 #include <kernel/fork.h>
@@ -89,12 +90,12 @@ void kernel_main(void *boot_info)
     printk("Initializing timer...\n");
     setup_counter();
 
-    printk("Initializing apic...\n");
+    mp_init();
     apic_init();
 
     printk("kernel_main\n");
 
-    // enable_interrupt();
+    enable_interrupt();
 
     cpu_idle();
 }

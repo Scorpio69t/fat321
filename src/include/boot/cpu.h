@@ -25,6 +25,7 @@
 
 #ifndef __ASSEMBLY__
 
+#include <config.h>
 #include <kernel/mm.h>
 #include <kernel/types.h>
 
@@ -184,6 +185,12 @@ void cpu_idle(void);
     } while (0)
 
 void cpuid(int op, int *eax, int *ebx, int *ecx, int *edx);
+
+struct cpu {
+    unsigned char apicid;
+};
+
+extern struct cpu cpu[NR_CPUS];
 
 #endif /* __ASSEMBLY__ */
 

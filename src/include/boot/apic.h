@@ -22,16 +22,32 @@
     #define APIC_TDCR_D1       0xb   /* divide counts by 1 */
 
 #define APIC_LVT_MASK         (1 << 16)
-#define APIC_TIMER_IRQ        0x20 /* Local Timer irq */
-#define APIC_IRQ_ERROR        0x30
-#define APIC_IRQ_SPURIOUS     0x3f
 #define APIC_TIMER_INIT_COUNT 10000000
+
+/* IRQ */
+#define APIC_TIMER_IRQ    0x20 /* Local Timer irq */
+#define APIC_IRQ_ERROR    0x30
+#define APIC_IRQ_SPURIOUS 0x3f
+#define IOAPIC_IRQ_BASE   0x20
+
+#define IOREGSEL 0x00
+#define IOWIN    0x10
+#define IOEOI    0x40
+
+#define IOAPIC_ID     0x00
+#define IOAPIC_VER    0x01
+#define IOAPIC_REDTBL 0x10
+    #define IOAPIC_RED_MASK 0x10000
 
 #ifndef __ASSEMBLY__
 
 void         apic_init(void);
 unsigned int apic_read(unsigned long off);
 void         apic_write(unsigned long off, unsigned int value);
+unsigned int ioapic_read(unsigned long reg);
+void ioapic_write(unsigned long reg, unsigned int value);
+
+extern unsigned int ioapic_maxintr;
 
 #endif
 

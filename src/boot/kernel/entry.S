@@ -7,6 +7,7 @@
 #include <kernel/fork.h>
 #include <boot/boot.h>
 #include <boot/cpu.h>
+#include <boot/apic.h>
 
 .section .text
 
@@ -49,80 +50,6 @@
 	movq	$-KERNEL_STACK_SIZE, reg;	\
 	andq	%rsp, reg
 
-#define INTERRUPT_RETURN     \
-    addq    $8, %rsp;        \
-    iretq
-
-#define PUSH_PT_ARGS    \
-    movq    %rsp, %rdi
-
-#define POP_PT_ARGS
-
-/* could not use stack */
-#define RESET_8259A_CHIP    \
-    movb    $0x20, %al;     \
-    outb    %al, $0x20;     \
-    outb    %al, $0xa0
-
-/* could not use stack */
-/* 这里传入的是中断号，相应的引脚号要减去0x20 */
-#define CLOSE_8259A_PIN(irq)    \
-    movb    $8, %al;            \
-    cmpb    $(irq-0x20), %al;   \
-    jle     1f;                 \
-    inb     $0x21, %al;         \
-    bts     $(irq-0x20), %ax;   \
-    outb    %al, $0x21;         \
-    jmp     2f;                 \
-  1:inb     $0xa1, %al;         \
-    bts     $(irq-0x28), %ax;   \
-    outb    %al, $0xa1;         \
-  2: ;
-
-/* could not use stack */
-#define OPEN_8259A_PIN(irq)     \
-    movb    $8, %al;            \
-    cmpb    $(irq-0x20), %al;   \
-    jle     1f;                 \
-    inb     $0x21, %al;         \
-    btr     $(irq-0x20),  %ax;  \
-    outb    %al, $0x21;         \
-    jmp     2f;                 \
-  1:inb     $0xa1, %al;         \
-    btr     $(irq-0x28), %ax;   \
-    outb    %al, $0xa1;         \
-  2: ;
-
-#define RING0_HW_IRQ_FREAM(irq)    \
-	pushq $irq;                 \
-	testq $3,16(%rsp);	/* test CS RPL */	\
-	je 1f; 				\
-	swapgs;				\
-1:	SAVE_ALL;                   \
-	CLOSE_8259A_PIN(irq);       \
-	RESET_8259A_CHIP;           \
-	sti;                        \
-	PUSH_PT_ARGS;               \
-	call    do_IRQ;             \
-	POP_PT_ARGS;                \
-	OPEN_8259A_PIN(irq);        \
-	jmp     ret_from_int
-
-
-ret_from_int:
-	GET_CURRENT(%rbx)
-	testl	$NEED_SCHEDULE, PROC_FLAGS(%rbx)
-	jnz	re_sched
-	jmp     int_ret
-	re_sched:
-	call    schedule
-	int_ret:
-	testq $3, SF_CS(%rsp)
-	je 1f
-	swapgs
-1:  	RESTOR_ALL
-    	INTERRUPT_RETURN
-
 .global ret_from_fork
 ret_from_fork:
 	cli
@@ -139,22 +66,63 @@ exec_ret:
 	addq	$8, %rsp
 	iretq
 
-ENTRY(hwint0x20) RING0_HW_IRQ_FREAM(0x20); END(hwint0x20)
-ENTRY(hwint0x21) RING0_HW_IRQ_FREAM(0x21); END(hwint0x21)
-ENTRY(hwint0x22) RING0_HW_IRQ_FREAM(0x22); END(hwint0x22)
-ENTRY(hwint0x23) RING0_HW_IRQ_FREAM(0x23); END(hwint0x23)
-ENTRY(hwint0x24) RING0_HW_IRQ_FREAM(0x24); END(hwint0x24)
-ENTRY(hwint0x25) RING0_HW_IRQ_FREAM(0x25); END(hwint0x25)
-ENTRY(hwint0x26) RING0_HW_IRQ_FREAM(0x26); END(hwint0x26)
-ENTRY(hwint0x27) RING0_HW_IRQ_FREAM(0x27); END(hwint0x27)
-ENTRY(hwint0x28) RING0_HW_IRQ_FREAM(0x28); END(hwint0x28)
-ENTRY(hwint0x29) RING0_HW_IRQ_FREAM(0x29); END(hwint0x29)
-ENTRY(hwint0x2a) RING0_HW_IRQ_FREAM(0x2a); END(hwint0x2a)
-ENTRY(hwint0x2b) RING0_HW_IRQ_FREAM(0x2b); END(hwint0x2b)
-ENTRY(hwint0x2c) RING0_HW_IRQ_FREAM(0x2c); END(hwint0x2c)
-ENTRY(hwint0x2d) RING0_HW_IRQ_FREAM(0x2d); END(hwint0x2d)
-ENTRY(hwint0x2e) RING0_HW_IRQ_FREAM(0x2e); END(hwint0x2e)
-ENTRY(hwint0x2f) RING0_HW_IRQ_FREAM(0x2f); END(hwint0x2f)
+.global apic_timer
+apic_timer:
+	pushq $0x20
+	testq $3,16(%rsp)	/* test CS RPL */
+	je 1f
+	swapgs
+1:	SAVE_ALL
+	movq	%rsp, %rdi
+	call    do_timer
+	jmp     ret_from_int
+
+.macro HWINTR irq
+.global	hwint\irq
+hwint\irq:
+	pushq	$\irq
+	jmp	hwintr
+.endm
+	HWINTR	0x21
+	HWINTR	0x22
+	HWINTR	0x23
+	HWINTR	0x24
+	HWINTR	0x25
+	HWINTR 	0x26
+	HWINTR	0x27
+	HWINTR	0x28
+	HWINTR	0x29
+	HWINTR	0x2a
+	HWINTR	0x2b
+	HWINTR	0x2c
+	HWINTR	0x2d
+	HWINTR	0x2e
+	HWINTR	0x2f
+hwintr:
+	testq $3,16(%rsp)	/* test CS RPL */
+	je 1f
+	swapgs
+1:	SAVE_ALL
+	movq	%rsp, %rdi
+	call    do_IRQ
+	jmp     ret_from_int
+
+ret_from_int:
+	movq	$(KERNEL_OFFSET + 0xfee000b0), %rax
+	movl	$0, (%rax)	/* send EOI to local APIC */
+	GET_CURRENT(%rbx)
+	testl	$NEED_SCHEDULE, PROC_FLAGS(%rbx)
+	jnz	re_sched
+	jmp     int_ret
+re_sched:
+	call    schedule
+int_ret:
+	testq $3, SF_CS(%rsp)
+	je 1f
+	swapgs
+1:  	RESTOR_ALL
+    	addq    $8, %rsp
+    	iretq
 
 /* 中断和异常 -- 异常 */
 ENTRY(divide_error)
@@ -259,9 +227,29 @@ END(copr_error)
 
 exception:
 	SAVE_ALL
-	PUSH_PT_ARGS
+	movq    %rsp, %rdi
 	cli
 	call	do_IRQ
+	hlt
+
+.global spurious_intr
+spurious_intr:
+	pushq	$APIC_IRQ_SPURIOUS
+	SAVE_ALL
+	cli
+	movq	%rsp, %rdi
+	movq	$APIC_IRQ_SPURIOUS, %rsi
+	call exception_handler
+	hlt
+
+.global apic_error
+apic_error:
+	pushq $APIC_IRQ_ERROR
+	SAVE_ALL
+	cli
+	movq	%rsp, %rdi
+	movq	$APIC_IRQ_ERROR, %rsi
+	call	exception_handler
 	hlt
 
 /* 系统调用入口 int 0x80
@@ -282,7 +270,8 @@ system_call:
 	call	*%rax
 	movq	%rax, SF_RAX(%rsp)
 	RESTOR_ALL
-	INTERRUPT_RETURN
+	addq    $8, %rsp;        \
+    	iretq
 
 kernel_process_child:
 	movq	%rdi, %rax	/* kernle process function address */

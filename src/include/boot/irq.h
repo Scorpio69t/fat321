@@ -71,7 +71,7 @@ extern void general_protection();
 extern void page_fault();
 extern void copr_error();
 
-extern void hwint0x20();
+extern void apic_timer();
 extern void hwint0x21();
 extern void hwint0x22();
 extern void hwint0x23();
@@ -87,6 +87,8 @@ extern void hwint0x2c();
 extern void hwint0x2d();
 extern void hwint0x2e();
 extern void hwint0x2f();
+extern void spurious_intr();
+extern void apic_error();
 extern void system_call(void);
 
 #endif /*__ASSEMBLY__*/

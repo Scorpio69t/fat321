@@ -5,7 +5,9 @@
 #include <kernel/kernel.h>
 
 unsigned long apic_base;
+unsigned long ioapic_base;
 unsigned char ioapicid; /* init in mptable.c */
+unsigned int  ioapic_maxintr;
 
 unsigned int apic_read(unsigned long off)
 {
@@ -17,20 +19,49 @@ void apic_write(unsigned long off, unsigned int value)
     *((volatile unsigned int *)(apic_base + off)) = value;
 }
 
+unsigned int ioapic_read(unsigned long reg)
+{
+    *((volatile unsigned int *)(ioapic_base + IOREGSEL)) = reg;
+    return *((volatile unsigned int *)(ioapic_base + IOWIN));
+}
+
+void ioapic_write(unsigned long reg, unsigned int value)
+{
+    *((volatile unsigned int *)(ioapic_base + IOREGSEL)) = reg;
+    *((volatile unsigned int *)(ioapic_base + IOWIN)) = value;
+}
+
 int get_apic_version(void)
 {
-    int v;
-
-    v = apic_read(APIC_LVR);
-    return v & 0xff;
+    return apic_read(APIC_LVR) & 0xff;
 }
 
 int get_maxlvt(void)
 {
-    int val;
+    return (apic_read(APIC_LVR) >> 16) & 0xff;
+}
 
-    val = apic_read(APIC_LVR);
-    return (val >> 16) & 0xff;
+int ioapic_init(void)
+{
+    int version, id, i;
+
+    printk("ioapic_base %llx\n", ioapic_base);
+
+    version = ioapic_read(IOAPIC_VER);
+    ioapic_maxintr = (version >> 16) & 0xff;
+    id = ioapic_read(IOAPIC_ID) >> 24;
+    if (id != ioapicid) {
+        panic("id isn't equal to ioapicid\n");
+        return -1;
+    }
+
+    /* init all pin*/
+    for (i = 0; i < ioapic_maxintr; i++) {
+        ioapic_write(IOAPIC_REDTBL + 2 * i, IOAPIC_RED_MASK | (IOAPIC_IRQ_BASE + i));
+        ioapic_write(IOAPIC_REDTBL + 2 * i + 1, 0);
+    }
+    printk("ioapic maxintr: %d\n", ioapic_maxintr);
+    return 0;
 }
 
 void apic_init(void)
@@ -90,6 +121,10 @@ void apic_init(void)
     apic_write(APIC_TPR, 0);
 
     printk("apic init finish\n");
+
+    if (ioapic_init() != 0)
+        goto failed;
+
     return;
 failed:
     cpu_idle();
