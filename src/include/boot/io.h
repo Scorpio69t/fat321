@@ -25,6 +25,26 @@ static inline u8 inb(u16 port)
     return val;
 }
 
+static inline void outl(uint16 port, uint32 value)
+{
+    asm volatile(
+        "outl %%eax, %%dx\n\t"
+        "mfence\n\t"
+        : "=&a"(value), "=&d"(port)
+        : "0"(value), "1"(port));
+}
+
+static inline uint32 inl(uint16 port)
+{
+    uint32 value;
+    asm volatile(
+        "inl %%dx, %%eax\n\t"
+        "mfence\n\t"
+        : "=&a"(value), "=&d"(port)
+        : "1"(port));
+    return value;
+}
+
 /**
  * innb - 从指定端口读取n个字节
  */

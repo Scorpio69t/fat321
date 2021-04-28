@@ -88,7 +88,7 @@ static void setup_pages_reserved(uint32 nr_page)
 
 void mm_init()
 {
-    uint64 memsize;
+    uint64 memsize, page_table_size;
     uint32 nr_pages;
     int    i;
 
@@ -97,7 +97,10 @@ void mm_init()
 
     /* 计算内存总大小，包括不可用内存 */
     for (memsize = 0, i = 0; i < kinfo.mmap_size; i++) {
-        memsize += kinfo.mmap[i].len;
+        if (kinfo.mmap[i].type != MULTIBOOT_MEMORY_AVAILABLE)
+            continue;
+        if (kinfo.mmap[i].addr + kinfo.mmap[i].len > memsize)
+            memsize = kinfo.mmap[i].addr + kinfo.mmap[i].len;
     }
     printk("memory size: 0x%llx\n", memsize);
 
@@ -107,10 +110,12 @@ void mm_init()
             kinfo.global_pgd_start = kinfo.module[i].mod_end;
     }
 
+    page_table_size = memsize > kinfo.mmio_end ? memsize : kinfo.mmio_end;
     kinfo.global_pgd_start = PAGE_UPPER_ALIGN(to_vir(kinfo.global_pgd_start));
-    kinfo.global_pgd_end = setup_page_table(memsize);
+    kinfo.global_pgd_end = setup_page_table(page_table_size);
 
-    printk("global page table: start: 0x%016llx, end 0x%016llx\n", kinfo.global_pgd_start, kinfo.global_pgd_end);
+    printk("global page table: start: 0x%016llx, end 0x%016llx size 0x%016llx\n", kinfo.global_pgd_start,
+           kinfo.global_pgd_end, page_table_size);
 
     kinfo.mem_map_start = PAGE_UPPER_ALIGN(kinfo.global_pgd_end);
     kinfo.mem_map_end = init_pages(memsize, kinfo.mem_map_start, &nr_pages);

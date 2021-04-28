@@ -25,6 +25,7 @@
 
 #ifndef __ASSEMBLY__
 
+#include <kernel/mm.h>
 #include <kernel/types.h>
 
 #define load_tss(tss_desc) asm volatile("ltr %%ax" ::"a"((uint16)tss_desc))
@@ -129,6 +130,7 @@ struct cpu_info {
 #define MSR_FS_BASE        0xc0000100
 #define MSR_GS_BASE        0xc0000101
 #define MSR_KERNEL_GS_BASE 0xc0000102
+#define MSR_IA32_APIC_BASE 0x1b
 
 #define wrmsr(msr, val) asm volatile("wrmsr" ::"c"(msr), "a"(((uint64)val) & 0xffffffff), "d"(((uint64)val) >> 32))
 
@@ -137,6 +139,26 @@ struct cpu_info {
         uint64 __rax, __rdx;                                         \
         asm volatile("rdmsr" : "=a"(__rax), "=d"(__rdx) : "c"(msr)); \
         val = __rax | (__rdx << 32);                                 \
+    } while (0);
+
+#define rdmsrl(msr, low, high)                                    \
+    do {                                                          \
+        asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr)); \
+    } while (0);
+
+#define wrmsrl(msr, low, high)                                   \
+    do {                                                         \
+        asm volatile("wrmsr" : : "c"(msr), "a"(low), "d"(high)); \
+    } while (0);
+
+#define rdmmiol(addr, val)                     \
+    do {                                       \
+        val = *((unsigned int *)to_vir(addr)); \
+    } while (0);
+
+#define wrmmiol(addr, val)                     \
+    do {                                       \
+        *((unsigned int *)to_vir(addr)) = val; \
     } while (0);
 
 /*
@@ -160,6 +182,8 @@ void cpu_idle(void);
     do {                                     \
         asm volatile("mfence" ::: "memory"); \
     } while (0)
+
+void cpuid(int op, int *eax, int *ebx, int *ecx, int *edx);
 
 #endif /* __ASSEMBLY__ */
 

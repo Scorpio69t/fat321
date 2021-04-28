@@ -24,7 +24,7 @@ bochs:
 
 qemu:
 	./scripts/mkimg.sh
-	qemu-system-x86_64 -curses  -drive file=feng.img,format=raw,index=0,media=disk -m 1G
+	qemu-system-x86_64 -curses -drive file=feng.img,format=raw,index=0,media=disk -m 1G
 
 config:
 	ln -fsn $(CURDIR)/src/include/libc $(CURDIR)/include

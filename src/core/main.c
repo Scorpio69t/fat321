@@ -2,6 +2,7 @@
  * 内核初始化入口
  */
 
+#include <boot/apic.h>
 #include <boot/boot.h>
 #include <boot/cpu.h>
 #include <boot/io.h>
@@ -88,9 +89,12 @@ void kernel_main(void *boot_info)
     printk("Initializing timer...\n");
     setup_counter();
 
+    printk("Initializing apic...\n");
+    apic_init();
+
     printk("kernel_main\n");
 
-    enable_interrupt();
+    // enable_interrupt();
 
     cpu_idle();
 }
