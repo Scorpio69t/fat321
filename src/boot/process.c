@@ -1,24 +1,45 @@
 #include <boot/cpu.h>
-#include <boot/io.h>
 #include <boot/irq.h>
 #include <boot/memory.h>
-#include <boot/sched.h>
+#include <boot/process.h>
+#include <kernel/bugs.h>
+#include <kernel/fork.h>
+#include <kernel/gfp.h>
+#include <kernel/ipc.h>
 #include <kernel/kernel.h>
-#include <kernel/mm.h>
 #include <kernel/sched.h>
+#include <kernel/slab.h>
 #include <kernel/types.h>
 
-/**
- * setup_counter - 设置8253计数器
- *
- * pc上计数器的输入频率为1193180HZ
- */
-void setup_counter(void)
+int copy_context(struct proc_struct *p, frame_t *regs)
 {
-    unsigned long t = 1193180;
-    outb(0x43, 0x36); /* 使用二进制 模式3 先读写低字节再读写高字节 计数器0 */
-    outb(0x40, (u8)(t / HZ));
-    outb(0x40, (u8)((t / HZ) >> 8));
+    frame_t *newregs;
+    newregs = (frame_t *)kernel_stack_top(p) - 1;
+    *newregs = *regs;
+
+    p->context.rsp0 = (uint64)newregs; /* ignore some stack space */
+    p->context.rsp = (uint64)newregs;
+    p->context.rip = (uint64)ret_from_fork;
+
+    return 0;
+}
+
+int setup_proc_context(proc_t *proc, uint64 entry, uint64 stack_bottom)
+{
+    frame_t *newregs;
+    newregs = (frame_t *)kernel_stack_top(proc) - 1;
+    memset(newregs, 0x00, sizeof(newregs));
+
+    newregs->rip = entry;
+    newregs->cs = USER_CODE_DESC;
+    newregs->eflags = (1 << 9) | (3 << 12); /* IF, IOPL */
+    newregs->rsp = stack_bottom;
+    newregs->ss = USER_DATA_DESC;
+
+    proc->context.rsp0 = (uint64)newregs;
+    proc->context.rsp = (uint64)newregs;
+    proc->context.rip = (uint64)exec_ret;
+    return 0;
 }
 
 /**

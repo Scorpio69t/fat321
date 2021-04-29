@@ -3,7 +3,6 @@
 
 #ifndef __ASSEMBLY__
 #include <boot/cpu.h>
-#include <boot/i8259.h>
 
 /* idt_table and idt_end are defined in head.S */
 extern uint8 idt_table[];
@@ -21,9 +20,7 @@ struct idtr_struct {
 #define NR_IRQ 256
 extern struct gate_struct idt[];
 
-void        irq_init();
-extern void enable_irq(unsigned short);
-extern void disable_irq(unsigned short);
+void irq_init();
 
 /*
  * 开中断 IF=1

@@ -1,6 +1,5 @@
 #include <boot/boot.h>
 #include <kernel/multiboot.h>
-#include <kernel/linkage.h>
 #include <kernel/sched.h>
 
 /*

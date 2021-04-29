@@ -1,10 +1,8 @@
 #include <boot/apic.h>
 #include <boot/boot.h>
 #include <boot/cpu.h>
-#include <boot/i8259.h>
 #include <boot/irq.h>
 #include <kernel/kernel.h>
-#include <kernel/linkage.h>
 #include <kernel/sched.h>
 
 #define NR_HW_IRQ 0x10
@@ -99,7 +97,6 @@ int unregister_irq(unsigned vector)
     if (vector >= IOAPIC_IRQ_BASE + ioapic_maxintr || vector <= IOAPIC_IRQ_BASE)
         return -1;
     hw_proc[vector - IOAPIC_IRQ_BASE] = 0;
-    disable_irq(vector - 0x20);
     ioapic_write(IOAPIC_REDTBL + (vector - IOAPIC_IRQ_BASE) * 2 + 1, 0);
     ioapic_write(IOAPIC_REDTBL + (vector - IOAPIC_IRQ_BASE) * 2, IOAPIC_RED_MASK);
     return 0;

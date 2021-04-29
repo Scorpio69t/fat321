@@ -1,8 +1,20 @@
-subdir := kernel boot
 
-.PHONY: default $(subdir)
+.PHONY: default dep
 
-default: $(subdir)
+HEADER := ../include
+SOURCE := $(wildcard *.c) $(wildcard *.S)
+OBJS := $(patsubst %.c, %.o, $(SOURCE))
+OBJS := $(patsubst %.S, %.o, $(OBJS))
 
-$(subdir):
-	@$(MAKE) -C $@
+default: $(OBJS)
+
+-include Makefile.dep
+
+%.o: %.S
+	$(CC) -I$(HEADER) $(CFLAGS) -D__ASSEMBLY__ -o $@ $<
+
+%.o: %.c
+	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
+
+Makefile.dep: $(SOURCE)
+	$(CC) -I$(HEADER) -MM $^ > Makefile.dep

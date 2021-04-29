@@ -1,8 +1,6 @@
 /*
  * 中断入口
  */
-
-#include <kernel/linkage.h>
 #include <kernel/sched.h>
 #include <kernel/fork.h>
 #include <boot/boot.h>
@@ -11,44 +9,47 @@
 
 .section .text
 
-#define SAVE_ALL    \
-	cld;            \
-	pushq	%rdi;	\
-	pushq	%rsi;	\
-	pushq	%rdx;	\
-	pushq	%rcx;	\
-	pushq	%rax;	\
-	pushq   %r8;   	\
-	pushq   %r9;   	\
-	pushq   %r10;   \
-	pushq   %r11;   \
-	pushq   %rbx;   \
-	pushq   %rbp;   \
-	pushq   %r12;	\
-	pushq	%r13;	\
-	pushq	%r14;	\
+.macro SAVE_ALL
+	cld
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rax
+	pushq   %r8
+	pushq   %r9
+	pushq   %r10
+	pushq   %r11
+	pushq   %rbx
+	pushq   %rbp
+	pushq   %r12
+	pushq	%r13
+	pushq	%r14
 	pushq	%r15
+.endm
 
-#define RESTOR_ALL  \
-	popq    %r15;   \
-	popq    %r14;   \
-	popq    %r13;   \
-	popq    %r12;   \
-	popq    %rbp;   \
-	popq    %rbx;   \
-	popq    %r11;   \
-	popq	%r10;	\
-	popq	%r9;	\
-	popq	%r8;	\
-	popq	%rax;	\
-	popq	%rcx;	\
-	popq	%rdx;	\
-	popq	%rsi;	\
+.macro RESTOR_ALL
+	popq    %r15
+	popq    %r14
+	popq    %r13
+	popq    %r12
+	popq    %rbp
+	popq    %rbx
+	popq    %r11
+	popq	%r10
+	popq	%r9
+	popq	%r8
+	popq	%rax
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
+.endm
 
-#define GET_CURRENT(reg)	\
-	movq	$-KERNEL_STACK_SIZE, reg;	\
-	andq	%rsp, reg
+.macro 	CURRENT reg
+	movq	$-KERNEL_STACK_SIZE, \reg
+	andq	%rsp, \reg
+.endm
 
 .global ret_from_fork
 ret_from_fork:
@@ -110,13 +111,13 @@ hwintr:
 ret_from_int:
 	movq	$(KERNEL_OFFSET + 0xfee000b0), %rax
 	movl	$0, (%rax)	/* send EOI to local APIC */
-	GET_CURRENT(%rbx)
+	CURRENT %rbx
 	testl	$NEED_SCHEDULE, PROC_FLAGS(%rbx)
-	jnz	re_sched
-	jmp     int_ret
-re_sched:
+	jnz	resched
+	jmp     intr_ret
+resched:
 	call    schedule
-int_ret:
+intr_ret:
 	testq $3, SF_CS(%rsp)
 	je 1f
 	swapgs
@@ -125,105 +126,105 @@ int_ret:
     	iretq
 
 /* 中断和异常 -- 异常 */
-ENTRY(divide_error)
+.global divide_error
+divide_error:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$0
 	jmp 	exception
-END(divide_error)
 
-ENTRY(single_step_exception)
+.global single_step_exception
+single_step_exception:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$1
 	jmp 	exception
-END(single_step_exception)
 
-ENTRY(nmi)
+.global nmi
+nmi:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$2
 	jmp	exception
-END(nmi)
 
-ENTRY(breakpoint_exception)
+.global breakpoint_exception
+breakpoint_exception:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$3
 	jmp	    exception
-END(breakpoint_exception)
 
-ENTRY(overflow)
+.global overflow
+overflow:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$4
 	jmp	    exception
-END(overflow)
 
-ENTRY(bounds_check)
+.global bounds_check
+bounds_check:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$5
 	jmp	    exception
-END(bounds_check)
 
-ENTRY(inval_opcode)
+.global inval_opcode
+inval_opcode:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$6
 	jmp	    exception
-END(inval_opcode)
 
-ENTRY(copr_not_available)
+.global copr_not_available
+copr_not_available:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$7
 	jmp	    exception
-END(copr_not_available)
 
-ENTRY(double_fault)
+.global double_fault
+double_fault:
 	pushq	$8
 	jmp	    exception
-END(double_fault)
 
-ENTRY(copr_seg_overrun)
+.global copr_seg_overrun
+copr_seg_overrun:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$9
 	jmp	    exception
-END(copr_seg_overrun)
 
-ENTRY(inval_tss)
+.global inval_tss
+inval_tss:
 	pushq	$10
 	jmp	    exception
-END(inval_tss)
 
-ENTRY(segment_not_present)
+.global segment_not_present
+segment_not_present:
 	pushq	$11
 	jmp	    exception
-END(segment_not_present)
 
-ENTRY(stack_exception)
+.global stack_exception
+stack_exception:
 	pushq	$12
 	jmp	    exception
-END(stack_exception)
 
-ENTRY(general_protection)
+.global general_protection
+general_protection:
 	pushq	$13
 	jmp	    exception
-END(general_protection)
 
-ENTRY(page_fault)
+.global page_fault
+page_fault:
 	pushq	$14
 	jmp	    exception
-END(page_fault)
 
-ENTRY(copr_error)
+.global copr_error
+copr_error:
 	movq 	$0xffffffff, %rax
 	pushq	%rax
 	pushq	$16
 	jmp	    exception
-END(copr_error)
 
 exception:
 	SAVE_ALL
@@ -270,7 +271,7 @@ system_call:
 	call	*%rax
 	movq	%rax, SF_RAX(%rsp)
 	RESTOR_ALL
-	addq    $8, %rsp;        \
+	addq    $8, %rsp
     	iretq
 
 kernel_process_child:

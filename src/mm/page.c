@@ -1,6 +1,5 @@
 
 #include <boot/memory.h>
-#include <boot/sched.h>
 #include <kernel/bugs.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>

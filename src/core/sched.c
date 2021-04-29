@@ -6,19 +6,21 @@
 #include <boot/irq.h>
 #include <boot/memory.h>
 #include <boot/process.h>
-#include <boot/sched.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
 #include <kernel/elf.h>
 #include <kernel/gfp.h>
 #include <kernel/ipc.h>
 #include <kernel/kernel.h>
-#include <kernel/linkage.h>
 #include <kernel/list.h>
 #include <kernel/mm.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
 #include <kernel/string.h>
+
+union proc_union init_proc_union __attribute__((__section__(".data.init_proc"))) = {
+    INIT_PROC(init_proc_union.proc),
+};
 
 struct list_head __proc_hash_map[PROC_HASH_MAP_SIZE];
 

@@ -4,7 +4,6 @@
 #include <kernel/fork.h>
 #include <kernel/gfp.h>
 #include <kernel/kernel.h>
-#include <kernel/linkage.h>
 #include <kernel/mm.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>
@@ -118,7 +117,10 @@ long do_fork(frame_t *regs)
     return proc->pid;
 
 faild:
-    /*TODO: free_mm*/
+    if (proc && proc->mm.pgd) {
+        free_proc_mm(proc);
+        free_page(proc->mm.pgd);
+    }
     free_pages((unsigned long)proc, KERNEL_STACK_ORDER);
     return -1;
 }

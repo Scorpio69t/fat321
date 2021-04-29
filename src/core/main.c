@@ -87,9 +87,6 @@ void kernel_main(void *boot_info)
     printk("Initializing proc...\n");
     proc_init();
 
-    printk("Initializing timer...\n");
-    setup_counter();
-
     mp_init();
     apic_init();
 

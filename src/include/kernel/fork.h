@@ -3,7 +3,6 @@
 
 #ifndef __ASSEMBLY__
 #include <boot/cpu.h>
-#include <kernel/linkage.h>
 #include <kernel/sched.h>
 #endif
 

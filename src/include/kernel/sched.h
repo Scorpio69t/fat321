@@ -27,7 +27,7 @@
 
 #include <boot/atomic.h>
 #include <boot/cpu.h>
-#include <boot/sched.h>
+#include <boot/process.h>
 #include <kernel/ipc.h>
 #include <kernel/list.h>
 #include <kernel/string.h>
@@ -154,7 +154,7 @@ void ticks_plus(void);
 void update_alarm(void);
 
 /**
- * 获取当前内核栈的栈底，减8是防止i386下没有内核栈的切换时访问ss和esp寄存器引发缺页异常
+ * 获取当前内核栈的栈底
  */
 #define kernel_stack_top(proc) (((u8 *)proc) + KERNEL_STACK_SIZE - 8)
 
