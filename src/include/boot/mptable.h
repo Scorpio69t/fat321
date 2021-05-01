@@ -26,6 +26,9 @@ struct intel_mp_floating {
 #define MP_INTSRC    3
 #define MP_LINTSRC   4
 
+#define CPU_ENABLED  1
+#define CPU_BOOTPROC 2
+
 struct mp_config_table {
     char mpc_signature[4];
 #define MPC_SIGNATURE "PCMP"

@@ -110,7 +110,7 @@ long do_fork(frame_t *regs)
 
     copy_context(proc, regs);
     disable_interrupt();
-    list_add_tail(&proc->proc, &scheduler.proc_head);
+    list_add_tail(&proc->proc, &proc_head);
     hash_proc(proc);
     enable_interrupt();
     proc->state = PROC_RUNNABLE;

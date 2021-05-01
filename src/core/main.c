@@ -8,6 +8,7 @@
 #include <boot/io.h>
 #include <boot/irq.h>
 #include <boot/mptable.h>
+#include <boot/smp.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
 #include <kernel/fork.h>
@@ -89,6 +90,7 @@ void kernel_main(void *boot_info)
 
     mp_init();
     apic_init();
+    smp_init();
 
     printk("kernel_main\n");
 

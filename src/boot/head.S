@@ -12,13 +12,17 @@
 
 .global _start
 _start:
-	/* check multiboot2 magic */
-	cmpl 	$MULTIBOOT2_BOOTLOADER_MAGIC, %eax
-	je	magic_ok
-	hlt
-magic_ok:
-	/* 32-bit physical address of the Multiboot2 information structure */
-	movl	%ebx, 0x100f30
+	/*
+	 * Save boot info, it's 32-bit physical address of the Multiboot2 information structure
+	 * when boot from BSP or zero when boot from AP
+	 */
+	movl	%ebx, %ebp
+
+# 	testl	%ebp, %ebp
+# 	jnz	1f
+# 	hlt
+# 1:
+
 	/* check if cpu support extended function information */
 	movl	$0x80000000, %eax
 	cpuid
@@ -62,11 +66,21 @@ compatibility_mode:
 	 * Now we are in 32bit compatibility mode
 	 */
 
+ 	testl	%ebp, %ebp
+ 	jz	secondary		/* secondary cpu */
+
 	movl	$0x100f00, %eax		/* the address of pGDT32 */
 	lgdt	(%eax)
 
-	movl	$0x100f20, %eax		/* the address of long_jump_vector */
-	ljmp 	*(%eax)
+	ljmpl 	$0x08, $0x100200
+
+	/*
+	 * The segment selector was defined in smpboot.S.
+	 * When booting from a AP, I always get an error when executing
+	 * lgdt, so I can't reuse the old code. I don't know why about that.
+	 */
+secondary:
+	ljmpl	$0x18, $0x100200
 
 start_hlt:
 	hlt
@@ -85,11 +99,19 @@ real_long_mode:
 	movl	%eax, %es
 	movl	%eax, %ss
 
-	xorq	%rdi, %rdi
-	movl	0x100f30, %edi
+	testl	%ebp, %ebp
+	jz	1f
+
+	/* boot form BSP */
 	movq	$KERNEL_OFFSET, %rax
+	xorq	%rdi, %rdi
+	movl	%ebp, %edi
 	addq	%rax, %rdi
 	movq	kernel_main_entry(%rip), %rax
+	jmp	*%rax
+
+	/* boot from AP */
+1:	movq	smp_boot_entry(%rip), %rax
 	jmp	*%rax
 
 	hlt
@@ -104,18 +126,8 @@ pGDT32:					/* address 0x100f00 */
 .org 0xf10
 GDT32:
 	.quad 0x0000000000000000	/* null descriptor */
-	.quad 0x0020980000000000	/* code descriptor */
+	.quad 0x00af9a000000ffff	/* code descriptor */
 GDT32_end:
-
-
-.org 0xf20
-long_jump_vector:			/* address 0x100f20 */
-	.long	0x100200		/* the address of real_long_mode */
-	.word	0x08			/* code descriptor */
-
-.org 0xf30
-boot_info:				/* address 0x100f30 */
-	.long	0
 
 .org 0xf40
 .global	gdt_desc
@@ -123,11 +135,15 @@ gdt_desc:				/* address 0x100f40 */
 	.word	gdt_end - gdt_table
 	.quad	gdt_table
 
+.global init_stack
 init_stack:
 	.quad 	init_proc_union + KERNEL_STACK_SIZE - 8
 
 kernel_main_entry:
 	.quad	kernel_main
+
+smp_boot_entry:
+	.quad	smp_boot_main
 
 /*
  * We use 2Mbyte large pages provided by PAE mode

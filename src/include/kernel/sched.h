@@ -137,12 +137,10 @@ union proc_union {
 
 extern union proc_union init_proc_union;
 
-struct sched_struct {
-    struct list_head proc_head;
-    struct proc_struct *idle;
-};
+extern struct list_head proc_head;
+extern struct proc_struct *proc_idle[NR_CPUS];
 
-extern struct sched_struct scheduler;
+#define smp_processor_id() 0
 
 #define PROC_HASH_MAP_SIZE 256
 extern struct list_head __proc_hash_map[];

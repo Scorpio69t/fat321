@@ -6,8 +6,11 @@
 #include <kernel/mm.h>
 #include <kernel/string.h>
 
-struct cpu           cpu[NR_CPUS];
-int                  nr_cpu = 0;
+struct cpu cpu[NR_CPUS];
+
+int nr_cpu = 0;
+int boot_apic_id = 0;
+
 extern unsigned long ioapic_base; /* defined in apic.c */
 extern unsigned char ioapicid;    /* defined in apic.c */
 
@@ -78,9 +81,19 @@ void mp_init(void)
         switch (*(unsigned char *)addr) {
         case MP_PROCESSOR:
             proc = (struct mpc_config_processor *)addr;
+
+            if (!(proc->mpc_cpuflag & CPU_ENABLED)) {
+                printk(KERN_ERR "Have disabled cpu\n");
+                continue;
+            }
+
             if (nr_cpu < NR_CPUS) {
                 cpu[nr_cpu].apicid = proc->mpc_apicid;
                 nr_cpu++;
+            }
+            if (proc->mpc_cpuflag & CPU_BOOTPROC) {
+                boot_apic_id = proc->mpc_apicid;
+                printk("Boot cpu apicid %d\n", boot_apic_id);
             }
             addr += sizeof(struct mpc_config_processor);
             continue;

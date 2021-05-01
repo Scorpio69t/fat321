@@ -173,6 +173,9 @@ extern struct tss_struct init_tss;
 
 void cpu_init(void);
 void cpu_idle(void);
+
+#define nop() asm volatile("hlt")
+
 /* cpu特权级 */
 #define RING0 0
 #define RING1 1
@@ -189,6 +192,9 @@ void cpuid(int op, int *eax, int *ebx, int *ecx, int *edx);
 struct cpu {
     unsigned char apicid;
 };
+
+extern int nr_cpu;
+extern int boot_apic_id;
 
 extern struct cpu cpu[NR_CPUS];
 

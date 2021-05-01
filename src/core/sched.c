@@ -24,7 +24,10 @@ union proc_union init_proc_union __attribute__((__section__(".data.init_proc")))
 
 struct list_head __proc_hash_map[PROC_HASH_MAP_SIZE];
 
-struct sched_struct scheduler;
+struct list_head    proc_head;
+struct proc_struct *proc_idle[NR_CPUS] = {
+    &init_proc_union.proc,
+};
 
 proc_t *map_proc(pid_t pid)
 {
@@ -69,7 +72,7 @@ inline void update_alarm(void)
 {
     struct proc_struct *p;
 
-    list_for_each_entry(p, &scheduler.proc_head, proc)
+    list_for_each_entry(p, &proc_head, proc)
     {
         if (p->alarm == 0) {
             continue;
@@ -97,9 +100,9 @@ void schedule(void)
     disable_interrupt();
     if (!(prev->flags & PF_IDLE)) {
         list_del(&prev->proc);
-        list_add_tail(&prev->proc, &scheduler.proc_head);
+        list_add_tail(&prev->proc, &proc_head);
     }
-    list_for_each_entry(p, &scheduler.proc_head, proc)
+    list_for_each_entry(p, &proc_head, proc)
     {
         if (p->state == PROC_RUNNABLE) {
             next = p;
@@ -107,7 +110,7 @@ void schedule(void)
         }
     }
     if (!next)
-        next = scheduler.idle;
+        next = proc_idle[smp_processor_id()];
     next->counter = 1;
 
     if (prev == next)
@@ -244,21 +247,16 @@ check_failed:
 
 void proc_init(void)
 {
-    struct proc_struct *init_proc;
-
-    list_head_init(&scheduler.proc_head);
+    list_head_init(&proc_head);
     for (int i = 0; i < PROC_HASH_MAP_SIZE; i++) list_head_init(&__proc_hash_map[i]);
 
-    init_proc = &init_proc_union.proc;
-    /* init_proc 中的一些属性缺失的，在这里进行补充 */
-    init_proc->mm.pgd = kinfo.global_pgd_start;
-
-    scheduler.idle = init_proc;
+    /* init_proc_union 中的一些属性缺失的，在这里进行补充 */
+    init_proc_union.proc.mm.pgd = kinfo.global_pgd_start;
 
     for (int i = 0; i < kinfo.module_size; i++) {
         proc_t *proc = module_proc(&kinfo.module[i]);
         assert(proc != NULL);
-        list_add_tail(&proc->proc, &scheduler.proc_head);
+        list_add_tail(&proc->proc, &proc_head);
         hash_proc(proc);
     }
 }

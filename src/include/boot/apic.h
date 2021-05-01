@@ -10,6 +10,14 @@
 #define APIC_SVR           0xf0 /* Spurious Interrupt Vector Register */
     #define APIC_SVR_ENABLE    0x100
 #define APIC_ESR           0x280 /* Error Status Register */
+#define APIC_ICRLO         0x300
+#define APIC_ICRHI         0x310
+    #define APIC_ICR_BCAST  0x80000
+    #define APIC_ICR_INTR   0x500
+    #define APIC_ICR_ASSERT 0x4000
+    #define APIC_ICR_LEVEL  0x8000
+    #define APIC_ICR_DELIVS 0x1000
+    #define APIC_ICR_STARTUP 0x600
 #define APIC_LVTT          0x320 /* LVT Timer Register */
     #define APIC_LVTT_PERIODIC (1 << 17)
 #define APIC_LVTPC         0x340 /* LVT Performance Monitoring Counters Register */

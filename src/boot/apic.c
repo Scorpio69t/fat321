@@ -55,7 +55,7 @@ int ioapic_init(void)
         return -1;
     }
 
-    /* init all pin*/
+    /* init all pin */
     for (i = 0; i < ioapic_maxintr; i++) {
         ioapic_write(IOAPIC_REDTBL + 2 * i, IOAPIC_RED_MASK | (IOAPIC_IRQ_BASE + i));
         ioapic_write(IOAPIC_REDTBL + 2 * i + 1, 0);
