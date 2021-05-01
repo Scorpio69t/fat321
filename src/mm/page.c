@@ -133,6 +133,7 @@ static void fill_pml4(uint64 base, uint64 addr, uint32 nr)
     uint64 *pml4e = (uint64 *)base;
     memset(pml4e, 0x00, PAGE_SIZE);
     for (int i = 0; i < nr; i++, addr += PAGE_SIZE) {
+        pml4e[i] = to_phy(addr) | PML4E_ATTR;
         pml4e[i + 256] = to_phy(addr) | PML4E_ATTR;
     }
 }

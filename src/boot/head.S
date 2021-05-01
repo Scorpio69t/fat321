@@ -111,7 +111,10 @@ real_long_mode:
 	jmp	*%rax
 
 	/* boot from AP */
-1:	movq	smp_boot_entry(%rip), %rax
+1:	movq	global_page_table(%rip), %rax
+	movq	%rax, %cr3
+	jmp	2f
+2:	movq	smp_boot_entry(%rip), %rax
 	jmp	*%rax
 
 	hlt
@@ -138,6 +141,10 @@ gdt_desc:				/* address 0x100f40 */
 .global init_stack
 init_stack:
 	.quad 	init_proc_union + KERNEL_STACK_SIZE - 8
+
+.global global_page_table
+global_page_table:
+	.quad	0
 
 kernel_main_entry:
 	.quad	kernel_main

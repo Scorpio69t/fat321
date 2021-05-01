@@ -8,10 +8,12 @@
 #include <kernel/sched.h>
 #include <kernel/string.h>
 
-int          current_boot_cpu;
-volatile int smp_booting;
+int current_boot_cpu; /* which cpu is booting */
+
+volatile int smp_booting; /* is there a cpu booting? */
 
 extern unsigned long init_stack;
+extern unsigned long global_page_table;
 
 extern unsigned char smp_boot_start[];
 extern unsigned char smp_boot_end[];
@@ -60,6 +62,8 @@ void smp_init(void)
     /* copy boot code to the correct positon */
     smp_boot_base = (unsigned char *)to_vir(SMP_BOOT_BASE);
     memcpy(smp_boot_base, smp_boot_start, smp_boot_end - smp_boot_start);
+
+    global_page_table = to_phy(kinfo.global_pgd_start);
 
     for (apicid = 0; apicid < nr_cpu; apicid++) {
         if (apicid == boot_apic_id)
