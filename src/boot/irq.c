@@ -72,6 +72,11 @@ static inline void setup_idtr(void)
     asm volatile("lidt %0" ::"m"(idtr));
 }
 
+void smp_irq_init(void)
+{
+    setup_idtr();
+}
+
 void irq_init(void)
 {
     setup_irq();
@@ -102,8 +107,12 @@ int unregister_irq(unsigned vector)
     return 0;
 }
 
+#include <boot/smp.h>
+
 void do_timer(frame_t *reg)
 {
+    if (!boot_finished)
+        return;
     ticks_plus();
     update_alarm();
     current->flags |= NEED_SCHEDULE;
@@ -130,7 +139,15 @@ void exception_handler(frame_t *regs, unsigned nr)
 {
     unsigned long addr;
     asm volatile("movq %%cr2, %0" : "=r"(addr)::"memory");
-    printk("Exception ---> %d addr %llx\n", nr, regs->rip);
+    printk("CPU%d Exception ---> %d addr=%llx\n", smp_processor_id(), nr, regs->rip);
+}
+
+void spurious_handler(frame_t *regs)
+{
+    unsigned int val;
+
+    val = apic_read(APIC_ESR);
+    printk("CPU%d spurious, ESR: 0x%x\n", val);
 }
 
 void do_IRQ(frame_t *regs)

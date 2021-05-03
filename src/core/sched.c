@@ -6,6 +6,7 @@
 #include <boot/irq.h>
 #include <boot/memory.h>
 #include <boot/process.h>
+#include <boot/smp.h>
 #include <boot/system.h>
 #include <kernel/bugs.h>
 #include <kernel/elf.h>
@@ -24,7 +25,10 @@ union proc_union init_proc_union __attribute__((__section__(".data.init_proc")))
 
 struct list_head __proc_hash_map[PROC_HASH_MAP_SIZE];
 
-struct list_head    proc_head;
+struct list_head proc_head;
+
+spinlock_t proc_head_lock;
+
 struct proc_struct *proc_idle[NR_CPUS] = {
     &init_proc_union.proc,
 };
@@ -93,11 +97,15 @@ void schedule(void)
 {
     struct proc_struct *prev, *next, *p;
 
+    spin_lock(&proc_head_lock);
+
     prev = current;
     next = NULL;
-
+    // FIXME: Can't call printk here
+    // printk("schedule %d\n", smp_processor_id());
     prev->flags &= ~NEED_SCHEDULE;
-    disable_interrupt();
+    if (prev->state == PROC_RUNNING)
+        prev->state = PROC_RUNNABLE;
     if (!(prev->flags & PF_IDLE)) {
         list_del(&prev->proc);
         list_add_tail(&prev->proc, &proc_head);
@@ -109,16 +117,17 @@ void schedule(void)
             break;
         }
     }
+    if (next)
+        next->state = PROC_RUNNING;
+    spin_unlock(&proc_head_lock);
+
     if (!next)
         next = proc_idle[smp_processor_id()];
     next->counter = 1;
 
     if (prev == next)
-        goto same_process;
+        return;
     switch_to(prev, next, prev);
-
-same_process:
-    enable_interrupt();
 }
 
 /**
@@ -247,6 +256,7 @@ check_failed:
 
 void proc_init(void)
 {
+    spin_init(&proc_head_lock);
     list_head_init(&proc_head);
     for (int i = 0; i < PROC_HASH_MAP_SIZE; i++) list_head_init(&__proc_hash_map[i]);
 

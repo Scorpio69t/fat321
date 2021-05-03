@@ -2,6 +2,7 @@
 #include <boot/irq.h>
 #include <boot/memory.h>
 #include <boot/process.h>
+#include <boot/smp.h>
 #include <kernel/bugs.h>
 #include <kernel/fork.h>
 #include <kernel/gfp.h>
@@ -63,7 +64,7 @@ inline struct proc_struct *__current(void)
 
 struct proc_struct *__switch_to(struct proc_struct *prev, struct proc_struct *next)
 {
-    init_tss.rsp0 = next->context.rsp0;
+    init_tss[smp_processor_id()].rsp0 = next->context.rsp0;
 
     uint64 pgd = get_pgd();
     if (next->flags & PF_KTHREAD) {

@@ -16,7 +16,7 @@ base = .
 	lidt	idt_ptr	- base
 	lgdt 	gdt_ptr - base
 
-	movw	$0x10, %ax
+	movw	$0x20, %ax
 	movw	%ax, %ds
 	movw	%ax, %es
 
@@ -25,7 +25,7 @@ base = .
 	movl	%eax, %cr0
 
 	xorl	%ebx, %ebx
-	ljmpl	$0x08, $0x00100000  /* jmp to _start */
+	ljmpl	$0x18, $0x00100000  /* jmp to _start */
 
 gdt_ptr:
 	.short gdt32_end - gdt32
@@ -37,10 +37,10 @@ idt_ptr:
 .align 64
 gdt32:
 	.quad 0x0000000000000000
-	.quad 0x00cf9a000000ffff /* code */
-	.quad 0x00cf92000000ffff /* data */
 	.quad 0x0020980000000000 /* 64bit code */
 	.quad 0x0000920000000000 /* 64bit data */
+	.quad 0x00cf9a000000ffff /* code */
+	.quad 0x00cf92000000ffff /* data */
 gdt32_end:
 
 .global smp_boot_end

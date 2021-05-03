@@ -1,6 +1,7 @@
 #include <boot/boot.h>
 #include <kernel/multiboot.h>
 #include <kernel/sched.h>
+#include <config.h>
 
 /*
  * This file is the kernel head that will be loaded at the physical address
@@ -80,7 +81,7 @@ compatibility_mode:
 	 * lgdt, so I can't reuse the old code. I don't know why about that.
 	 */
 secondary:
-	ljmpl	$0x18, $0x100200
+	ljmpl	$0x08, $0x100200
 
 start_hlt:
 	hlt
@@ -94,10 +95,14 @@ real_long_mode:
 	movq	$(0x100f40+KERNEL_OFFSET), %rax	/* the address of gdt_desc */
 	lgdt	(%rax)
 
-	movl	$0x10,	%eax
-	movl	%eax, %ds
-	movl	%eax, %es
-	movl	%eax, %ss
+lretaddr:
+	movq	$0x10,	%rax
+	movq	%rax, %ds
+	movq	%rax, %es
+	movq	%rax, %ss
+	xorq	%rax, %rax
+	movq	%rax, %gs
+	movq	%rax, %fs
 
 	testl	%ebp, %ebp
 	jz	1f
@@ -199,7 +204,11 @@ gdt_table:
 	.quad	0x0000920000000000	/* 64bit kernel data segment, 0x10 */
 	.quad	0x0020f80000000000	/* 64bit user code segment, 0x18 */
 	.quad	0x0000f20000000000	/* 64bit user data segment, 0x20 */
-	.fill	12, 8, 0		/* reserved */
+	.quad	0			/* align 0x10 */
+.global gdt_tss
+gdt_tss:
+	.fill   NR_CPUS, 0x10, 0	/* tss descriptor */
+	.fill	32, 8, 0		/* reserved */
 .global gdt_end
 gdt_end:
 

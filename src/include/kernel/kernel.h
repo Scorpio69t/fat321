@@ -28,6 +28,8 @@ typedef struct kernel_info {
 
 extern kinfo_t kinfo;
 
+extern volatile int boot_finished;
+
 /* printk打印前缀 */
 #define KERN_EMERG   "<0>" /* system is unusable            */
 #define KERN_ALERT   "<1>" /* action must be taken immediately    */

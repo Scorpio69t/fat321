@@ -49,7 +49,9 @@
 
 #ifndef __ASSEMBLY__
 
-void         apic_init(void);
+void apic_init(void);
+int lapic_init(void);
+
 unsigned int apic_read(unsigned long off);
 void         apic_write(unsigned long off, unsigned int value);
 unsigned int ioapic_read(unsigned long reg);

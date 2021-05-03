@@ -35,6 +35,7 @@
 /* gdt_table and gdt_end are defiend in head.S */
 extern uint8 gdt_table[];
 extern uint8 gdt_end[];
+extern uint8 gdt_tss[];
 
 struct gdtr_struct {
     uint16 len;
@@ -124,9 +125,11 @@ struct context_struct {
 };
 
 struct cpu_info {
-    uint64 kernelstack; /* kernel stack */
-    uint64 oldrsp;      /* 暂存syscall过来的用户栈 */
+    uint64        kernelstack; /* kernel stack */
+    uint64        oldrsp;      /* 暂存syscall过来的用户栈 */
+    unsigned char apicid;
 };
+extern struct cpu_info cpu_info[NR_CPUS];
 
 #define MSR_FS_BASE        0xc0000100
 #define MSR_GS_BASE        0xc0000101
@@ -169,7 +172,7 @@ struct cpu_info {
 #define LDT_SIZE 32
 extern struct desc_struct ldt[];
 
-extern struct tss_struct init_tss;
+extern struct tss_struct init_tss[NR_CPUS];
 
 void cpu_init(void);
 void cpu_idle(void);
@@ -188,15 +191,6 @@ void cpu_idle(void);
     } while (0)
 
 void cpuid(int op, int *eax, int *ebx, int *ecx, int *edx);
-
-struct cpu {
-    unsigned char apicid;
-};
-
-extern int nr_cpu;
-extern int boot_apic_id;
-
-extern struct cpu cpu[NR_CPUS];
 
 #endif /* __ASSEMBLY__ */
 

@@ -6,11 +6,10 @@
 #include <kernel/mm.h>
 #include <kernel/string.h>
 
-struct cpu cpu[NR_CPUS];
-
 int nr_cpu = 0;
 int boot_apic_id = 0;
 
+extern unsigned long apic_base;   /* defined in apic.c */
 extern unsigned long ioapic_base; /* defined in apic.c */
 extern unsigned char ioapicid;    /* defined in apic.c */
 
@@ -77,6 +76,7 @@ void mp_init(void)
         panic("get mp config failed\n");
         return;
     }
+    apic_base = to_vir(mpconfig->mpc_lapic);
     for (addr = (void *)(mpconfig + 1), end = (void *)mpconfig + mpconfig->mpc_length; addr < end;) {
         switch (*(unsigned char *)addr) {
         case MP_PROCESSOR:
@@ -88,7 +88,7 @@ void mp_init(void)
             }
 
             if (nr_cpu < NR_CPUS) {
-                cpu[nr_cpu].apicid = proc->mpc_apicid;
+                cpu_info[nr_cpu].apicid = proc->mpc_apicid;
                 nr_cpu++;
             }
             if (proc->mpc_cpuflag & CPU_BOOTPROC) {

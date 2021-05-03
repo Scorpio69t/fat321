@@ -140,8 +140,6 @@ extern union proc_union init_proc_union;
 extern struct list_head proc_head;
 extern struct proc_struct *proc_idle[NR_CPUS];
 
-#define smp_processor_id() 0
-
 #define PROC_HASH_MAP_SIZE 256
 extern struct list_head __proc_hash_map[];
 proc_t *map_proc(pid_t);

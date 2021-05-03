@@ -11,7 +11,6 @@
 #define KERNEL_DATA_DESC 0x10
 #define USER_CODE_DESC   0x1b
 #define USER_DATA_DESC   0x23
-#define TSS_DESC         0x30
 
 #ifndef __ASSEMBLY__
 

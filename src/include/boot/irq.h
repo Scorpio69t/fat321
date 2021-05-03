@@ -21,7 +21,7 @@ struct idtr_struct {
 extern struct gate_struct idt[];
 
 void irq_init();
-
+void smp_irq_init(void);
 /*
  * 开中断 IF=1
  */

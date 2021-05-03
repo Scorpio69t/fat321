@@ -1,9 +1,9 @@
 #ifndef _BOOT_SPINLOCK_H_
 #define _BOOT_SPINLOCK_H_
 
-/* 值为1为加锁，其他值表示加锁 */
+/* 值为1为加锁，其他值表示为加锁 */
 typedef struct {
-    volatile unsigned int lock;
+    volatile unsigned char lock;
 } spinlock_t;
 
 static inline int __spin_is_locked(spinlock_t *lock)
@@ -14,7 +14,7 @@ static inline int __spin_is_locked(spinlock_t *lock)
 static inline void __spin_lock(spinlock_t *lock)
 {
     asm volatile(
-        "\n1:\t lock decl %0\n\t"
+        "\n1:\t lock decb %0\n\t"
         "jns  3f\n\t"
         "2:\t pause\n\t"
         "cmpb $0, %0\n\t"
@@ -32,7 +32,7 @@ static inline void __spin_unlock(spinlock_t *lock)
 static inline int __spin_try_lock(spinlock_t *lock)
 {
     char oldval;
-    asm volatile("xchgb %b0, %1\n\t" : "=q"(oldval), "+m"(lock->lock) : "0"(0) : "memory");
+    asm volatile("xchgb %0, %1\n\t" : "=q"(oldval), "+m"(lock->lock) : "0"(0) : "memory");
     return oldval > 0;
 }
 

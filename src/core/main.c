@@ -21,6 +21,8 @@
 #include <kernel/syscalls.h>
 #include <kernel/types.h>
 
+volatile int boot_finished = 0;
+
 kinfo_t kinfo;
 
 static void check_boot_info(uint64 addr)
@@ -95,6 +97,6 @@ void kernel_main(void *boot_info)
     printk("kernel_main\n");
 
     enable_interrupt();
-
+    boot_finished = 1;
     cpu_idle();
 }

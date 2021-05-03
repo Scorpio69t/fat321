@@ -55,7 +55,10 @@
 ret_from_fork:
 	cli
 	RESTOR_ALL
-	addq 	$8, %rsp	/* skip orgi_rax */
+	testq $3,16(%rsp)	/* test CS RPL */
+	jz 1f
+	swapgs
+1:	addq 	$8, %rsp	/* skip orgi_rax */
 	xorq	%rax, %rax
 	movq	$0, 0x8(%rsi) 	/* The return value of the child process in message struct */
 	iretq
@@ -64,14 +67,17 @@ ret_from_fork:
 exec_ret:
 	cli
 	RESTOR_ALL
-	addq	$8, %rsp
+	testq $3,16(%rsp)	/* test CS RPL */
+	jz 1f
+	swapgs
+1:	addq	$8, %rsp
 	iretq
 
 .global apic_timer
 apic_timer:
 	pushq $0x20
 	testq $3,16(%rsp)	/* test CS RPL */
-	je 1f
+	jz 1f
 	swapgs
 1:	SAVE_ALL
 	movq	%rsp, %rdi
@@ -101,7 +107,7 @@ hwint\irq:
 	HWINTR	0x2f
 hwintr:
 	testq $3,16(%rsp)	/* test CS RPL */
-	je 1f
+	jz 1f
 	swapgs
 1:	SAVE_ALL
 	movq	%rsp, %rdi
@@ -118,11 +124,11 @@ ret_from_int:
 resched:
 	call    schedule
 intr_ret:
-	testq $3, SF_CS(%rsp)
-	je 1f
+  	RESTOR_ALL
+	testq $3, 16(%rsp)	/* test CS RPL */
+	jz 1f
 	swapgs
-1:  	RESTOR_ALL
-    	addq    $8, %rsp
+1:    	addq    $8, %rsp
     	iretq
 
 /* 中断和异常 -- 异常 */
@@ -239,8 +245,7 @@ spurious_intr:
 	SAVE_ALL
 	cli
 	movq	%rsp, %rdi
-	movq	$APIC_IRQ_SPURIOUS, %rsi
-	call exception_handler
+	call 	spurious_handler
 	hlt
 
 .global apic_error
@@ -259,19 +264,25 @@ apic_error:
 .global system_call
 system_call:
 	pushq   %rax    /* 压入功能号 */
-	SAVE_ALL
+	testq 	$3, 16(%rsp)	/* test CS RPL */
+	jz 	1f
+	swapgs
+1:	SAVE_ALL
 	cmpl	$3, %eax
-	je	1f
+	je	2f
 	movq	%rsp, %rdi
 	call	pre_syscall
-1:	leaq	syscall_table(%rip), %rbx
+2:	leaq	syscall_table(%rip), %rbx
 	movq	SF_ORIG(%rsp), %rax
 	movq	(%rbx,%rax,8), %rax
 	movq	%rsp, %rdi
 	call	*%rax
 	movq	%rax, SF_RAX(%rsp)
 	RESTOR_ALL
-	addq    $8, %rsp
+	testq	$3, 16(%rsp)
+	jz	3f
+	swapgs
+3:	addq    $8, %rsp
     	iretq
 
 kernel_process_child:
