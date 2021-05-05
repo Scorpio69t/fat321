@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/list.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -390,6 +391,24 @@ static int vfs_chdir(pid_t pid, const char *pathname)
     return 0;
 }
 
+static int vfs_stat(pid_t pid, const char *pathname, struct stat *buf)
+{
+    struct proc_file *proc_file;
+    struct fentry *   entry;
+    message           m;
+
+    if ((proc_file = map_proc_file(pid)) == NULL)
+        return -1;
+    if ((entry = vfs_lookup(proc_file->cwd, pathname)) == NULL)
+        return -1;
+    m.type = MSG_FSSTAT;
+    m.m_fsstat.inode = entry->f_ino;
+    m.m_fsstat.buf = buf;
+    if (_sendrecv(entry->f_fs_pid, &m) != 0)
+        return -1;
+    return 0;
+}
+
 static int vfs_copyfs(pid_t ppid, pid_t pid)
 {
     int fd;
@@ -613,6 +632,9 @@ static void do_process(void)
             break;
         case MSG_CHDIR:
             retval = vfs_chdir(m.src, m.m_chdir.pathname);
+            break;
+        case MSG_STAT:
+            retval = vfs_stat(m.src, m.m_stat.pathname, m.m_stat.buf);
             break;
         case MSG_COPYFS:
             retval = vfs_copyfs(m.src, m.m_copyfs.pid);

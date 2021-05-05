@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/fs.h>
 #include <sys/list.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 
 #include "cache.h"
@@ -210,10 +211,27 @@ static ssize_t ext2_write(const struct fs_entry *entry, void *buf, loff_t pos, s
     return -1;
 }
 
+static int ext2_stat(const struct fs_entry *entry, struct stat *buf)
+{
+    struct inode *inode;
+
+    if (!(inode = getinode(entry->inode)))
+        return -1;
+
+    buf->st_ino = entry->inode;
+    buf->st_mode = inode->i_mode;
+    buf->st_size = inode->i_size;
+    buf->st_atime = inode->i_atime;
+    buf->st_mtime = inode->i_mtime;
+    buf->st_ctime = inode->i_mtime;
+    return 0;
+}
+
 static struct fs_ops ext2_ops = {
     .fs_lookup = ext2_lookup,
     .fs_read = ext2_read,
     .fs_write = ext2_write,
+    .fs_stat = ext2_stat,
     .fs_init = ext2_init,
 };
 

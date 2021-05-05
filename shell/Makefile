@@ -4,9 +4,13 @@ LD = ld
 CFLAGS := -c -Wall -fno-builtin -fno-common -fno-stack-protector -mcmodel=large
 LDFLAGS := -T ../scripts/proc.lds
 
+ifdef DEBUG
+	CFLAGS += -g -ggdb
+endif
+
 HEADER:=../include
 SOURCE := $(wildcard *.c)
-OBJS := main.o
+OBJS := main.o builtin.o
 LIBS := ../libc/libc.a
 TARGET := sh
 

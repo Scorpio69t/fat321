@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ipc.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -190,6 +191,17 @@ int chdir(const char *pathname)
         return -1;
     m.m_chdir.pathname = pathname;
     return _syscall(IPC_VFS, MSG_CHDIR, &m);
+}
+
+int stat(const char *pathname, struct stat *buf)
+{
+    message m;
+
+    if (_kmap((void **)&pathname, (void **)&buf, NULL) != 0)
+        return -1;
+    m.m_stat.buf = buf;
+    m.m_stat.pathname = pathname;
+    return _syscall(IPC_VFS, MSG_STAT, &m);
 }
 
 int register_irq(int no_intr)

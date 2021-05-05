@@ -86,6 +86,16 @@ static void do_read(message *msg)
     msg->retval = retval;
 }
 
+static void do_stat(message *msg)
+{
+    int             retval;
+    struct fs_entry entry;
+
+    entry.inode = msg->m_fsstat.inode;
+    retval = fs_ops->fs_stat(&entry, msg->m_fsstat.buf);
+    msg->retval = retval;
+}
+
 int run_fs(struct fs_ops *ops)
 {
     message m;
@@ -110,6 +120,9 @@ int run_fs(struct fs_ops *ops)
             break;
         case MSG_FSLOOKUP:
             do_lookup(&m);
+            break;
+        case MSG_FSSTAT:
+            do_stat(&m);
             break;
         default:
             retval = -1;

@@ -30,6 +30,7 @@
 #define MSG_GETPID 11 /* no message struct */
 #define MSG_GETCWD 12
 #define MSG_CHDIR  13
+#define MSG_STAT   14
 
 /* the aborve are syscall type */
 #define MSG_CFM           256
@@ -44,6 +45,7 @@
 #define MSG_FREEFS        265 /* no message struct */
 #define MSG_EXECFS        266 /* no message struct */
 #define MSG_KMAP          267
+#define MSG_FSSTAT        268
 
 typedef struct {
     int    fd;
@@ -99,6 +101,11 @@ typedef struct {
 typedef struct {
     const char *pathname;
 } msg_chdir;
+
+typedef struct {
+    const char *pathname;
+    void *      buf;
+} msg_stat;
 
 /* the aborve are syscall message */
 
@@ -167,6 +174,11 @@ typedef struct {
 } msg_fslookup;
 
 typedef struct {
+    unsigned long inode;
+    void *        buf;
+} msg_fsstat;
+
+typedef struct {
     pid_t pid; /* child pid */
 } msg_copyfs;
 
@@ -194,6 +206,7 @@ typedef struct {
         msg_brk    m_brk;
         msg_getcwd m_getcwd;
         msg_chdir  m_chdir;
+        msg_stat   m_stat;
 
         msg_bdev_transfer m_bdev_transfer;
         msg_irq           m_irq;
@@ -204,6 +217,7 @@ typedef struct {
         msg_fslookup      m_fslookup;
         msg_copyfs        m_copyfs;
         msg_kmap          m_kmap;
+        msg_fsstat        m_fsstat;
     };
 } message;
 

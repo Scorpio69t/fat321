@@ -71,6 +71,16 @@ void write_char(char c, unsigned char type, unsigned short cur)
     asm volatile("movw %%ax, (%%rdi)" ::"a"(val), "D"(pos));
 }
 
+void screen_clean(void)
+{
+    int i;
+
+    for (i = 0; i < ROW * COL; i++) {
+        write_char(' ', 0x0f, i);
+    }
+    set_cursor(0);
+}
+
 /**
  * 向控制台写字符串
  * @buf: 字符串缓冲区
@@ -80,6 +90,11 @@ void write_char(char c, unsigned char type, unsigned short cur)
 ssize_t vga_write(const char *buf, size_t n, unsigned char type)
 {
     int i, cur;
+
+    if (n == 1 && buf[0] == 0x0c) {
+        screen_clean();
+        return n;
+    }
 
     cur = get_cursor();
     for (i = 0; i < n; i++) {
@@ -105,16 +120,6 @@ ssize_t vga_write(const char *buf, size_t n, unsigned char type)
         set_cursor(cur);
     }
     return n;
-}
-
-void screen_clean(void)
-{
-    int i;
-
-    for (i = 0; i < ROW * COL; i++) {
-        write_char(' ', 0x0f, i);
-    }
-    set_cursor(0);
 }
 
 int main(int argc, char *argv[])
