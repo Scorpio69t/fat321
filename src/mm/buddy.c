@@ -148,6 +148,9 @@ void __free_pages(struct page *page, unsigned int order)
 void free_pages(unsigned long addr, unsigned int order)
 {
     struct page *page = NULL, *pos;
+
+    if (!addr)
+        return;
     addr = PAGE_LOWER_ALIGN(addr);
     spin_lock(&buddy.lock);
     list_for_each_entry(pos, &buddy.activate, list)

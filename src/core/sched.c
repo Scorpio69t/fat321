@@ -212,7 +212,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc->mm.start_brk = USER_BRK_START;
     proc->mm.brk = USER_BRK_START;
 
-    end_stack = proc->mm.end_stack - 16;
+    end_stack = proc->mm.end_stack - 32;
     setup_proc_context(proc, ehdr->e_entry, end_stack);
 
     phdr_table = (Elf64_Phdr *)(module_start + ehdr->e_phoff);

@@ -93,91 +93,125 @@ check_failed:
 
 /**
  * 将用户空间中的参数暂存到内核空间
- * Return: - 成功 返回参数暂存的参数个数, 并修改prt_argv为新的地址
+ * Return: - 成功 返回0
  *         - 失败 返回-1
  */
-static int save_argv(const char *pathname, char **ptr_argv[], char *buf, int bufsz)
+static int dup_args(char **ptr_argv[], char **ptr_envp[], char *buf, int bufsz)
 {
-    char **newargv, **argv;
-    int    argc, len, i;
+    char **newargv, **newenvp, **argv, **envp;
+    int    argc, envc, len, i;
 
     argv = *ptr_argv;
+    envp = *ptr_envp;
     argc = count(argv);
+    envc = count(envp);
+    if (bufsz - (argc + envc + 2) * sizeof(char *) < 0)  // argv和envp都以NULL结尾
+        return -1;
     newargv = (char **)buf;
-    if (bufsz - (argc + 1) * sizeof(char *) < 0)
-        return -1;
-    buf += (argc + 1) * sizeof(char *);  // argv中不包含pathname参数
-    bufsz -= (argc + 1) * sizeof(char *);
-
-    len = strlen(pathname) + 1;  // 包括\0
-    if (bufsz - len < 0)
-        return -1;
-    memcpy(buf, (void *)pathname, len);
-    newargv[0] = buf;
-    buf += len;
-    bufsz -= len;
+    buf += (argc + 1) * sizeof(char *);
+    newenvp = (char **)buf;
+    buf += (envc + 1) * sizeof(char *);
+    bufsz -= (argc + envc + 2) * sizeof(char *);
 
     for (i = 0; i < argc; i++) {
         len = strlen(argv[i]) + 1;
         if (bufsz - len < 0)
             return -1;
         memcpy(buf, argv[i], len);
-        newargv[i + 1] = buf;
+        newargv[i] = buf;
         buf += len;
         bufsz -= len;
     }
+    newargv[i] = NULL;
     *ptr_argv = newargv;
-    return argc + 1;
+
+    for (i = 0; i < envc; i++) {
+        len = strlen(envp[i]) + 1;
+        if (bufsz - len < 0)
+            return -1;
+        memcpy(buf, envp[i], len);
+        newenvp[i] = buf;
+        buf += len;
+        bufsz -= len;
+    }
+    newenvp[i] = NULL;
+    *ptr_envp = newenvp;
+    return 0;
 }
 
 /**
- * copy_argv - 向栈拷贝参数, 并设置argv为新地址
- * @argc: 参数数量
- * @argv: 需要拷贝的参数
- * @bufend: 缓冲区结束位置，也是栈底, 需要8字节对齐
+ * setup_args - 设置用户栈上的参数
+ * @ptr_argv: 指向argv的指针
+ * @ptr_envp: 指向envp的指针
+ * @bufend: 缓冲区结束位置，即栈底, 需要8字节对齐
  * @bufsize: 缓冲区大小
- * Return:  - 成功 新的缓存区结束位置，新的栈底，8字节对齐
+ * Return:  - 成功 新的缓存区结束位置(新的栈底)，8字节对齐
  *          - 失败 返回NULL
  */
-static void *copy_argv(int argc, char **ptr_argv[], void *bufend, int bufsize)
+static void *setup_args(char *const argv[], char *const envp[], void *bufend, int bufsize)
 {
-    int    i, len;
-    char **newargv;
-    char **argv;
+    int            i, len, argc, envc;
+    char **        newargv, **newenvp;
+    unsigned long *arglist;
 
-    argv = *ptr_argv;
-    if (bufsize - argc * sizeof(char *) < 0)
+    argc = count(argv);
+    envc = count(envp);
+    if (bufsize - (argc + envc + 2) * sizeof(char *) < 0)
         return NULL;
-    bufend -= argc * sizeof(char *);
+    bufend -= (argc + 1) * sizeof(char *);
     newargv = (char **)bufend;
+    bufend -= (envc + 1) * sizeof(char *);
+    newenvp = (char **)bufend;
+    bufsize -= (argc + envc + 2) * sizeof(char *);
 
     for (i = 0; i < argc; i++) {
-        len = strlen(argv[i]);
-        if (bufsize - len - 1 < 0)
+        len = strlen(argv[i]) + 1;
+        if (bufsize - len < 0)
             return NULL;
-        bufend -= len + 1;
-        memcpy(bufend, argv[i], len + 1); /* 末尾的\0 */
+        bufend -= len;
+        memcpy(bufend, argv[i], len);
         newargv[i] = (char *)bufend;
-        bufsize -= len + 1;
+        bufsize -= len;
     }
+    newargv[i] = NULL;
 
-    *ptr_argv = newargv;
-    return (void *)(bufend - ((unsigned long)bufend & 0x7));
+    for (i = 0; i < envc; i++) {
+        len = strlen(envp[i]) + 1;
+        if (bufsize - len < 0)
+            return NULL;
+        bufend -= len;
+        memcpy(bufend, envp[i], len);
+        newenvp[i] = (char *)bufend;
+        bufsize -= len;
+    }
+    newenvp[i] = NULL;
+
+    // align 8
+    bufend = bufend - ((unsigned long)bufend & 0x7);
+    bufsize = bufsize - (bufsize & 0x7);
+
+    if (bufsize - 3 * sizeof(unsigned long *) < 0)
+        return NULL;
+    bufend -= 3 * sizeof(unsigned long *);
+    arglist = (unsigned long *)bufend;
+    arglist[0] = (unsigned long)argc;
+    arglist[1] = (unsigned long)newargv;
+    arglist[2] = (unsigned long)newenvp;
+    return bufend;
 }
 
 int do_execve(const char *pathname, char *const argv[], char *const envp[])
 {
     int           fd, n, i;
-    int           argc;
     unsigned long end_stack, entry;
     Elf64_Ehdr *  ehdr;
     Elf64_Phdr *  phdr_table;
-    char *        argvbuf;
+    char *        argsbuf;
     proc_t *      proc;
 
     proc = current;
     ehdr = NULL;
-    argvbuf = NULL;
+    argsbuf = NULL;
 
     if ((fd = open_exec(pathname)) < 0)
         goto failed;
@@ -189,10 +223,10 @@ int do_execve(const char *pathname, char *const argv[], char *const envp[])
         goto failed;
 
     entry = ehdr->e_entry;
-    argvbuf = (char *)get_zeroed_page(GFP_KERNEL);
-    assert(argvbuf != NULL);
+    argsbuf = (char *)get_zeroed_page(GFP_KERNEL);
+    assert(argsbuf != NULL);
 
-    if ((argc = save_argv(pathname, (char ***)&argv, argvbuf, PAGE_SIZE)) < 0)
+    if (dup_args((char ***)&argv, (char ***)&envp, argsbuf, PAGE_SIZE) != 0)
         goto failed;
 
     free_proc_mm(proc);
@@ -205,10 +239,7 @@ int do_execve(const char *pathname, char *const argv[], char *const envp[])
         proc->mm.start_stack -= PAGE_SIZE;
         map_page(proc, proc->mm.start_stack);
     }
-    end_stack = (unsigned long)copy_argv(argc, (char ***)&argv, (void *)proc->mm.end_stack, PAGE_SIZE);
-    end_stack -= 2 * sizeof(unsigned long);
-    ((unsigned long *)end_stack)[0] = (unsigned long)argc;
-    ((unsigned long *)end_stack)[1] = (unsigned long)argv;
+    end_stack = (unsigned long)setup_args(argv, envp, (void *)proc->mm.end_stack, PAGE_SIZE);
 
     proc->mm.nr_seg = 0;
     proc->mm.start_brk = USER_BRK_START;
@@ -253,16 +284,14 @@ int do_execve(const char *pathname, char *const argv[], char *const envp[])
     reallocfs_exec();
     kfree(ehdr);
     kfree(phdr_table);
-    free_page((unsigned long)argvbuf);
+    free_page((unsigned long)argsbuf);
 
     disable_interrupt();
     setup_proc_context(proc, entry, end_stack);
     exec_switch_context(proc);
 
 failed:
-    if (ehdr != NULL)
-        kfree(ehdr);
-    if (argvbuf != NULL)
-        free_page((unsigned long)argvbuf);
+    kfree(ehdr);
+    free_page((unsigned long)argsbuf);
     return -1;
 }

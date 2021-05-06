@@ -84,6 +84,8 @@ void kfree(void *addr)
 {
     unsigned long phy, ind;
 
+    if (addr == NULL)
+        return;
     phy = (unsigned long)to_phy(addr);
     ind = phy / PAGE_SIZE;
     kmem_cache_free(mem_map[ind].slab, addr);

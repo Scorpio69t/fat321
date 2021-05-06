@@ -7,6 +7,7 @@ _start:
 	call	__libc_init
 	movq	(%rbp), %rdi 	/* argc */
 	movq	0x8(%rbp), %rsi /* argv */
+	movq	0x10(%rbp), %rdx /* envp */
 	call 	main
 	movq	%rax, %rdi
 	call	exit
