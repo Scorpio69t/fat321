@@ -146,6 +146,8 @@ void free(void *ptr)
 {
     m_node *pos, *node;
 
+    if (ptr == NULL)
+        return;
     node = NULL;
     list_for_each_entry(pos, &m_busy, list)
     {

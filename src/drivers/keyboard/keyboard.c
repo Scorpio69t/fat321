@@ -159,7 +159,7 @@ int main(void)
                 }
                 annlysis_scancode();
             }
-            m.retval = read_char(m.m_fsread.buf, m.m_fsread.size);
+            m.retval = read_char(m.m_fs_read.buf, m.m_fs_read.size);
             if (_send(m.src, &m) != 0) {
                 debug("kb send msg error\n");
             }

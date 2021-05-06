@@ -4,17 +4,16 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/dentry.h>
 #include <sys/list.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "blkdev.h"
-
 struct list_head      mount_head;
-static struct fentry *root_entry;
-static struct fentry *stdin, *stdout, *stderr;
+static struct dentry *root_entry;
+static struct dentry *stdin, *stdout, *stderr;
 
 #define __FILE_MAP_SIZE 1024
 static struct list_head __file_map[__FILE_MAP_SIZE];
@@ -61,14 +60,14 @@ static int append_proc_file(struct proc_file *fsp)
     return 0;
 }
 
-static struct file *make_filp(mode_t mode, struct fentry *entry)
+static struct file *make_filp(mode_t mode, struct dentry *entry)
 {
     struct file *filp;
 
     filp = (struct file *)malloc(sizeof(struct file));
     assert(filp != NULL);
     filp->f_mode = mode;
-    filp->f_entry = entry;
+    filp->f_dentry = entry;
     filp->f_pos = 0;
     entry->f_count++;
     return filp;
@@ -76,7 +75,7 @@ static struct file *make_filp(mode_t mode, struct fentry *entry)
 
 static void free_filp(struct file *filp)
 {
-    filp->f_entry->f_count--;
+    filp->f_dentry->f_count--;
     free(filp);
 }
 
@@ -124,38 +123,35 @@ int getfilename(char *sptr, char *buffer)
     return len;
 }
 
-static struct fentry *vfs_lookup_in_fs(struct fentry *parent, const char *filename)
+static struct dentry *vfs_lookup_in_fs(struct dentry *parent, const char *filename)
 {
-    struct fentry *child;
+    struct dentry *child, *kmap_child;
     message        mess;
 
-    if (_kmap((void **)&filename, NULL, NULL) != 0) {
+    child = (struct dentry *)malloc(sizeof(struct dentry));
+    assert(child != NULL);
+    kmap_child = child;
+    if (_kmap((void **)&filename, (void **)&kmap_child, NULL) != 0) {
         debug("vfs_lookup_in_fs kmap failed\n");
-        return NULL;
+        goto failed;
     }
     mess.type = MSG_FSLOOKUP;
-    mess.m_fslookup.filename = (char *)filename;
-    mess.m_fslookup.p_inode = parent->f_ino;
-    mess.m_fslookup.p_pread = parent->f_pread;
+    mess.m_fs_lookup.filename = (char *)filename;
+    mess.m_fs_lookup.pino = parent->f_ino;
+    mess.m_fs_lookup.dentry = kmap_child;
     if (_sendrecv(parent->f_fs_pid, &mess) != 0) {
         debug("vfs_lookup_in_fs failed\n");
-        return NULL;
+        goto failed;
     }
     if (mess.retval != 0) {
         debug("vfs_lookup_in_fs unfound %s in %s\n", filename, parent->f_name);
-        return NULL;
+        goto failed;
     }
 
-    child = (struct fentry *)malloc(sizeof(struct fentry));
-    assert(child != NULL);
+    *child = *mess.m_fs_lookup.dentry;
     child->f_fs_pid = parent->f_fs_pid;
-    child->f_flags = FE_NORMAL;
-    child->f_ino = mess.m_fslookup.inode;
+    child->f_flags = DE_NORMAL;
     child->f_count = 1;
-    child->f_size = mess.m_fslookup.fsize;
-    child->f_mode = mess.m_fslookup.mode;
-    child->f_pread = mess.m_fslookup.pread;
-    child->f_pwrite = mess.m_fslookup.pwrite;
     strcpy(child->f_name, filename);
     child->f_parent = parent;
     list_add(&child->f_list, &parent->f_children);
@@ -163,15 +159,18 @@ static struct fentry *vfs_lookup_in_fs(struct fentry *parent, const char *filena
     parent->f_count++;
 
     return child;
+failed:
+    free(child);
+    return NULL;
 }
 
-static struct fentry *vfs_lookup(struct fentry *cwd, const char *path)
+static struct dentry *vfs_lookup(struct dentry *cwd, const char *path)
 {
     char *sptr;
     int   len;
     char  filename[256];
 
-    struct fentry *parent, *child, *pos;
+    struct dentry *parent, *child, *pos;
 
     assert(cwd != NULL);
     if (!strncmp("/", path, 1)) {
@@ -226,13 +225,12 @@ static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
     if (_kmap(&buf, NULL, NULL) != 0)
         return -1;
     mess.type = MSG_FSREAD;
-    mess.m_fsread.buf = buf;
-    mess.m_fsread.size = size;
-    mess.m_fsread.inode = filp->f_entry->f_ino;
-    mess.m_fsread.fsize = filp->f_entry->f_size;
-    mess.m_fsread.pread = filp->f_entry->f_pread;
-    mess.m_fsread.offset = filp->f_pos;
-    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
+    mess.m_fs_read.buf = buf;
+    mess.m_fs_read.size = size;
+    mess.m_fs_read.inode = filp->f_dentry->f_ino;
+    mess.m_fs_read.fsize = filp->f_dentry->f_size;
+    mess.m_fs_read.offset = filp->f_pos;
+    if ((status = _sendrecv(filp->f_dentry->f_fs_pid, &mess)) != 0) {
         return -1;
     }
     if (mess.retval > 0)
@@ -253,13 +251,12 @@ int vfs_write(pid_t pid, int fd, void *buf, size_t size)
     if (_kmap(&buf, NULL, NULL) != 0)
         return -1;
     mess.type = MSG_FSWRITE;
-    mess.m_fswrite.buf = buf;
-    mess.m_fswrite.size = size;
-    mess.m_fswrite.inode = filp->f_entry->f_ino;
-    mess.m_fswrite.fsize = filp->f_entry->f_size;
-    mess.m_fswrite.pwrite = filp->f_entry->f_pwrite;
-    mess.m_fswrite.offset = filp->f_pos;
-    if ((status = _sendrecv(filp->f_entry->f_fs_pid, &mess)) != 0) {
+    mess.m_fs_write.buf = buf;
+    mess.m_fs_write.size = size;
+    mess.m_fs_write.inode = filp->f_dentry->f_ino;
+    mess.m_fs_write.fsize = filp->f_dentry->f_size;
+    mess.m_fs_write.offset = filp->f_pos;
+    if ((status = _sendrecv(filp->f_dentry->f_fs_pid, &mess)) != 0) {
         return -1;
     }
     if (mess.retval > 0)
@@ -270,7 +267,7 @@ int vfs_write(pid_t pid, int fd, void *buf, size_t size)
 
 static int vfs_open(pid_t pid, const char *path, int oflag, mode_t mode)
 {
-    struct fentry *   entry;
+    struct dentry *   entry;
     struct proc_file *proc_file;
     struct file *     filp;
     int               fd;
@@ -332,9 +329,9 @@ static off_t vfs_lseek(pid_t pid, int fd, off_t offset, int whence)
         filp->f_pos = filp->f_pos + offset;
         break;
     case SEEK_END:
-        if ((off_t)filp->f_entry->f_size + offset < 0)
+        if ((off_t)filp->f_dentry->f_size + offset < 0)
             return -1;
-        filp->f_pos = filp->f_entry->f_size + offset;
+        filp->f_pos = filp->f_dentry->f_size + offset;
         break;
     default:
         return -1;
@@ -342,7 +339,7 @@ static off_t vfs_lseek(pid_t pid, int fd, off_t offset, int whence)
     return filp->f_pos;
 }
 
-static int getcwdstr(struct fentry *entry, char *buf, int size)
+static int getcwdstr(struct dentry *entry, char *buf, int size)
 {
     assert(entry != NULL);
     int n, len;
@@ -380,7 +377,7 @@ static int vfs_getcwd(pid_t pid, char *buf, size_t size)
 static int vfs_chdir(pid_t pid, const char *pathname)
 {
     struct proc_file *proc_file;
-    struct fentry *   newcwd;
+    struct dentry *   newcwd;
 
     if ((proc_file = map_proc_file(pid)) == NULL)
         return -1;
@@ -394,7 +391,7 @@ static int vfs_chdir(pid_t pid, const char *pathname)
 static int vfs_stat(pid_t pid, const char *pathname, struct stat *buf)
 {
     struct proc_file *proc_file;
-    struct fentry *   entry;
+    struct dentry *   entry;
     message           m;
 
     if ((proc_file = map_proc_file(pid)) == NULL)
@@ -402,8 +399,8 @@ static int vfs_stat(pid_t pid, const char *pathname, struct stat *buf)
     if ((entry = vfs_lookup(proc_file->cwd, pathname)) == NULL)
         return -1;
     m.type = MSG_FSSTAT;
-    m.m_fsstat.inode = entry->f_ino;
-    m.m_fsstat.buf = buf;
+    m.m_fs_stat.inode = entry->f_ino;
+    m.m_fs_stat.buf = buf;
     if (_sendrecv(entry->f_fs_pid, &m) != 0)
         return -1;
     return 0;
@@ -434,7 +431,7 @@ static int vfs_copyfs(pid_t ppid, pid_t pid)
         filp = (struct file *)malloc(sizeof(struct file));
         assert(filp != NULL);
         memcpy(filp, pfilp, sizeof(struct file));
-        filp->f_entry->f_count++;
+        filp->f_dentry->f_count++;
         proc_file->filp[fd] = filp;
     }
     append_proc_file(proc_file);
@@ -481,7 +478,7 @@ static int vfs_freefs(pid_t pid)
         filp = proc_file->filp[fd];
         if (!filp)
             continue;
-        filp->f_entry->f_count--;
+        filp->f_dentry->f_count--;
         free(filp);
     }
 
@@ -490,37 +487,25 @@ static int vfs_freefs(pid_t pid)
     return 0;
 }
 
-static int mount_root(size_t start_lba)
+static int wait_root_mount(pid_t fs_pid)
 {
-    debug("mount root\n", start_lba);
     struct vmount *root_mount;
     message        mess;
-    msg_fsmnt *    fsmnt;
     int            status;
 
-    status = _recv(IPC_EXT2, &mess);
-    assert(status == 0);
-    assert(mess.type == MSG_FSMNT);
-    assert(mess.m_fsmnt.type == FSMNT_STEP1 && mess.m_fsmnt.systemid == 0xc);
+    status = _recv(fs_pid, &mess);
+    if (status != 0 || strcmp("/", mess.m_fs_mnt.pmnt) != 0) {
+        panic("not valid m_fs_mnt message\n");
+        return -1;
+    }
 
-    mess.retval = start_lba;
-    status = _send(IPC_EXT2, &mess);
-    assert(status == 0);
-
-    status = _recv(IPC_EXT2, &mess);
-    assert(status == 0 && mess.m_fsmnt.type == FSMNT_STEP2);
-
-    fsmnt = &mess.m_fsmnt;
-    root_entry = (struct fentry *)malloc(sizeof(struct fentry));
+    root_entry = (struct dentry *)malloc(sizeof(struct dentry));
     assert(root_entry != NULL);
-    root_entry->f_fs_pid = IPC_EXT2;
-    root_entry->f_flags = FE_NORMAL;
+
+    *root_entry = *mess.m_fs_mnt.dentry;
+    root_entry->f_fs_pid = fs_pid;
+    root_entry->f_flags = DE_NORMAL;
     root_entry->f_count = 1;
-    root_entry->f_ino = fsmnt->inode;
-    root_entry->f_mode = fsmnt->mode;
-    root_entry->f_pread = fsmnt->pread;
-    root_entry->f_pwrite = fsmnt->pwrite;
-    root_entry->f_size = fsmnt->fsize;
     root_entry->f_parent = root_entry;
     strcpy(root_entry->f_name, "/");
     list_head_init(&root_entry->f_children);
@@ -529,13 +514,13 @@ static int mount_root(size_t start_lba)
     assert(root_mount != NULL);
 
     root_mount->m_entry = root_entry;
-    root_mount->m_fs_pid = IPC_EXT2;
+    root_mount->m_fs_pid = fs_pid;
     list_add_tail(&root_mount->list, &mount_head);
 
     mess.type = MSG_FSMNT;
     mess.retval = 0;
-    status = _send(IPC_EXT2, &mess);
-    assert(status == 0);
+    if ((status = _send(fs_pid, &mess)) != 0)
+        return -1;
 
     return 0;
 }
@@ -560,16 +545,16 @@ static int mount_dev(void)
 {
     assert(root_entry != NULL);
 
-    struct fentry *  dev_dir, *dev;
+    struct dentry *  dev_dir, *dev;
     struct dev_file *dev_file;
     int              i, nr_dev;
 
-    dev_dir = (struct fentry *)malloc(sizeof(struct fentry));
+    dev_dir = (struct dentry *)malloc(sizeof(struct dentry));
     assert(dev_dir != NULL);
 
-    memset(dev_dir, 0x00, sizeof(struct fentry));
+    memset(dev_dir, 0x00, sizeof(struct dentry));
     dev_dir->f_fs_pid = IPC_KERNEL;
-    dev_dir->f_flags = FE_DEV;
+    dev_dir->f_flags = DE_DEV;
     dev_dir->f_mode = 0x1b6;
     strcpy(dev_dir->f_name, "dev");
     list_head_init(&dev_dir->f_children);
@@ -580,11 +565,11 @@ static int mount_dev(void)
     nr_dev = sizeof(dev_table) / sizeof(struct dev_file);
     for (i = 0; i < nr_dev; i++) {
         dev_file = &dev_table[i];
-        dev = (struct fentry *)malloc(sizeof(struct fentry));
+        dev = (struct dentry *)malloc(sizeof(struct dentry));
         assert(dev != NULL);
-        memset(dev, 0x00, sizeof(struct fentry));
+        memset(dev, 0x00, sizeof(struct dentry));
         dev->f_fs_pid = dev_file->driver_pid;
-        dev->f_flags = FE_DEV;
+        dev->f_flags = DE_DEV;
         dev->f_ino = i;
         dev->f_count = 1;
         dev->f_mode = dev_file->mode;
@@ -659,43 +644,19 @@ static void do_process(void)
 
 int main(int argc, char *argv[])
 {
-    int    i;
-    size_t start_lba;
+    int i;
 
     /* init __file_map */
     for (i = 0; i < __FILE_MAP_SIZE; i++) list_head_init(&__file_map[i]);
     list_head_init(&mount_head);
 
-    struct mbr_sector *mbr = (struct mbr_sector *)malloc(512);
-    if (bdev_read(0, mbr, 512) != 0) {
-        debug("vfs storage read error\n");
-        goto faild;
-    }
-
-    if (mbr->magic != 0xaa55) {
-        debug("mbr read error\n");
-        goto faild;
-    }
-
-    start_lba = ~(size_t)0;
-    for (i = 0; i < 4; i++) {
-        struct mbr_dpte *dpte = &mbr->dpte[i];
-        if (dpte->flags == 0x80) {
-            start_lba = dpte->start_LBA;
-            break;
-        }
-    }
-    if (start_lba == ~(size_t)0) {
-        debug("read start lba error\n");
-        goto faild;
-    }
-
-    mount_root(start_lba);
-    mount_dev();
-
+    if (wait_root_mount(IPC_EXT2) != 0)
+        goto failed;
+    if (mount_dev() != 0)
+        goto failed;
     do_process();
 
-faild:
+failed:
     debug("vfs init faild\n");
     while (1) nop();
     return 0;

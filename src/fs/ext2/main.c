@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <malloc.h>
 #include <string.h>
+#include <sys/dentry.h>
 #include <sys/fs.h>
 #include <sys/list.h>
 #include <sys/stat.h>
@@ -52,7 +53,7 @@ static struct inode *getinode(uint32 ino)
     return inode;
 }
 
-static int ext2_init(unsigned long partition_offset, struct fs_entry *entry)
+static int ext2_init(unsigned long partition_offset, struct dentry *dentry)
 {
     struct group_desc *group_desc_table;
     struct inode *     inode;
@@ -82,11 +83,9 @@ static int ext2_init(unsigned long partition_offset, struct fs_entry *entry)
     super_block->group_desc_table = group_desc_table;
 
     inode = getinode(EXT2_ROOT_INO);
-    entry->inode = EXT2_ROOT_INO;
-    entry->fsize = inode->i_size;
-    entry->mode = inode->i_mode;
-    entry->pread = EXT2_ROOT_INO;
-    entry->pwrite = EXT2_ROOT_INO;
+    dentry->f_ino = EXT2_ROOT_INO;
+    dentry->f_mode = inode->i_mode;
+    dentry->f_size = inode->i_size;
     return 0;
 }
 
@@ -128,7 +127,7 @@ failed:
     return -1;
 }
 
-static int ext2_lookup(const char *filename, struct fs_entry *p_entry, struct fs_entry *entry)
+static int ext2_lookup(const char *filename, ino_t pino, struct dentry *dentry)
 {
     struct inode *           pinode, *inode;
     struct linked_directory *dir;
@@ -140,7 +139,7 @@ static int ext2_lookup(const char *filename, struct fs_entry *p_entry, struct fs
     filename_len = strlen(filename);
     block_buffer = get_block_buffer();
     buffer = block_buffer->buffer;
-    pinode = getinode(p_entry->inode);
+    pinode = getinode(pino);
     block = 0;
     ino = 0;
     while (getblock(block, pinode, buffer) == 0) {
@@ -162,15 +161,13 @@ static int ext2_lookup(const char *filename, struct fs_entry *p_entry, struct fs
 
 founded:
     inode = getinode(ino);
-    entry->inode = ino;
-    entry->mode = inode->i_mode;
-    entry->fsize = inode->i_size;
-    entry->pread = ino;
-    entry->pwrite = ino;
+    dentry->f_ino = ino;
+    dentry->f_mode = inode->i_mode;
+    dentry->f_size = inode->i_size;
     return 0;
 }
 
-static ssize_t ext2_read(const struct fs_entry *entry, void *buf, loff_t pos, size_t size)
+static ssize_t ext2_read(ino_t ino, void *buf, loff_t pos, size_t size)
 {
     struct inode *  inode;
     block_buffer_t *block_buffer;
@@ -178,7 +175,7 @@ static ssize_t ext2_read(const struct fs_entry *entry, void *buf, loff_t pos, si
     ssize_t         readsz, copysz;
     void *          buffer;
 
-    inode = getinode(entry->inode);
+    inode = getinode(ino);
     assert(inode != NULL);
     if (pos < 0 || pos >= inode->i_size)
         return 0;
@@ -206,19 +203,19 @@ static ssize_t ext2_read(const struct fs_entry *entry, void *buf, loff_t pos, si
     return readsz;
 }
 
-static ssize_t ext2_write(const struct fs_entry *entry, void *buf, loff_t pos, size_t size)
+static ssize_t ext2_write(ino_t ino, void *buf, loff_t pos, size_t size)
 {
     return -1;
 }
 
-static int ext2_stat(const struct fs_entry *entry, struct stat *buf)
+static int ext2_stat(ino_t ino, struct stat *buf)
 {
     struct inode *inode;
 
-    if (!(inode = getinode(entry->inode)))
+    if (!(inode = getinode(ino)))
         return -1;
 
-    buf->st_ino = entry->inode;
+    buf->st_ino = ino;
     buf->st_mode = inode->i_mode;
     buf->st_size = inode->i_size;
     buf->st_atime = inode->i_atime;
@@ -237,6 +234,6 @@ static struct fs_ops ext2_ops = {
 
 int main(int argc, char *argv[])
 {
-    run_fs(&ext2_ops);
+    run_fs("ext2", "/", &ext2_ops);
     return 0;
 }

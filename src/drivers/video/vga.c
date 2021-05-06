@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        m.retval = vga_write(m.m_fswrite.buf, m.m_fswrite.size, 0x0f);
+        m.retval = vga_write(m.m_fs_write.buf, m.m_fs_write.size, 0x0f);
         _send(m.src, &m);
     }
 }

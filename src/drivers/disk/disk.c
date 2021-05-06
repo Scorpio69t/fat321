@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/blkdev.h>
 #include <sys/io.h>
 #include <sys/ipc.h>
 #include <sys/syscall.h>
@@ -233,6 +234,41 @@ static int transfer(unsigned long pos, void *buf, size_t size, int write)
     return retval;
 }
 
+static long fs_part(const char *fsname, const unsigned int systemid)
+{
+    // 当前暂时忽略函数参数, 等待GPT分区功能
+    int                i;
+    long               start_lba;
+    struct mbr_sector *mbr;
+    message            msg;
+    unsigned char      buffer[SECTOR_SIZE];
+
+    request.buffer = buffer;
+    request.position = 0;
+    request.size = SECTOR_SIZE;
+    do_request(LBA48_READ_CMD, 1, 0, NULL);
+    _recv(IPC_INTR, &msg);
+    disk_read();
+
+    mbr = (struct mbr_sector *)buffer;
+    if (mbr->magic != 0xaa55) {
+        debug("mbr sector magic error\n");
+        return -1;
+    }
+
+    start_lba = 0;
+    for (i = 0; i < 4; i++) {
+        struct mbr_dpte *dpte = &mbr->dpte[i];
+        if (dpte->flags == 0x80) {
+            start_lba = dpte->start_LBA;
+            break;
+        }
+    }
+    if (start_lba == 0)
+        return -1;
+    return start_lba * SECTOR_SIZE;
+}
+
 int main(int argc, char *argv[])
 {
     message mess;
@@ -245,12 +281,17 @@ int main(int argc, char *argv[])
             debug("disk recive message failed\n");
             continue;
         }
-        if (mess.type != MSG_BDEV_TRANSFER) {
+        switch (mess.type) {
+        case MSG_BDEV_TRANSFER:
+            mess.retval = transfer(mess.m_bdev_transfer.pos, mess.m_bdev_transfer.buffer, mess.m_bdev_transfer.size,
+                                   mess.m_bdev_transfer.write);
+            break;
+        case MSG_BDEV_PART:
+            mess.retval = fs_part(mess.m_bdev_part.fsname, mess.m_bdev_part.systemid);
+            break;
+        default:
             debug("disk: unknow msg, src %d type %x\n", mess.src, mess.type);
-            continue;
         }
-        mess.retval = transfer(mess.m_bdev_transfer.pos, mess.m_bdev_transfer.buffer, mess.m_bdev_transfer.size,
-                               mess.m_bdev_transfer.write);
         if (_send(mess.src, &mess) != 0) {
             debug("disk send message failed\n");
         }

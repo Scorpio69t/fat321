@@ -1,6 +1,7 @@
 #ifndef _SYS_IPC_H_
 #define _SYS_IPC_H_
 
+#include <sys/dentry.h>
 #include <sys/types.h>
 
 #define IPC_NOWAIT 0
@@ -46,6 +47,7 @@
 #define MSG_EXECFS        266 /* no message struct */
 #define MSG_KMAP          267
 #define MSG_FSSTAT        268
+#define MSG_BDEV_PART     269
 
 typedef struct {
     int    fd;
@@ -117,6 +119,11 @@ typedef struct {
 } msg_bdev_transfer;
 
 typedef struct {
+    const char * fsname;
+    unsigned int systemid;
+} msg_bdev_part;
+
+typedef struct {
 #define IRQ_REGISTER   1
 #define IRQ_UNREGISTER 2
     int type;
@@ -129,54 +136,38 @@ typedef struct {
 } msg_intr;
 
 typedef struct {
-#define FSMNT_STEP1 1
-#define FSMNT_STEP2 2
-    int type;
-    /* step 1 */
-    int systemid;
-    /* step 2 */
-    unsigned long inode;
-    loff_t        pread;
-    loff_t        pwrite;
-    mode_t        mode;
-    size_t        fsize;
-} msg_fsmnt;
+    const char *   pmnt;
+    struct dentry *dentry;
+} msg_fs_mnt;
 
 typedef struct {
-    unsigned long inode;
-    size_t        fsize;
-    loff_t        pread;
-    loff_t        offset;
-    void *        buf;
-    size_t        size;
-} msg_fsread;
+    ino_t  inode;
+    size_t fsize;
+    loff_t offset;
+    void * buf;
+    size_t size;
+} msg_fs_read;
 
 typedef struct {
-    unsigned long inode;
-    size_t        fsize;
-    loff_t        pwrite;
-    loff_t        offset;
-    void *        buf;
-    size_t        size;
-} msg_fswrite;
+    ino_t  inode;
+    size_t fsize;
+    loff_t offset;
+    void * buf;
+    size_t size;
+} msg_fs_write;
 
 typedef struct {
-    unsigned long p_inode;
-    loff_t        p_pread;
-    char *        filename;
+    ino_t pino;
+    char *filename;
 
     /* retval */
-    unsigned long inode;
-    loff_t        pread;
-    loff_t        pwrite;
-    size_t        fsize;
-    mode_t        mode;
-} msg_fslookup;
+    struct dentry *dentry;
+} msg_fs_lookup;
 
 typedef struct {
-    unsigned long inode;
-    void *        buf;
-} msg_fsstat;
+    ino_t inode;
+    void *buf;
+} msg_fs_stat;
 
 typedef struct {
     pid_t pid; /* child pid */
@@ -209,15 +200,16 @@ typedef struct {
         msg_stat   m_stat;
 
         msg_bdev_transfer m_bdev_transfer;
+        msg_bdev_part     m_bdev_part;
         msg_irq           m_irq;
         msg_intr          m_intr;
-        msg_fsmnt         m_fsmnt;
-        msg_fsread        m_fsread;
-        msg_fswrite       m_fswrite;
-        msg_fslookup      m_fslookup;
+        msg_fs_mnt        m_fs_mnt;
+        msg_fs_read       m_fs_read;
+        msg_fs_write      m_fs_write;
+        msg_fs_lookup     m_fs_lookup;
+        msg_fs_stat       m_fs_stat;
         msg_copyfs        m_copyfs;
         msg_kmap          m_kmap;
-        msg_fsstat        m_fsstat;
     };
 } message;
 

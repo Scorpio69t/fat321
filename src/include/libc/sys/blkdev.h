@@ -1,5 +1,5 @@
-#ifndef _KERNEL_BLKDEV_H_
-#define _KERNEL_BLKDEV_H_
+#ifndef _SYS_BLKDEV_H_
+#define _SYS_BLKDEV_H_
 
 /* 硬盘分区表表项 */
 struct mbr_dpte {

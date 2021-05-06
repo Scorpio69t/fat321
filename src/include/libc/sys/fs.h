@@ -1,25 +1,18 @@
 #ifndef _SYS_FS_H_
 #define _SYS_FS_H_
 
+#include <sys/dentry.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-struct fs_entry {
-    unsigned long inode;
-    loff_t        pread;
-    loff_t        pwrite;
-    mode_t        mode;
-    size_t        fsize;
-};
-
 struct fs_ops {
-    int (*fs_lookup)(const char *filename, struct fs_entry *p_entry, struct fs_entry *entry);
-    ssize_t (*fs_read)(const struct fs_entry *entry, void *buf, loff_t pos, size_t size);
-    ssize_t (*fs_write)(const struct fs_entry *entry, void *buf, loff_t pos, size_t size);
-    int (*fs_stat)(const struct fs_entry *entry, struct stat *buf);
-    int (*fs_init)(unsigned long, struct fs_entry *);
+    int (*fs_lookup)(const char *filename, ino_t pino, struct dentry *dentry);
+    ssize_t (*fs_read)(ino_t ino, void *buf, loff_t pos, size_t size);
+    ssize_t (*fs_write)(ino_t ino, void *buf, loff_t pos, size_t size);
+    int (*fs_stat)(ino_t ino, struct stat *buf);
+    int (*fs_init)(unsigned long, struct dentry *);
 };
 
-int run_fs(struct fs_ops *ops);
+int run_fs(const char *fsname, const char *pmnt, struct fs_ops *ops);
 
 #endif

@@ -21,6 +21,7 @@ typedef long          off_t;
 typedef long long     loff_t;
 typedef int           pid_t;
 typedef unsigned int  mode_t;
+typedef unsigned long ino_t;
 
 typedef long ssize_t;
 
