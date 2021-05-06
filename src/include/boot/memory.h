@@ -5,7 +5,7 @@
 #include <kernel/page.h>
 
 uint64 get_pgd(void);
-void   switch_pgd(uint64 pgd);
-void   flash_tlb(void);
+void switch_pgd(uint64 pgd);
+void flash_tlb(void);
 
 #endif

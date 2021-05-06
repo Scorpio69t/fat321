@@ -36,7 +36,7 @@ struct proc_struct *proc_idle[NR_CPUS] = {
 proc_t *map_proc(pid_t pid)
 {
     struct list_head *head;
-    proc_t *          pos;
+    proc_t *pos;
     head = &__proc_hash_map[pid % PROC_HASH_MAP_SIZE];
 
     list_for_each_entry(pos, head, hash_map)
@@ -168,10 +168,10 @@ static int parse_cmdline(char *s)
 
 static proc_t *module_proc(multiboot_tag_module_t *module)
 {
-    uint64        module_start = to_vir(module->mod_start);
-    proc_t *      proc;
-    Elf64_Ehdr *  ehdr = (Elf64_Ehdr *)module_start;
-    Elf64_Phdr *  phdr_table;
+    uint64 module_start = to_vir(module->mod_start);
+    proc_t *proc;
+    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)module_start;
+    Elf64_Phdr *phdr_table;
     unsigned long end_stack;
 
     /* check header magic */
@@ -228,7 +228,7 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
 
         uint64 seg_start = PAGE_LOWER_ALIGN(phdr->p_vaddr);
         uint64 seg_end = PAGE_UPPER_ALIGN(phdr->p_vaddr + phdr->p_memsz);
-        int64  page_num = (seg_end - seg_start) / PAGE_SIZE;
+        int64 page_num = (seg_end - seg_start) / PAGE_SIZE;
         while (page_num--) {
             map_page(proc, seg_start);
             seg_start += PAGE_SIZE;

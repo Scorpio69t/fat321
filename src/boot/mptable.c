@@ -62,11 +62,11 @@ static struct mp_config_table *get_mp_config(struct intel_mp_floating *mp)
 
 void mp_init(void)
 {
-    struct intel_mp_floating *   mp;
-    struct mp_config_table *     mpconfig;
+    struct intel_mp_floating *mp;
+    struct mp_config_table *mpconfig;
     struct mpc_config_processor *proc;
-    struct mpc_config_ioapic *   ioapic;
-    void *                       addr, *end;
+    struct mpc_config_ioapic *ioapic;
+    void *addr, *end;
 
     if (!(mp = find_mp_table())) {
         panic("can't find mp table\n");

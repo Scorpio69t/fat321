@@ -11,9 +11,9 @@
 
 struct slab {
     struct list_head list;
-    void *           s_mem; /* slab中的第一个对象   */
-    unsigned int     inuse; /* slab中已分配的对象数 */
-    unsigned int     free;  /* 第一个空闲对象所在的位置 */
+    void *s_mem;        /* slab中的第一个对象   */
+    unsigned int inuse; /* slab中已分配的对象数 */
+    unsigned int free;  /* 第一个空闲对象所在的位置 */
 };
 
 struct kmem_cache {
@@ -32,13 +32,13 @@ struct kmem_cache {
 };
 
 void *kmalloc(size_t, int);
-void  kfree(void *);
-void  kmalloc_cache_init(void);
+void kfree(void *);
+void kmalloc_cache_init(void);
 
-void               kmem_cache_test(void);
+void kmem_cache_test(void);
 struct kmem_cache *kmem_cache_create(const char *, size_t, unsigned int);
-int                kmem_cache_destroy(struct kmem_cache *);
-void *             kmem_cache_alloc(struct kmem_cache *, unsigned int);
-void               kmem_cache_free(struct kmem_cache *, void *);
+int kmem_cache_destroy(struct kmem_cache *);
+void *kmem_cache_alloc(struct kmem_cache *, unsigned int);
+void kmem_cache_free(struct kmem_cache *, void *);
 
 #endif

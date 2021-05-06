@@ -8,8 +8,8 @@
 
 typedef struct {
     struct list_head list;
-    void *           ptr;
-    size_t           size;
+    void *ptr;
+    size_t size;
 } m_node;
 
 #define EACH_BRK      0x2000
@@ -46,7 +46,7 @@ static void free_node(m_node *node)
 void __malloc_init(void)
 {
     m_node *nodes, *n;
-    int     i;
+    int i;
 
     list_head_init(&m_free_node);
     list_head_init(&m_free);
@@ -71,8 +71,8 @@ void __malloc_init(void)
 static void merge_free(m_node *node)
 {
     struct list_head *pos, *n;
-    m_node *          entry;
-    int               merged = 0;
+    m_node *entry;
+    int merged = 0;
 
     list_for_each_safe(pos, n, &m_free)
     {

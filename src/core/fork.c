@@ -18,8 +18,8 @@ static inline pid_t alloc_pid(void)
 
 static int copy_mm(proc_t *proc)
 {
-    proc_t *      cur;
-    int           i;
+    proc_t *cur;
+    int i;
     unsigned long vstart, vend;
     unsigned long start, end;
     unsigned long kstart;

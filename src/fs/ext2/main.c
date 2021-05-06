@@ -22,14 +22,14 @@ static int ext2_bdev_read(unsigned long pos, void *buf, size_t size)
 
 static struct inode *getinode(uint32 ino)
 {
-    int   group, index;
-    int   inode_per_block;
-    int   itable, itable_index;
+    int group, index;
+    int inode_per_block;
+    int itable, itable_index;
     void *buffer;
 
     struct group_desc *gd;
-    struct inode *     inode;
-    block_buffer_t *   block_buffer;
+    struct inode *inode;
+    block_buffer_t *block_buffer;
 
     if ((inode = get_inode_map(ino)) != NULL)
         return inode;
@@ -56,7 +56,7 @@ static struct inode *getinode(uint32 ino)
 static int ext2_init(unsigned long partition_offset, struct dentry *dentry)
 {
     struct group_desc *group_desc_table;
-    struct inode *     inode;
+    struct inode *inode;
 
     init_inode_map();
 
@@ -94,8 +94,8 @@ static int ext2_init(unsigned long partition_offset, struct dentry *dentry)
  */
 static int getblock(unsigned int n, struct inode *inode, void *data)
 {
-    unsigned int    block, block_array_len;
-    uint32 *        block_array;
+    unsigned int block, block_array_len;
+    uint32 *block_array;
     block_buffer_t *block_buffer;
 
     block_array_len = super_block->block_size / sizeof(uint32);
@@ -129,12 +129,12 @@ failed:
 
 static int ext2_lookup(const char *filename, ino_t pino, struct dentry *dentry)
 {
-    struct inode *           pinode, *inode;
+    struct inode *pinode, *inode;
     struct linked_directory *dir;
-    block_buffer_t *         block_buffer;
+    block_buffer_t *block_buffer;
 
     unsigned int block, ino, filename_len;
-    void *       buffer;
+    void *buffer;
 
     filename_len = strlen(filename);
     block_buffer = get_block_buffer();
@@ -169,11 +169,11 @@ founded:
 
 static ssize_t ext2_read(ino_t ino, void *buf, loff_t pos, size_t size)
 {
-    struct inode *  inode;
+    struct inode *inode;
     block_buffer_t *block_buffer;
-    unsigned long   block, offset;
-    ssize_t         readsz, copysz;
-    void *          buffer;
+    unsigned long block, offset;
+    ssize_t readsz, copysz;
+    void *buffer;
 
     inode = getinode(ino);
     assert(inode != NULL);

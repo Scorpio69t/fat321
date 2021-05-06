@@ -10,8 +10,8 @@
 #define KEYBOARD_BUF_SIZE 128
 struct {
     char buf[KEYBOARD_BUF_SIZE];
-    int  count; /* 字符数量 */
-    int  head, tail;
+    int count; /* 字符数量 */
+    int head, tail;
 } kb_buf;
 
 struct {
@@ -55,10 +55,10 @@ static int read_char(char *buf, size_t size)
  */
 static void annlysis_scancode(void)
 {
-    static char   pre_code = 0;
-    static int    skip = 0;
+    static char pre_code = 0;
+    static int skip = 0;
     unsigned char code;
-    int           key, make;
+    int key, make;
 
     key = make = 0;
     code = inb(0x60);

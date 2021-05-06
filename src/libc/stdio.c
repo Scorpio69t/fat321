@@ -6,8 +6,8 @@
 int printf(const char *fmt, ...)
 {
     static char buf[1024];
-    va_list     args;
-    int         len;
+    va_list args;
+    int len;
 
     va_start(args, fmt);
     len = vsnprintf(buf, sizeof(buf), fmt, args);
@@ -23,8 +23,8 @@ void perror(const char *s)
 int debug(const char *fmt, ...)
 {
     static char buf[1024];
-    va_list     args;
-    int         len;
+    va_list args;
+    int len;
 
     va_start(args, fmt);
     len = vsnprintf(buf, sizeof(buf), fmt, args);

@@ -25,7 +25,7 @@ static unsigned int getnextclus(superblock_t *sb, unsigned int entry)
  */
 static int getname(char *buf, dir_t *de, void *begin)
 {
-    int          len, i, j;
+    int len, i, j;
     static short tmp[512];
 
     j = 0;
@@ -48,7 +48,7 @@ static int getname(char *buf, dir_t *de, void *begin)
 static int match_name(const char *name, dir_t *de, void *begin)
 {
     static char tmp[512];
-    int         len;
+    int len;
 
     len = getname(tmp, de, begin);
     if (len <= 0)
@@ -126,10 +126,10 @@ static int match_name(const char *name, dir_t *de, void *begin)
 
 static void *fat32_setsb(unsigned long lba, struct fs_entry *entry)
 {
-    DBR_t *       dbr;
-    FSInfo_t *    fsinfo;
+    DBR_t *dbr;
+    FSInfo_t *fsinfo;
     superblock_t *sb;
-    int           status;
+    int status;
 
     dbr = (DBR_t *)malloc(sizeof(DBR_t));
     assert(dbr != NULL);
@@ -168,11 +168,11 @@ static void *fat32_setsb(unsigned long lba, struct fs_entry *entry)
 
 int fat32_lookup(const char *filename, struct fs_entry *p_entry, struct fs_entry *entry, void *ptr_sb)
 {
-    dir_t *        dir;
-    superblock_t * sb;
-    int            i, status;
-    unsigned int   clus;
-    unsigned long  sect;
+    dir_t *dir;
+    superblock_t *sb;
+    int i, status;
+    unsigned int clus;
+    unsigned long sect;
     unsigned char *buffer;
 
     sb = (superblock_t *)ptr_sb;
@@ -211,9 +211,9 @@ static ssize_t fat32_read(const struct fs_entry *entry, void *buf, loff_t pos, s
 {
     superblock_t *sb;
     unsigned long index, offset, clus, sect, cpysize;
-    ssize_t       retval;
-    char *        buffer;
-    int           i, status;
+    ssize_t retval;
+    char *buffer;
+    int i, status;
 
     sb = (superblock_t *)ptr_sb;
     if (pos >= entry->fsize)

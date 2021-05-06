@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-struct list_head      mount_head;
+struct list_head mount_head;
 static struct dentry *root_entry;
 static struct dentry *stdin, *stdout, *stderr;
 
@@ -126,7 +126,7 @@ int getfilename(char *sptr, char *buffer)
 static struct dentry *vfs_lookup_in_fs(struct dentry *parent, const char *filename)
 {
     struct dentry *child, *kmap_child;
-    message        mess;
+    message mess;
 
     child = (struct dentry *)malloc(sizeof(struct dentry));
     assert(child != NULL);
@@ -167,8 +167,8 @@ failed:
 static struct dentry *vfs_lookup(struct dentry *cwd, const char *path)
 {
     char *sptr;
-    int   len;
-    char  filename[256];
+    int len;
+    char filename[256];
 
     struct dentry *parent, *child, *pos;
 
@@ -215,8 +215,8 @@ static struct dentry *vfs_lookup(struct dentry *cwd, const char *path)
 
 static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
 {
-    message      mess;
-    int          status;
+    message mess;
+    int status;
     struct file *filp;
 
     if (!(filp = getfilp(pid, fd)))
@@ -241,8 +241,8 @@ static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
 
 int vfs_write(pid_t pid, int fd, void *buf, size_t size)
 {
-    message      mess;
-    int          status;
+    message mess;
+    int status;
     struct file *filp;
 
     if (!(filp = getfilp(pid, fd)))
@@ -267,10 +267,10 @@ int vfs_write(pid_t pid, int fd, void *buf, size_t size)
 
 static int vfs_open(pid_t pid, const char *path, int oflag, mode_t mode)
 {
-    struct dentry *   entry;
+    struct dentry *entry;
     struct proc_file *proc_file;
-    struct file *     filp;
-    int               fd;
+    struct file *filp;
+    int fd;
 
     if ((proc_file = map_proc_file(pid)) == NULL) {
         proc_file = init_proc_file(pid);
@@ -296,7 +296,7 @@ static int vfs_open(pid_t pid, const char *path, int oflag, mode_t mode)
 
 static int vfs_close(pid_t pid, int fd)
 {
-    struct file *     filp;
+    struct file *filp;
     struct proc_file *proc_file;
 
     proc_file = map_proc_file(pid);
@@ -377,7 +377,7 @@ static int vfs_getcwd(pid_t pid, char *buf, size_t size)
 static int vfs_chdir(pid_t pid, const char *pathname)
 {
     struct proc_file *proc_file;
-    struct dentry *   newcwd;
+    struct dentry *newcwd;
 
     if ((proc_file = map_proc_file(pid)) == NULL)
         return -1;
@@ -391,8 +391,8 @@ static int vfs_chdir(pid_t pid, const char *pathname)
 static int vfs_stat(pid_t pid, const char *pathname, struct stat *buf)
 {
     struct proc_file *proc_file;
-    struct dentry *   entry;
-    message           m;
+    struct dentry *entry;
+    message m;
 
     if ((proc_file = map_proc_file(pid)) == NULL)
         return -1;
@@ -411,7 +411,7 @@ static int vfs_copyfs(pid_t ppid, pid_t pid)
     int fd;
 
     struct proc_file *pproc_file, *proc_file;
-    struct file *     pfilp, *filp;
+    struct file *pfilp, *filp;
 
     if ((pproc_file = map_proc_file(ppid)) == NULL) {
         pproc_file = init_proc_file(ppid);
@@ -444,7 +444,7 @@ static int vfs_execfs(pid_t pid)
     int i;
 
     struct proc_file *proc_file;
-    struct file *     filp;
+    struct file *filp;
 
     if ((proc_file = map_proc_file(pid)) == NULL) {
         proc_file = init_proc_file(pid);
@@ -469,7 +469,7 @@ static int vfs_freefs(pid_t pid)
     int fd;
 
     struct proc_file *proc_file;
-    struct file *     filp;
+    struct file *filp;
 
     if ((proc_file = map_proc_file(pid)) == NULL)
         return 0;
@@ -490,8 +490,8 @@ static int vfs_freefs(pid_t pid)
 static int wait_root_mount(pid_t fs_pid)
 {
     struct vmount *root_mount;
-    message        mess;
-    int            status;
+    message mess;
+    int status;
 
     status = _recv(fs_pid, &mess);
     if (status != 0 || strcmp("/", mess.m_fs_mnt.pmnt) != 0) {
@@ -545,9 +545,9 @@ static int mount_dev(void)
 {
     assert(root_entry != NULL);
 
-    struct dentry *  dev_dir, *dev;
+    struct dentry *dev_dir, *dev;
     struct dev_file *dev_file;
-    int              i, nr_dev;
+    int i, nr_dev;
 
     dev_dir = (struct dentry *)malloc(sizeof(struct dentry));
     assert(dev_dir != NULL);
@@ -592,7 +592,7 @@ static void do_process(void)
 {
     while (1) {
         message m;
-        long    retval;
+        long retval;
         if (_recv(IPC_ALL, &m) == -1) {
             debug("vfs: recv error\n");
         }

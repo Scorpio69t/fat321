@@ -99,7 +99,7 @@ check_failed:
 static int dup_args(char **ptr_argv[], char **ptr_envp[], char *buf, int bufsz)
 {
     char **newargv, **newenvp, **argv, **envp;
-    int    argc, envc, len, i;
+    int argc, envc, len, i;
 
     argv = *ptr_argv;
     envp = *ptr_envp;
@@ -150,8 +150,8 @@ static int dup_args(char **ptr_argv[], char **ptr_envp[], char *buf, int bufsz)
  */
 static void *setup_args(char *const argv[], char *const envp[], void *bufend, int bufsize)
 {
-    int            i, len, argc, envc;
-    char **        newargv, **newenvp;
+    int i, len, argc, envc;
+    char **newargv, **newenvp;
     unsigned long *arglist;
 
     argc = count(argv);
@@ -202,12 +202,12 @@ static void *setup_args(char *const argv[], char *const envp[], void *bufend, in
 
 int do_execve(const char *pathname, char *const argv[], char *const envp[])
 {
-    int           fd, n, i;
+    int fd, n, i;
     unsigned long end_stack, entry;
-    Elf64_Ehdr *  ehdr;
-    Elf64_Phdr *  phdr_table;
-    char *        argsbuf;
-    proc_t *      proc;
+    Elf64_Ehdr *ehdr;
+    Elf64_Phdr *phdr_table;
+    char *argsbuf;
+    proc_t *proc;
 
     proc = current;
     ehdr = NULL;
@@ -261,7 +261,7 @@ int do_execve(const char *pathname, char *const argv[], char *const envp[])
 
         uint64 seg_start = PAGE_LOWER_ALIGN(phdr->p_vaddr);
         uint64 seg_end = PAGE_UPPER_ALIGN(phdr->p_vaddr + phdr->p_memsz);
-        int64  page_num = (seg_end - seg_start) / PAGE_SIZE;
+        int64 page_num = (seg_end - seg_start) / PAGE_SIZE;
 
         assert(lseek_exec(fd, phdr->p_offset, 0) == phdr->p_offset);
         uint64 filesz = phdr->p_filesz, copyaddr = phdr->p_vaddr, copysz;

@@ -120,7 +120,7 @@ void do_timer(frame_t *reg)
 
 static void do_hwint(frame_t *regs, unsigned nr)
 {
-    int     ind = nr - 0x20;
+    int ind = nr - 0x20;
     message msg = {.type = MSG_INTR,
                    .src = IPC_INTR,
                    .m_intr = {

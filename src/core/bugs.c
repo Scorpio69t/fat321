@@ -5,7 +5,7 @@
 
 void __panic(char *fmt, char *file, int line, ...)
 {
-    char    buf[128];
+    char buf[128];
     va_list args;
     va_start(args, line);
     vsprintf(buf, fmt, args);

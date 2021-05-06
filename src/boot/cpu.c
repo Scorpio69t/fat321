@@ -11,7 +11,7 @@
 #include <kernel/types.h>
 
 struct tss_struct init_tss[NR_CPUS];
-struct cpu_info   cpu_info[NR_CPUS];
+struct cpu_info cpu_info[NR_CPUS];
 
 struct desc_struct ldt[LDT_SIZE];
 
@@ -32,9 +32,9 @@ static void setup_tss_desc(struct tss_desc_struct *desc, uint64 addr, uint32 siz
 
 void cpu_init(void)
 {
-    struct tss_struct *     tss;
+    struct tss_struct *tss;
     struct tss_desc_struct *tss_desc;
-    unsigned long           tss_desc_index;
+    unsigned long tss_desc_index;
 
     tss = &init_tss[current_boot_cpu];
     tss->rsp0 = (uint64)init_stack;

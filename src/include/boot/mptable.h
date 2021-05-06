@@ -8,8 +8,8 @@ void mp_init(void);
  */
 
 struct intel_mp_floating {
-    char          mpf_signature[4];  /* "_MP_" 			*/
-    unsigned int  mpf_physptr;       /* Configuration table address	*/
+    char mpf_signature[4];           /* "_MP_" 			*/
+    unsigned int mpf_physptr;        /* Configuration table address	*/
     unsigned char mpf_length;        /* Our length (paragraphs)	*/
     unsigned char mpf_specification; /* Specification version	*/
     unsigned char mpf_checksum;      /* Checksum (makes sum 0)	*/
@@ -33,15 +33,15 @@ struct mp_config_table {
     char mpc_signature[4];
 #define MPC_SIGNATURE "PCMP"
     unsigned short mpc_length; /* Size of table */
-    char           mpc_spec;   /* 0x01 */
-    char           mpc_checksum;
-    char           mpc_oem[8];
-    char           mpc_productid[12];
-    unsigned int   mpc_oemptr;  /* 0 if not present */
+    char mpc_spec;             /* 0x01 */
+    char mpc_checksum;
+    char mpc_oem[8];
+    char mpc_productid[12];
+    unsigned int mpc_oemptr;    /* 0 if not present */
     unsigned short mpc_oemsize; /* 0 if not present */
     unsigned short mpc_oemcount;
-    unsigned int   mpc_lapic; /* APIC address */
-    unsigned int   reserved;
+    unsigned int mpc_lapic; /* APIC address */
+    unsigned int reserved;
 };
 
 struct mpc_config_processor {

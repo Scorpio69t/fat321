@@ -4,9 +4,9 @@
 #include <sys/types.h>
 
 struct stat {
-    mode_t        st_mode;
-    unsigned int  st_ino;
-    off_t         st_size;
+    mode_t st_mode;
+    unsigned int st_ino;
+    off_t st_size;
     unsigned long st_atime;
     unsigned long st_mtime;
     unsigned long st_ctime;

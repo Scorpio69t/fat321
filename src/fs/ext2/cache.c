@@ -22,7 +22,7 @@ void put_inode_map(unsigned int ino, struct inode *inode)
 
 struct inode *get_inode_map(unsigned int ino)
 {
-    struct inode *    inode;
+    struct inode *inode;
     inode_hash_map_t *pos;
 
     inode = NULL;
@@ -45,7 +45,7 @@ void init_inode_map(void)
 
 static struct {
     struct list_head head;
-    unsigned int     block_size;
+    unsigned int block_size;
 } buffer_pool;
 
 void init_buffer_pool(unsigned int block_size)

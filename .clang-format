@@ -1,13 +1,15 @@
 BasedOnStyle: Google
+AlignAfterOpenBracket: Align
 ColumnLimit: 120
-PointerAlignment: Left
+PointerAlignment: Right
 IndentWidth: 4
 TabWidth: 4
 IndentCaseLabels: false
 AllowShortFunctionsOnASingleLine: Empty
 AlignConsecutiveMacros: true
-AlignConsecutiveDeclarations: true
+AlignConsecutiveDeclarations: false
 # AlignConsecutiveAssignments: true
 AlignTrailingComments: true
 BreakBeforeBraces: WebKit
 AllowShortIfStatementsOnASingleLine: false
+IncludeBlocks: Regroup

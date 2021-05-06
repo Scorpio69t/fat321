@@ -22,7 +22,7 @@ static inline void *memcpy(void *to, void *from, size_t n)
 static inline void *memset(void *from, u8 value, size_t n)
 {
     uint64 d0, d1;
-    u8     d2;
+    u8 d2;
     asm volatile(
         "1: movb %%al, (%%rdi)\n\t"
         "dec %%rcx\n\t"

@@ -11,10 +11,10 @@
 
 void *kmap(void *uaddr)
 {
-    uint64  paddr;
+    uint64 paddr;
     uint64 *pml4, *pdpt, *pd, *pt;
-    uint64  pml4_ind, pdpt_ind, pd_ind, pt_ind;
-    uint64  addr = (uint64)uaddr;
+    uint64 pml4_ind, pdpt_ind, pd_ind, pt_ind;
+    uint64 addr = (uint64)uaddr;
     if ((addr & ((uint64)0xffff << 48)) != 0)
         return uaddr;
 
@@ -37,7 +37,7 @@ uint64 map_page(proc_t *proc, uint64 ustart)
 {
     assert(proc->mm.pgd != NULL);
     uint64 *pml4, *pdpt, *pd, *pt, *page;
-    uint64  pml4_ind, pdpt_ind, pd_ind, pt_ind;
+    uint64 pml4_ind, pdpt_ind, pd_ind, pt_ind;
 
     pml4 = pdpt = pd = pt = NULL;
     pml4 = (uint64 *)proc->mm.pgd;
@@ -92,10 +92,10 @@ uint64 unmap_page(proc_t *proc, uint64 ustart)
 
 int free_proc_mm(proc_t *proc)
 {
-    uint64 *      level4, *level3, *level2, *level1;
-    uint64        ind1, ind2, ind3, ind4;
+    uint64 *level4, *level3, *level2, *level1;
+    uint64 ind1, ind2, ind3, ind4;
     unsigned long page;
-    int           nr_entry;
+    int nr_entry;
 
     assert(proc != NULL);
     nr_entry = PAGE_SIZE / sizeof(uint64);

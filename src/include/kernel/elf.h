@@ -3,11 +3,11 @@
 
 typedef unsigned long long Elf64_Addr;
 typedef unsigned long long Elf64_Off;
-typedef unsigned short     Elf64_Half;
-typedef unsigned int       Elf64_Word;
-typedef int                Elf64_Sword;
+typedef unsigned short Elf64_Half;
+typedef unsigned int Elf64_Word;
+typedef int Elf64_Sword;
 typedef unsigned long long Elf64_Xword;
-typedef long long          Elf64_Sxword;
+typedef long long Elf64_Sxword;
 
 /* ELF ideltification index */
 #define EI_MAG0       0  /* File identification */
@@ -49,19 +49,19 @@ typedef long long          Elf64_Sxword;
 
 typedef struct {
     unsigned char e_ident[EI_NIDENT]; /* ELF ideltification */
-    Elf64_Half    e_type;             /* file type */
-    Elf64_Half    e_machine;          /* required architecture */
-    Elf64_Word    e_version;          /* file version, always 1 */
-    Elf64_Addr    e_entry;            /* virtual address of entrty point */
-    Elf64_Off     e_phoff;            /* program header table's file offset in bytes */
-    Elf64_Off     e_shoff;            /* section header table's file offset in bytes */
-    Elf64_Word    e_flags;            /* processor-specific flags */
-    Elf64_Half    e_ehsize;           /* ELF header's size in bytes */
-    Elf64_Half    e_phentsize;        /* the size in bytes of one entry in the file's program header table */
-    Elf64_Half    e_phnum;            /* the number of entries in the program header table */
-    Elf64_Half    e_shentsize;        /* a section header's size in bytes */
-    Elf64_Half    e_shnum;            /* the number of entries in the section header table */
-    Elf64_Half    e_shstrndx;         /* the section header table index */
+    Elf64_Half e_type;                /* file type */
+    Elf64_Half e_machine;             /* required architecture */
+    Elf64_Word e_version;             /* file version, always 1 */
+    Elf64_Addr e_entry;               /* virtual address of entrty point */
+    Elf64_Off e_phoff;                /* program header table's file offset in bytes */
+    Elf64_Off e_shoff;                /* section header table's file offset in bytes */
+    Elf64_Word e_flags;               /* processor-specific flags */
+    Elf64_Half e_ehsize;              /* ELF header's size in bytes */
+    Elf64_Half e_phentsize;           /* the size in bytes of one entry in the file's program header table */
+    Elf64_Half e_phnum;               /* the number of entries in the program header table */
+    Elf64_Half e_shentsize;           /* a section header's size in bytes */
+    Elf64_Half e_shnum;               /* the number of entries in the section header table */
+    Elf64_Half e_shstrndx;            /* the section header table index */
 } Elf64_Ehdr;
 
 /* segment type */
@@ -86,11 +86,11 @@ typedef struct {
 #define PF_MASKPROC 0xf0000000 /* Unspecified */
 
 typedef struct {
-    Elf64_Word  p_type;   /* segment type */
-    Elf64_Word  p_flags;  /* segment flags */
-    Elf64_Off   p_offset; /* the offset from the beginning of the file */
-    Elf64_Addr  p_vaddr;  /* virtual start address */
-    Elf64_Addr  p_paddr;  /* physical start addressing */
+    Elf64_Word p_type;    /* segment type */
+    Elf64_Word p_flags;   /* segment flags */
+    Elf64_Off p_offset;   /* the offset from the beginning of the file */
+    Elf64_Addr p_vaddr;   /* virtual start address */
+    Elf64_Addr p_paddr;   /* physical start addressing */
     Elf64_Xword p_filesz; /* size in the file */
     Elf64_Xword p_memsz;  /* size in the memory */
     Elf64_Xword p_align;

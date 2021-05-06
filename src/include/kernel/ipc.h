@@ -50,20 +50,20 @@
 #define MSG_BDEV_PART     269
 
 typedef struct {
-    int    fd;
-    void * buf;
+    int fd;
+    void *buf;
     size_t size;
 } msg_read;
 
 typedef struct {
-    int    fd;
-    void * buf;
+    int fd;
+    void *buf;
     size_t size;
 } msg_write;
 
 typedef struct {
-    char * filepath;
-    int    oflag;
+    char *filepath;
+    int oflag;
     mode_t mode;
 } msg_open;
 
@@ -72,13 +72,13 @@ typedef struct {
 } msg_close;
 
 typedef struct {
-    int   fd;
+    int fd;
     off_t offset;
-    int   whence;
+    int whence;
 } msg_lseek;
 
 typedef struct {
-    const char * pathname;
+    const char *pathname;
     char *const *argv;
     char *const *envp;
 } msg_execve;
@@ -96,7 +96,7 @@ typedef struct {
 } msg_brk;
 
 typedef struct {
-    char * buf;
+    char *buf;
     size_t size;
 } msg_getcwd;
 
@@ -106,20 +106,20 @@ typedef struct {
 
 typedef struct {
     const char *pathname;
-    void *      buf;
+    void *buf;
 } msg_stat;
 
 /* the aborve are syscall message */
 
 typedef struct {
     unsigned long pos;
-    void *        buffer;
-    size_t        size;
-    int           write;
+    void *buffer;
+    size_t size;
+    int write;
 } msg_bdev_transfer;
 
 typedef struct {
-    const char * fsname;
+    const char *fsname;
     unsigned int systemid;
 } msg_bdev_part;
 
@@ -136,23 +136,23 @@ typedef struct {
 } msg_intr;
 
 typedef struct {
-    const char *   pmnt;
+    const char *pmnt;
     struct dentry *dentry;
 } msg_fs_mnt;
 
 typedef struct {
-    ino_t  inode;
+    ino_t inode;
     size_t fsize;
     loff_t offset;
-    void * buf;
+    void *buf;
     size_t size;
 } msg_fs_read;
 
 typedef struct {
-    ino_t  inode;
+    ino_t inode;
     size_t fsize;
     loff_t offset;
-    void * buf;
+    void *buf;
     size_t size;
 } msg_fs_write;
 
@@ -182,34 +182,34 @@ typedef struct {
 typedef struct {
     int src;
     union {
-        int  type;
+        int type;
         long retval;
     };
     union {
-        msg_read   m_read;
-        msg_write  m_write;
-        msg_open   m_open;
-        msg_close  m_close;
-        msg_lseek  m_lseek;
+        msg_read m_read;
+        msg_write m_write;
+        msg_open m_open;
+        msg_close m_close;
+        msg_lseek m_lseek;
         msg_execve m_execve;
-        msg_exit   m_exit;
-        msg_wait   m_wait;
-        msg_brk    m_brk;
+        msg_exit m_exit;
+        msg_wait m_wait;
+        msg_brk m_brk;
         msg_getcwd m_getcwd;
-        msg_chdir  m_chdir;
-        msg_stat   m_stat;
+        msg_chdir m_chdir;
+        msg_stat m_stat;
 
         msg_bdev_transfer m_bdev_transfer;
-        msg_bdev_part     m_bdev_part;
-        msg_irq           m_irq;
-        msg_intr          m_intr;
-        msg_fs_mnt        m_fs_mnt;
-        msg_fs_read       m_fs_read;
-        msg_fs_write      m_fs_write;
-        msg_fs_lookup     m_fs_lookup;
-        msg_fs_stat       m_fs_stat;
-        msg_copyfs        m_copyfs;
-        msg_kmap          m_kmap;
+        msg_bdev_part m_bdev_part;
+        msg_irq m_irq;
+        msg_intr m_intr;
+        msg_fs_mnt m_fs_mnt;
+        msg_fs_read m_fs_read;
+        msg_fs_write m_fs_write;
+        msg_fs_lookup m_fs_lookup;
+        msg_fs_stat m_fs_stat;
+        msg_copyfs m_copyfs;
+        msg_kmap m_kmap;
     };
 } message;
 

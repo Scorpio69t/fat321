@@ -14,16 +14,16 @@ typedef struct {
 } module_mmap_t;
 
 typedef struct kernel_info {
-    uint32                 mmap_size;
+    uint32 mmap_size;
     multiboot_memory_map_t mmap[KINFO_MEMMAP_SIZE];
 
-    uint32                 module_size;
+    uint32 module_size;
     multiboot_tag_module_t module[KINFO_MODULE_SIZE];
-    module_mmap_t          module_mmap[KINFO_MODULE_SIZE];
-    uint64                 kernrl_start, kernel_end;         /* linear address of kernel */
-    uint64                 global_pgd_start, global_pgd_end; /* global page table start and end */
-    uint64                 mem_map_start, mem_map_end;       /* mem_map array start address and end */
-    uint64                 mmio_start, mmio_end;
+    module_mmap_t module_mmap[KINFO_MODULE_SIZE];
+    uint64 kernrl_start, kernel_end;         /* linear address of kernel */
+    uint64 global_pgd_start, global_pgd_end; /* global page table start and end */
+    uint64 mem_map_start, mem_map_end;       /* mem_map array start address and end */
+    uint64 mmio_start, mmio_end;
 } kinfo_t;
 
 extern kinfo_t kinfo;

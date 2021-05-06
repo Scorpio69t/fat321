@@ -34,7 +34,7 @@ extern int strcmp(const char *str1, const char *str2);
 static inline int strncmp(const char *str1, const char *str2, size_t n)
 {
     size_t i;
-    int    retval;
+    int retval;
 
     for (i = 0; i < n; i++, str1++, str2++) {
         retval = *str1 - *str2;

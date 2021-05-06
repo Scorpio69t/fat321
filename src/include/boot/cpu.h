@@ -60,8 +60,8 @@ struct tss_struct {
 #define IO_BITMAP_BASE offsetof(struct tss_struct, io_bitmap)
 
 struct desc_struct {
-    u16      limit0;
-    u16      base0;
+    u16 limit0;
+    u16 base0;
     unsigned base1 : 8, type : 4, s : 1, dpl : 2, p : 1;
     unsigned limit : 4, avl : 1, l : 1, d : 1, g : 1, base2 : 8;
 } __attribute__((packed));
@@ -81,9 +81,9 @@ struct gate_struct {
     uint16 offset0;
     uint16 segment;
     uint16 ist : 3, zero0 : 5, type : 4, zero1 : 1, dpl : 2, p : 1;
-    u16    offset1;
-    u32    offset2;
-    u32    zero2;
+    u16 offset1;
+    u32 offset2;
+    u32 zero2;
 } __attribute__((packed));
 
 /**
@@ -125,8 +125,8 @@ struct context_struct {
 };
 
 struct cpu_info {
-    uint64        kernelstack; /* kernel stack */
-    uint64        oldrsp;      /* 暂存syscall过来的用户栈 */
+    uint64 kernelstack; /* kernel stack */
+    uint64 oldrsp;      /* 暂存syscall过来的用户栈 */
     unsigned char apicid;
 };
 extern struct cpu_info cpu_info[NR_CPUS];

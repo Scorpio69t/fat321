@@ -15,7 +15,7 @@ int cls(int argc, char *argv[])
 
 int pwd(int argc, char *argv[])
 {
-    int   retval;
+    int retval;
     char *buf;
 
     if ((buf = (char *)malloc(512)) == 0) {

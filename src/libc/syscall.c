@@ -136,7 +136,7 @@ int brk(void *addr)
 pid_t wait(int *statloc)
 {
     message m;
-    int     status;
+    int status;
 
     if ((status = _syscall(IPC_KERNEL, MSG_WAIT, &m)) <= 0)
         return status;
@@ -148,7 +148,7 @@ pid_t wait(int *statloc)
 void *sbrk(long size)
 {
     extern void *_brk;
-    void *       old_brk, *new_brk;
+    void *old_brk, *new_brk;
 
     old_brk = _brk;
     new_brk = old_brk + size;
@@ -171,7 +171,7 @@ pid_t getpid(void)
 char *getcwd(char *buf, size_t size)
 {
     message m;
-    char *  oldbuf;
+    char *oldbuf;
 
     oldbuf = buf;
     if (_kmap((void **)&buf, NULL, NULL) != 0)

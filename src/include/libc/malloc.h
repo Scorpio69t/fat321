@@ -4,6 +4,6 @@
 #include <sys/types.h>
 
 void *malloc(size_t);
-void  free(void *);
+void free(void *);
 
 #endif

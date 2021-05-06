@@ -12,9 +12,9 @@
 
 static char *number(char *str, char *end, unsigned long long num, int base, int size, int type)
 {
-    char              sign, tmp[66], pad;
-    const char *      digits;
-    int               i = 0;
+    char sign, tmp[66], pad;
+    const char *digits;
+    int i = 0;
     static const char small_digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     static const char large_digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -93,8 +93,8 @@ int vsprintf(char *buf, const char *fmt, va_list args)
  */
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
-    char               c, *str, *end, *s;
-    int                flags, base, field_width, len, qualifier;
+    char c, *str, *end, *s;
+    int flags, base, field_width, len, qualifier;
     unsigned long long tmp;
     end = buf + size;
 
@@ -217,7 +217,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 int sprintf(char *buf, const char *fmt, ...)
 {
     va_list args;
-    int     i;
+    int i;
 
     va_start(args, fmt);
     i = vsnprintf(buf, INT_MAX, fmt, args);

@@ -7,7 +7,7 @@
 unsigned long apic_base;   /* init in mptable.c */
 unsigned long ioapic_base; /* init in mptable.c */
 unsigned char ioapicid;    /* init in mptable.c */
-unsigned int  ioapic_maxintr;
+unsigned int ioapic_maxintr;
 
 unsigned int apic_read(unsigned long off)
 {
@@ -102,7 +102,7 @@ int lapic_init(void)
 
 void apic_init(void)
 {
-    int           eax, ebx, ecx, edx;
+    int eax, ebx, ecx, edx;
     unsigned char val;
 
     /* check whether APIC is supported */

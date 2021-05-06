@@ -16,8 +16,8 @@
 
 static struct {
     unsigned long position;
-    size_t        size;
-    void *        buffer;
+    size_t size;
+    void *buffer;
 } request;
 
 static unsigned short sector_per_drq;
@@ -109,7 +109,7 @@ static int do_request(int cmd, unsigned short nsect, unsigned long sector, void 
 static int disk_read(void)
 {
     static unsigned char buffer[SECTOR_SIZE];
-    unsigned int         copysz, offset;
+    unsigned int copysz, offset;
 
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
         debug("read_handler: disk read error\n");
@@ -132,7 +132,7 @@ static int disk_read(void)
 static int disk_write(void)
 {
     static unsigned char buffer[SECTOR_SIZE];
-    unsigned int         copysz;
+    unsigned int copysz;
     memset(buffer, 0x00, SECTOR_SIZE);
 
     if (inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_ERROR) {
@@ -165,7 +165,7 @@ static int disk_identify(void)
 
 int init_disk(void)
 {
-    message        msg;
+    message msg;
     unsigned short buffer[512];
 
     outb(PORT_DISK0_ALT_STA_CTL, 0);
@@ -199,8 +199,8 @@ int init_disk(void)
 static int transfer(unsigned long pos, void *buf, size_t size, int write)
 {
     unsigned long sector, nsect, pos_base, pos_high;
-    message       mess;
-    int           cmd, retval;
+    message mess;
+    int cmd, retval;
 
     if (write && pos % SECTOR_SIZE) {
         debug("Position must sector-aligned for write\n");
@@ -237,11 +237,11 @@ static int transfer(unsigned long pos, void *buf, size_t size, int write)
 static long fs_part(const char *fsname, const unsigned int systemid)
 {
     // 当前暂时忽略函数参数, 等待GPT分区功能
-    int                i;
-    long               start_lba;
+    int i;
+    long start_lba;
     struct mbr_sector *mbr;
-    message            msg;
-    unsigned char      buffer[SECTOR_SIZE];
+    message msg;
+    unsigned char buffer[SECTOR_SIZE];
 
     request.buffer = buffer;
     request.position = 0;

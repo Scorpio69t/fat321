@@ -9,20 +9,20 @@
 
 typedef struct inode_hash_map_list {
     struct list_head list;
-    unsigned int     ino;
-    struct inode *   inode;
+    unsigned int ino;
+    struct inode *inode;
 } inode_hash_map_t;
 
-void          put_inode_map(unsigned int, struct inode *);
+void put_inode_map(unsigned int, struct inode *);
 struct inode *get_inode_map(unsigned int);
-void          init_inode_map(void);
+void init_inode_map(void);
 
 typedef struct block_buffer {
     struct list_head list;
-    void *           buffer;
+    void *buffer;
 } block_buffer_t;
 
 block_buffer_t *get_block_buffer(void);
-void            put_block_buffer(block_buffer_t *);
-void            init_buffer_pool(unsigned int);
+void put_block_buffer(block_buffer_t *);
+void init_buffer_pool(unsigned int);
 #endif

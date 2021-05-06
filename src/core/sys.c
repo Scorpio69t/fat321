@@ -12,9 +12,9 @@ unsigned long sys_getticks(void)
 
 long do_brk(unsigned long addr)
 {
-    proc_t *      proc = current;
+    proc_t *proc = current;
     unsigned long new_brk, brk;
-    int           nr_pages, i;
+    int nr_pages, i;
 
     new_brk = PAGE_UPPER_ALIGN(addr);
     nr_pages = (new_brk - proc->mm.brk) / PAGE_SIZE;
@@ -31,9 +31,9 @@ long do_brk(unsigned long addr)
 
 void do_exit(int status)
 {
-    proc_t *          proc, *parent;
+    proc_t *proc, *parent;
     struct list_head *pos, *n;
-    message           mess;
+    message mess;
 
     proc = current;
     parent = proc->parent;
@@ -62,7 +62,7 @@ void do_exit(int status)
 long do_wait(int *statloc)
 {
     proc_t *child, *pos;
-    pid_t   pid;
+    pid_t pid;
 
     if (list_is_null(&current->children))
         return -1;

@@ -10,13 +10,13 @@
 struct buddy_struct {
     struct list_head block[MAX_ORDER];
     struct list_head activate;
-    spinlock_t       lock;
+    spinlock_t lock;
 };
 
 void buddy_system_init(uint32 nr_pages);
 
-struct page * alloc_pages(unsigned int gfp_mask, unsigned int order);
-struct page * alloc_page(unsigned int gfp_mask);
+struct page *alloc_pages(unsigned int gfp_mask, unsigned int order);
+struct page *alloc_page(unsigned int gfp_mask);
 unsigned long __get_free_pages(unsigned int gfp_mask, unsigned int order);
 unsigned long __get_free_page(unsigned int gfp_mask);
 unsigned long get_zeroed_page(unsigned int gfp_mask);

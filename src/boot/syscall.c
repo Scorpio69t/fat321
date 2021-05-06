@@ -12,8 +12,8 @@
 long sys_send(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
-    pid_t    to = regs->rdi;
-    long     status;
+    pid_t to = regs->rdi;
+    long status;
 
     status = do_send(regs, to, msg);
     return status;
@@ -22,8 +22,8 @@ long sys_send(frame_t *regs)
 long sys_recv(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
-    pid_t    from = regs->rdi;
-    long     status;
+    pid_t from = regs->rdi;
+    long status;
 
     status = do_recv(regs, from, msg);
     return status;
@@ -32,8 +32,8 @@ long sys_recv(frame_t *regs)
 long sys_sendrecv(frame_t *regs)
 {
     message *msg = (message *)regs->rsi;
-    pid_t    who = regs->rdi;
-    long     status;
+    pid_t who = regs->rdi;
+    long status;
 
     switch (who) {
     case IPC_KERNEL:

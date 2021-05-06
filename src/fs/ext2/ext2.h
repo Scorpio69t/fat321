@@ -45,36 +45,36 @@ struct super_block {
     uint32 s_feature_compat;
     uint32 s_feature_incompat;
     uint32 s_feature_ro_compat;
-    uint8  s_uuid[16];
-    char   s_volume_name[16];
-    char   s_last_mounted[64];
+    uint8 s_uuid[16];
+    char s_volume_name[16];
+    char s_last_mounted[64];
     uint32 s_algo_bitmap;
 
     /* Performance Hints */
-    uint8  s_prealloc_blocks;
-    uint8  s_prealloc_dir_blocks;
+    uint8 s_prealloc_blocks;
+    uint8 s_prealloc_dir_blocks;
     uint16 s_padding1;
 
     /* Journaling Support */
-    uint8  s_journal_uuid[16];
+    uint8 s_journal_uuid[16];
     uint32 s_journal_inum;
     uint32 s_journal_dev;
     uint32 s_last_orphan;
 
     /* Directory Indexing Support */
     uint32 s_hash_seed[4];
-    uint8  s_def_hash_version;
-    uint8  s_reserved1[3];
+    uint8 s_def_hash_version;
+    uint8 s_reserved1[3];
 
     /* Other options */
     uint32 s_default_mount_options;
     uint32 s_first_meta_bg;
-    uint8  s_reserved2[760];
+    uint8 s_reserved2[760];
 
     /* Private Date: This is NOT part of the standard definition */
-    uint64             partition_offset;
-    uint64             block_size;
-    int                nr_group;
+    uint64 partition_offset;
+    uint64 block_size;
+    int nr_group;
     struct group_desc *group_desc_table;
 };
 
@@ -147,8 +147,8 @@ struct inode {
     uint32 i_faddr;
     union {
         struct {
-            uint8  l_i_frag;
-            uint8  l_i_fsize;
+            uint8 l_i_frag;
+            uint8 l_i_fsize;
             uint16 i_pad1;
             uint16 l_i_uid_high;
             uint16 l_i_gid_high;
@@ -169,9 +169,9 @@ struct inode {
 struct linked_directory {
     uint32 inode;
     uint16 rec_len;
-    uint8  name_len;
-    uint8  file_type;
-    char   name[];
+    uint8 name_len;
+    uint8 file_type;
+    char name[];
 };
 
 #endif

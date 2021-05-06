@@ -8,7 +8,7 @@
 #include "shell.h"
 
 static char buffer[512];
-static int  cmdretval;
+static int cmdretval;
 
 static struct cmdptr cmdtab[] = {
     {
@@ -27,7 +27,7 @@ static struct cmdptr cmdtab[] = {
 
 static int getline(char *buf)
 {
-    int  len;
+    int len;
     char c;
 
     len = 0;
@@ -52,7 +52,7 @@ static int getline(char *buf)
 
 static int do_exec(int argc, char *argv[])
 {
-    int         pid, status;
+    int pid, status;
     struct stat buf;
 
     if (stat(argv[0], &buf) != 0 || (buf.st_mode & 0x40) == 0) {  // user execute
@@ -112,13 +112,18 @@ static void echo_prompt()
     printf("$ ");
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[], char *envp[])
 {
     int len, cargc;
     int (*func)(int, char **);
     char *cargv[32];
 
-    cls(0, NULL);
+    printf("sh argc %d\n", argc);
+    for (int i = 0; argv[i] != 0; i++) printf("%s\n", argv[i]);
+    printf("====\n");
+    for (int i = 0; envp[i] != 0; i++) printf("%s\n", envp[i]);
+
+    // cls(0, NULL);
     while (1) {
         echo_prompt();
         len = getline(buffer);

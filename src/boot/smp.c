@@ -18,7 +18,7 @@ extern unsigned long global_page_table;
 
 extern unsigned char smp_boot_start[];
 extern unsigned char smp_boot_end[];
-unsigned char *      smp_boot_base;
+unsigned char *smp_boot_base;
 
 unsigned char smp_processor_id(void)
 {

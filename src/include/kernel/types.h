@@ -1,26 +1,26 @@
 #ifndef _KERNEL_TYPE_H_
 #define _KERNEL_TYPE_H_
 
-typedef char               int8;
-typedef short              int16;
-typedef int                int32;
-typedef long long          int64;
-typedef unsigned char      uint8;
-typedef unsigned short     uint16;
-typedef unsigned int       uint32;
+typedef char int8;
+typedef short int16;
+typedef int int32;
+typedef long long int64;
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
-typedef unsigned char  u8;
+typedef unsigned char u8;
 typedef unsigned short u16;
-typedef unsigned int   u32;
+typedef unsigned int u32;
 
 typedef unsigned long long u64;
 
 typedef unsigned long size_t;
-typedef long          off_t;
-typedef long long     loff_t;
-typedef int           pid_t;
-typedef unsigned int  mode_t;
+typedef long off_t;
+typedef long long loff_t;
+typedef int pid_t;
+typedef unsigned int mode_t;
 typedef unsigned long ino_t;
 
 typedef long ssize_t;

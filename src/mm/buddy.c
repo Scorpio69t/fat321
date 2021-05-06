@@ -26,7 +26,7 @@ static uint32 check_order(struct page *page)
 static inline void block_insert(struct page *page, unsigned int order)
 {
     struct page *p;
-    int          i;
+    int i;
 
     for (i = order; i == order && i < MAX_ORDER; i++) {
         list_for_each_entry(p, &buddy.block[i], list)

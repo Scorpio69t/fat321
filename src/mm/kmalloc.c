@@ -93,7 +93,7 @@ void kfree(void *addr)
 
 void kmalloc_cache_init(void)
 {
-    int                i;
+    int i;
     struct kmem_cache *cachep;
 
     for (i = 0; i < KMALLOC_CACHE_SIZE; ++i) {

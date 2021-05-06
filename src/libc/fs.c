@@ -29,7 +29,7 @@ static long part_position(const char *fsname)
 
 static int mount_fs(const char *pmnt, unsigned long position)
 {
-    message        m;
+    message m;
     struct dentry *dentry, *dtmp;
 
     if (!(dentry = (struct dentry *)malloc(sizeof(struct dentry))))
@@ -57,8 +57,8 @@ failed:
 int run_fs(const char *fsname, const char *pmnt, struct fs_ops *ops)
 {
     message m;
-    long    position;
-    int     retval;
+    long position;
+    int retval;
 
     fs_ops = ops;
 

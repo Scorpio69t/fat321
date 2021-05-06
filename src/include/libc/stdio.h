@@ -12,9 +12,9 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
 
 int sprintf(char *buf, const char *fmt, ...);
 
-int  printf(const char *fmt, ...);
+int printf(const char *fmt, ...);
 void perror(const char *s);
-int  debug(const char *fmt, ...);
+int debug(const char *fmt, ...);
 
 char *gets(char *str);
 

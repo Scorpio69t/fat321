@@ -16,8 +16,8 @@ struct page *mem_map;
 /* 初始化pages数组, 返回pages数组的尾地址 */
 static uint64 init_pages(uint64 mem_size, uint64 mem_map_addr, uint32 *nr_page)
 {
-    uint32       num;
-    uint64       addr;
+    uint32 num;
+    uint64 addr;
     struct page *page;
 
     mem_map = (struct page *)mem_map_addr;
@@ -90,7 +90,7 @@ void mm_init()
 {
     uint64 memsize, page_table_size;
     uint32 nr_pages;
-    int    i;
+    int i;
 
     kinfo.mmio_start = 0xc0000000;
     kinfo.mmio_end = 0xffffffff;

@@ -67,32 +67,32 @@ extern pid_t volatile pid;
 
 /* 进程标示和状态标示的前面不可在定义任何变量，因为这两个变量需要在entry.S中借助偏移来访问 */
 typedef struct proc_struct {
-    volatile long         state;               /* 进程状态，-1不可运行，0可运行 */
-    unsigned long         flags;               /* 状态标识 */
-    pid_t                 pid;                 /* 进程id */
-    unsigned long         counter;             /* 进程可用时间片 */
-    unsigned long         alarm;               /* 滴答数定时器 */
-    long                  signal;              /* 进程持有的信号 */
-    int                   exit_status;         /* 进程退出状态 */
-    char                  comm[PROC_COMM_LEN]; /* 进程名称 */
-    struct proc_struct *  parent;              /* 父进程 */
-    struct context_struct context;             /* 进程的上下文信息 */
-    struct list_head      children;            /* 子进程链表 */
-    struct list_head      child_list;          /* 挂载到父进程的children上 */
-    struct list_head      proc;                /* 进程链表 */
-    struct list_head      hash_map;
+    volatile long state;           /* 进程状态，-1不可运行，0可运行 */
+    unsigned long flags;           /* 状态标识 */
+    pid_t pid;                     /* 进程id */
+    unsigned long counter;         /* 进程可用时间片 */
+    unsigned long alarm;           /* 滴答数定时器 */
+    long signal;                   /* 进程持有的信号 */
+    int exit_status;               /* 进程退出状态 */
+    char comm[PROC_COMM_LEN];      /* 进程名称 */
+    struct proc_struct *parent;    /* 父进程 */
+    struct context_struct context; /* 进程的上下文信息 */
+    struct list_head children;     /* 子进程链表 */
+    struct list_head child_list;   /* 挂载到父进程的children上 */
+    struct list_head proc;         /* 进程链表 */
+    struct list_head hash_map;
 
-    volatile long    wait;      /* 记录正在等待哪个进程发送/接收消息 */
+    volatile long wait;         /* 记录正在等待哪个进程发送/接收消息 */
     struct list_head wait_proc; /* 等待当前进程接收自身消息的进程 */
     struct list_head wait_list; /* 连接到wait_proc */
-    unsigned char    has_intr;  /* 是否有中断消息 */
-    message          msg;
+    unsigned char has_intr;     /* 是否有中断消息 */
+    message msg;
 
     struct {
         unsigned long flags;
         unsigned long pgd; /* 页目录所在的起始逻辑地址 */
         struct {
-            unsigned int  flags;
+            unsigned int flags;
             unsigned long vstart;
             unsigned long vend;
         } psegs[PROC_MM_SEG_SIZE]; /* ELF Programe Segment */
