@@ -3,6 +3,8 @@
 
 int cls(int, char **);
 int pwd(int, char **);
+int ls(int, char **);
+int cd(int, char **);
 
 struct cmdptr {
     char name[64];

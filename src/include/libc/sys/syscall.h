@@ -8,6 +8,7 @@
 
 #ifndef __ASSEMBLY__
 
+#include <dirent.h>
 #include <sys/ipc.h>
 
 extern int _send(int, message *);
@@ -20,6 +21,7 @@ ssize_t read(int fd, void *buf, size_t nbytes);
 ssize_t write(int fd, void *buf, size_t nbytes);
 int brk(void *addr);
 void *sbrk(long size);
+int getdents(int fd, struct dirent *dirp, size_t nbytes);
 
 int register_irq(int);
 int unregister_irq(int);

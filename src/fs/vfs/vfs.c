@@ -1,6 +1,7 @@
 #include "vfs.h"
 
 #include <assert.h>
+#include <dirent.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -170,17 +171,17 @@ static struct dentry *vfs_lookup(struct dentry *cwd, const char *path)
     int len;
     char filename[256];
 
-    struct dentry *parent, *child, *pos;
+    struct dentry *current, *next, *pos;
 
     assert(cwd != NULL);
     if (!strncmp("/", path, 1)) {
-        parent = root_entry;
+        current = root_entry;
         sptr = (char *)path + 1;
     } else {
-        parent = cwd;
+        current = cwd;
         sptr = (char *)path;
     }
-    assert(parent != NULL);
+    assert(current != NULL);
 
     while (*sptr != 0) {
         len = getfilename(sptr, filename);
@@ -188,29 +189,29 @@ static struct dentry *vfs_lookup(struct dentry *cwd, const char *path)
         if (*sptr == '/')
             sptr++;
         if (!strcmp(filename, "..")) {
-            parent = parent->f_parent;
+            current = current->f_parent;
             continue;
         }
         if (!strcmp(filename, "."))
             continue;
-        child = NULL;
-        list_for_each_entry(pos, &parent->f_children, f_list)
+        next = NULL;
+        list_for_each_entry(pos, &current->f_children, f_list)
         {
             if (!strncmp(pos->f_name, filename, len)) {
-                child = pos;
+                next = pos;
                 break;
             }
         }
-        if (!child) {
-            if (!(child = vfs_lookup_in_fs(parent, filename)))
+        if (!next) {
+            if (!(next = vfs_lookup_in_fs(current, filename)))
                 return NULL;
         } else {
-            child->f_count++;
+            next->f_count++;
         }
-        parent = child;
+        current = next;
     }
 
-    return child;
+    return current;
 }
 
 static int vfs_read(pid_t pid, int fd, void *buf, size_t size)
@@ -404,6 +405,24 @@ static int vfs_stat(pid_t pid, const char *pathname, struct stat *buf)
     if (_sendrecv(entry->f_fs_pid, &m) != 0)
         return -1;
     return 0;
+}
+
+static ssize_t vfs_getdents(pid_t pid, int fd, struct dirent *dirp, size_t nbytes)
+{
+    struct file *filp;
+    message msg;
+
+    if ((filp = getfilp(pid, fd)) == NULL)
+        return -1;
+    msg.type = MSG_FSGETDENTS;
+    msg.m_fs_getdents.inode = filp->f_dentry->f_ino;
+    msg.m_fs_getdents.offset = filp->f_pos;
+    msg.m_fs_getdents.buf = (void *)dirp;
+    msg.m_fs_getdents.nbytes = nbytes;
+    if (_sendrecv(filp->f_dentry->f_fs_pid, &msg) != 0 || msg.retval < 0)
+        return -1;
+    filp->f_pos += msg.retval;
+    return msg.retval;
 }
 
 static int vfs_copyfs(pid_t ppid, pid_t pid)
@@ -620,6 +639,9 @@ static void do_process(void)
             break;
         case MSG_STAT:
             retval = vfs_stat(m.src, m.m_stat.pathname, m.m_stat.buf);
+            break;
+        case MSG_GETDENTS:
+            retval = vfs_getdents(m.src, m.m_getdents.fd, m.m_getdents.dirp, m.m_getdents.count);
             break;
         case MSG_COPYFS:
             retval = vfs_copyfs(m.src, m.m_copyfs.pid);

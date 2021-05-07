@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <dirent.h>
 #include <malloc.h>
 #include <string.h>
 #include <sys/dentry.h>
@@ -90,6 +91,7 @@ static int ext2_init(unsigned long partition_offset, struct dentry *dentry)
 }
 
 /**
+ * 获取一个文件第n个block内的数据，data的大小最好等于block_size, 不可小于
  * Return: 成功为0， 失败或读取到结束 -1
  */
 static int getblock(unsigned int n, struct inode *inode, void *data)
@@ -167,7 +169,7 @@ founded:
     return 0;
 }
 
-static ssize_t ext2_read(ino_t ino, void *buf, loff_t pos, size_t size)
+static ssize_t ext2_read(ino_t ino, void *buf, off_t pos, size_t size)
 {
     struct inode *inode;
     block_buffer_t *block_buffer;
@@ -203,7 +205,7 @@ static ssize_t ext2_read(ino_t ino, void *buf, loff_t pos, size_t size)
     return readsz;
 }
 
-static ssize_t ext2_write(ino_t ino, void *buf, loff_t pos, size_t size)
+static ssize_t ext2_write(ino_t ino, void *buf, off_t pos, size_t size)
 {
     return -1;
 }
@@ -224,11 +226,60 @@ static int ext2_stat(ino_t ino, struct stat *buf)
     return 0;
 }
 
+// 这里的返回值是指在文件系统上读取的字节数，而不是写入到dirp中的字节数，目的是便于设置vfs中
+// 的文件偏移
+static ssize_t ext2_getdents(ino_t ino, struct dirent *dirp, off_t pos, size_t nbytes)
+{
+    struct inode *inode;
+    unsigned long block, offset, count, dirpcount, d_reclen;
+    block_buffer_t *buffer = NULL;
+    struct linked_directory *dir;
+
+    if (!(inode = getinode(ino)))
+        goto failed;
+    if (!(buffer = get_block_buffer()))
+        goto failed;
+    block = pos / super_block->block_size;
+    offset = pos % super_block->block_size;
+    count = dirpcount = 0;
+    // 注意reclen在linked_directory和dirent中含义不同
+    while (getblock(block, inode, buffer->buffer) == 0) {
+        dir = (struct linked_directory *)(buffer->buffer + offset);
+        while (offset != super_block->block_size) {
+            d_reclen = offsetof(struct dirent, d_name) + dir->name_len + 1;
+            if (nbytes < d_reclen)
+                goto finish;
+            dirp->d_ino = dir->inode;
+            dirp->d_type = dir->file_type;
+            strncpy(dirp->d_name, dir->name, dir->name_len);
+            dirp->d_name[dir->name_len] = 0;
+            dirp->d_reclen = d_reclen;
+            dirp->d_off = block * super_block->block_size + offset;
+
+            dirpcount += d_reclen;
+            nbytes -= d_reclen;
+            offset += dir->rec_len;
+            count += dir->rec_len;
+            dir = (struct linked_directory *)((unsigned long)dir + dir->rec_len);
+            dirp = (struct dirent *)((unsigned long)dirp + dirp->d_reclen);
+        }
+        block++;
+    }
+finish:
+    put_block_buffer(buffer);
+    return count;
+
+failed:
+    put_block_buffer(buffer);
+    return -1;
+}
+
 static struct fs_ops ext2_ops = {
     .fs_lookup = ext2_lookup,
     .fs_read = ext2_read,
     .fs_write = ext2_write,
     .fs_stat = ext2_stat,
+    .fs_getdents = ext2_getdents,
     .fs_init = ext2_init,
 };
 

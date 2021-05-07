@@ -18,20 +18,21 @@
 #define IPC_ALL    0x0ffffffe
 #define IPC_KERNEL 0x0fffffff
 
-#define MSG_READ   1
-#define MSG_WRITE  2
-#define MSG_OPEN   3
-#define MSG_CLOSE  4
-#define MSG_FORK   5 /* no message struct */
-#define MSG_EXECVE 6
-#define MSG_LSEEK  7
-#define MSG_EXIT   8
-#define MSG_WAIT   9
-#define MSG_BRK    10
-#define MSG_GETPID 11 /* no message struct */
-#define MSG_GETCWD 12
-#define MSG_CHDIR  13
-#define MSG_STAT   14
+#define MSG_READ     1
+#define MSG_WRITE    2
+#define MSG_OPEN     3
+#define MSG_CLOSE    4
+#define MSG_FORK     5 /* no message struct */
+#define MSG_EXECVE   6
+#define MSG_LSEEK    7
+#define MSG_EXIT     8
+#define MSG_WAIT     9
+#define MSG_BRK      10
+#define MSG_GETPID   11 /* no message struct */
+#define MSG_GETCWD   12
+#define MSG_CHDIR    13
+#define MSG_STAT     14
+#define MSG_GETDENTS 15
 
 /* the aborve are syscall type */
 #define MSG_CFM           256
@@ -48,6 +49,7 @@
 #define MSG_KMAP          267
 #define MSG_FSSTAT        268
 #define MSG_BDEV_PART     269
+#define MSG_FSGETDENTS    230
 
 typedef struct {
     int fd;
@@ -109,6 +111,12 @@ typedef struct {
     void *buf;
 } msg_stat;
 
+typedef struct {
+    int fd;
+    void *dirp; /* struct dirent * */
+    unsigned long count;
+} msg_getdents;
+
 /* the aborve are syscall message */
 
 typedef struct {
@@ -143,7 +151,7 @@ typedef struct {
 typedef struct {
     ino_t inode;
     size_t fsize;
-    loff_t offset;
+    off_t offset;
     void *buf;
     size_t size;
 } msg_fs_read;
@@ -151,7 +159,7 @@ typedef struct {
 typedef struct {
     ino_t inode;
     size_t fsize;
-    loff_t offset;
+    off_t offset;
     void *buf;
     size_t size;
 } msg_fs_write;
@@ -170,6 +178,13 @@ typedef struct {
 } msg_fs_stat;
 
 typedef struct {
+    ino_t inode;
+    size_t nbytes;
+    off_t offset;
+    void *buf;
+} msg_fs_getdents;
+
+typedef struct {
     pid_t pid; /* child pid */
 } msg_copyfs;
 
@@ -179,6 +194,7 @@ typedef struct {
     void *addr3;
 } msg_kmap;
 
+// clang-format off
 typedef struct {
     int src;
     union {
@@ -198,16 +214,20 @@ typedef struct {
         msg_getcwd m_getcwd;
         msg_chdir m_chdir;
         msg_stat m_stat;
+        msg_getdents m_getdents;
 
         msg_bdev_transfer m_bdev_transfer;
         msg_bdev_part m_bdev_part;
         msg_irq m_irq;
         msg_intr m_intr;
-        msg_fs_mnt m_fs_mnt;
-        msg_fs_read m_fs_read;
-        msg_fs_write m_fs_write;
-        msg_fs_lookup m_fs_lookup;
-        msg_fs_stat m_fs_stat;
+
+        msg_fs_mnt       m_fs_mnt;
+        msg_fs_read      m_fs_read;
+        msg_fs_write     m_fs_write;
+        msg_fs_lookup    m_fs_lookup;
+        msg_fs_stat      m_fs_stat;
+        msg_fs_getdents  m_fs_getdents;
+
         msg_copyfs m_copyfs;
         msg_kmap m_kmap;
     };

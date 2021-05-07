@@ -204,6 +204,18 @@ int stat(const char *pathname, struct stat *buf)
     return _syscall(IPC_VFS, MSG_STAT, &m);
 }
 
+int getdents(int fd, struct dirent *dirp, size_t nbytes)
+{
+    message m;
+
+    if (_kmap((void **)&dirp, NULL, NULL) != 0)
+        return 0;
+    m.m_getdents.fd = fd;
+    m.m_getdents.dirp = dirp;
+    m.m_getdents.count = nbytes;
+    return _syscall(IPC_VFS, MSG_GETDENTS, &m);
+}
+
 int register_irq(int no_intr)
 {
     message m;

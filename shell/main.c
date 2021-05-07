@@ -10,20 +10,15 @@
 static char buffer[512];
 static int cmdretval;
 
+// clang-format off
 static struct cmdptr cmdtab[] = {
-    {
-        .name = "cls",
-        .ptr = cls,
-    },
-    {
-        .name = "pwd",
-        .ptr = pwd,
-    },
-    {
-        .name = NULL,
-        .ptr = NULL,
-    },
+    { .name = "cls", .ptr = cls, },
+    { .name = "pwd", .ptr = pwd, },
+    { .name = "ls",  .ptr = ls, },
+    { .name = "cd",  .ptr = cd, },
+    { .name = NULL,  .ptr = NULL, },
 };
+// clang-format on
 
 static int getline(char *buf)
 {

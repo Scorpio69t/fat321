@@ -72,6 +72,7 @@ block_buffer_t *get_block_buffer(void)
 
 void put_block_buffer(block_buffer_t *block_buffer)
 {
-    assert(block_buffer != NULL);
+    if (block_buffer == NULL)
+        return;
     list_add(&block_buffer->list, &buffer_pool.head);
 }

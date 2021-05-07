@@ -86,6 +86,10 @@ int run_fs(const char *fsname, const char *pmnt, struct fs_ops *ops)
         case MSG_FSSTAT:
             retval = fs_ops->fs_stat(m.m_fs_stat.inode, m.m_fs_stat.buf);
             break;
+        case MSG_FSGETDENTS:
+            retval = fs_ops->fs_getdents(m.m_fs_getdents.inode, m.m_fs_getdents.buf, m.m_fs_getdents.offset,
+                                         m.m_fs_getdents.nbytes);
+            break;
         default:
             retval = -1;
         }
