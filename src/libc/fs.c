@@ -9,17 +9,18 @@
 
 static struct fs_ops *fs_ops;
 
-static long part_position(const char *fsname)
+static long part_position(const char *type_guid)
 {
     message m;
 
-    if (_kmap((void **)&fsname, NULL, NULL) != 0) {
+    if (_kmap((void **)&type_guid, NULL, NULL) != 0) {
         panic("part_position kmap failed\n");
         return -1;
     }
 
     m.type = MSG_BDEV_PART;
-    m.m_bdev_part.fsname = fsname;
+    m.m_bdev_part.type_guid = type_guid;
+    m.m_bdev_part.guid = NULL;
     if (_sendrecv(IPC_DISK, &m) != 0 && m.retval < 0) {
         panic("part_position send m_bdev_part message failed\n");
         return -1;
@@ -54,17 +55,18 @@ failed:
     return -1;
 }
 
-int run_fs(const char *fsname, const char *pmnt, struct fs_ops *ops)
+// TODO: refactor
+int run_fs(const char *type_guid, const char *pmnt, struct fs_ops *ops)
 {
     message m;
     long position;
     int retval;
 
     fs_ops = ops;
-
-    if ((position = part_position(fsname)) < 0)
+    if ((position = part_position(type_guid)) < 0)
         return -1;
 
+    debug("==== %s %d\n", pmnt, position);
     if (mount_fs(pmnt, (unsigned long)position) < 0) {
         panic("mount fs failed\n");
         return -1;

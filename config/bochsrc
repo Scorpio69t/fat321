@@ -2,7 +2,7 @@ config_interface: textconfig
 display_library: term
 
 # cpu: model=corei5_lynnfield_750
-cpu: count=1, ips=4000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
+cpu: count=1:4:1, ips=10000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
 cpu: cpuid_limit_winnt=0
 # cpuid option has no offect if CPU model was selected in CPU option.
 # cpuid: x86_64=1, mmx=1, sep=1, simd=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1

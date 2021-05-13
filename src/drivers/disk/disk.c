@@ -6,6 +6,7 @@
 #include "disk.h"
 
 #include <assert.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/blkdev.h>
@@ -234,39 +235,49 @@ static int transfer(unsigned long pos, void *buf, size_t size, int write)
     return retval;
 }
 
-static long fs_part(const char *fsname, const unsigned int systemid)
+static long fs_part(const char *type_guid, const char *guid)
 {
     // 当前暂时忽略函数参数, 等待GPT分区功能
-    int i;
     long start_lba;
-    struct mbr_sector *mbr;
+    struct gpt_header *header;
+    struct gpt_part_entry *entry;
+    void *buffer;
     message msg;
-    unsigned char buffer[SECTOR_SIZE];
 
-    request.buffer = buffer;
-    request.position = 0;
+    if (!(header = (struct gpt_header *)malloc(SECTOR_SIZE)))
+        return -1;
+    request.buffer = (void *)header;
+    request.position = SECTOR_SIZE * 1;
     request.size = SECTOR_SIZE;
-    do_request(LBA48_READ_CMD, 1, 0, NULL);
+    do_request(LBA48_READ_CMD, 1, 1, NULL);
     _recv(IPC_INTR, &msg);
     disk_read();
 
-    mbr = (struct mbr_sector *)buffer;
-    if (mbr->magic != 0xaa55) {
-        debug("mbr sector magic error\n");
+    if (strncmp(header->signature, GPT_SIGNATURE, 8)) {
+        panic("gpt signature error\n");
         return -1;
     }
 
-    start_lba = 0;
-    for (i = 0; i < 4; i++) {
-        struct mbr_dpte *dpte = &mbr->dpte[i];
-        if (dpte->flags == 0x80) {
-            start_lba = dpte->start_LBA;
-            break;
-        }
-    }
-    if (start_lba == 0)
+    if (!(buffer = malloc(SECTOR_SIZE)))
         return -1;
+    // TODO: need refactor
+    request.buffer = buffer;
+    request.position = SECTOR_SIZE * header->pentry;
+    request.size = 512;
+    do_request(LBA48_READ_CMD, 1, header->pentry, NULL);
+    if (_recv(IPC_INTR, &msg) != 0)
+        goto failed;
+    disk_read();
+    entry = (struct gpt_part_entry *)(buffer + header->pensz);  // 第2项，需要重构
+    start_lba = entry->first_lba;
+
+    free(header);
+    free(buffer);
     return start_lba * SECTOR_SIZE;
+failed:
+    free(header);
+    free(buffer);
+    return -1;
 }
 
 int main(int argc, char *argv[])
@@ -287,7 +298,7 @@ int main(int argc, char *argv[])
                                    mess.m_bdev_transfer.write);
             break;
         case MSG_BDEV_PART:
-            mess.retval = fs_part(mess.m_bdev_part.fsname, mess.m_bdev_part.systemid);
+            mess.retval = fs_part(mess.m_bdev_part.type_guid, mess.m_bdev_part.guid);
             break;
         default:
             debug("disk: unknow msg, src %d type %x\n", mess.src, mess.type);

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+# this script is deprecated
 
 tmpdir=mkiso.tmp
 cmds=(xorriso grub-mkrescue)
 
 function check_cmd() {
-    if [[ ! -x "$(command -v $1)" ]]; then
-        echo "\n$1 command is not exist" >&2
+    if [[ ! -x "$(command -v "$1")" ]]; then
+        echo "$1 not exist, please install it"
         exit 1
     fi
 }
@@ -15,14 +16,14 @@ if [[ ! "$(pwd)" =~ /fengos ]]; then
     exit 1
 fi
 
-echo -n "checking required command..."
+echo "checking required command..."
 for cmd in "${cmds[@]}"; do
-    check_cmd $cmd
+    check_cmd "$cmd"
 done
 echo "done"
 
 if [[ ! -e src/kernel.bin ]]; then
-    echo "kernel.bin is not exits, please run `make` first"
+    echo "kernel.bin is not exits, please run 'make' first"
     exit 1
 fi
 

@@ -15,6 +15,6 @@ struct fs_ops {
     int (*fs_init)(unsigned long, struct dentry *);
 };
 
-int run_fs(const char *fsname, const char *pmnt, struct fs_ops *ops);
+int run_fs(const char *type_guid, const char *pmnt, struct fs_ops *ops);
 
 #endif

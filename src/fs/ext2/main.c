@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <malloc.h>
 #include <string.h>
+#include <sys/blkdev.h>
 #include <sys/dentry.h>
 #include <sys/fs.h>
 #include <sys/list.h>
@@ -13,6 +14,9 @@
 #include "ext2.h"
 
 static struct super_block *super_block;
+
+#define NR_INODE_BLOCK 15
+static unsigned int array_ladder[NR_INODE_BLOCK];
 
 static int ext2_bdev_read(unsigned long pos, void *buf, size_t size)
 {
@@ -48,7 +52,7 @@ static struct inode *getinode(uint32 ino)
     block_buffer = get_block_buffer();
     buffer = block_buffer->buffer;
     ext2_bdev_read((gd->bg_inode_table + itable) * super_block->block_size, buffer, super_block->block_size);
-    *inode = *(struct inode *)(buffer + sizeof(struct inode) * itable_index);
+    *inode = *(struct inode *)(buffer + super_block->s_inode_size * itable_index);
     put_inode_map(ino, inode);
     put_block_buffer(block_buffer);
     return inode;
@@ -58,6 +62,7 @@ static int ext2_init(unsigned long partition_offset, struct dentry *dentry)
 {
     struct group_desc *group_desc_table;
     struct inode *inode;
+    unsigned int i, base, len;
 
     init_inode_map();
 
@@ -87,46 +92,59 @@ static int ext2_init(unsigned long partition_offset, struct dentry *dentry)
     dentry->f_ino = EXT2_ROOT_INO;
     dentry->f_mode = inode->i_mode;
     dentry->f_size = inode->i_size;
+
+    base = super_block->block_size / sizeof(uint32);
+    for (i = 0, len = 1; i < NR_INODE_BLOCK; i++) {
+        if (i >= 12)
+            len *= base;
+        array_ladder[i] = len;
+    }
     return 0;
 }
 
 /**
  * 获取一个文件第n个block内的数据，data的大小最好等于block_size, 不可小于
- * Return: 成功为0， 失败或读取到结束 -1
+ * Return: - 成功返回1, 读取结束返回0
+ *         - 失败为-1
  */
 static int getblock(unsigned int n, struct inode *inode, void *data)
 {
-    unsigned int block, block_array_len;
+    int i;
+    unsigned int block, depth, sum, index, reminder;
     uint32 *block_array;
     block_buffer_t *block_buffer;
 
-    block_array_len = super_block->block_size / sizeof(uint32);
-
-    block_array = NULL;
-
-    if (n < 12) {
-        if ((block = inode->i_block[n]) == 0)
-            goto failed;
-    } else if (n >= 12 && n < 12 + block_array_len) {
-        n -= 12;
-        if (inode->i_block[n] == 0) {
-            goto failed;
+    for (i = 0, sum = 0, depth = 0; i < NR_INODE_BLOCK; i++) {
+        if (i >= 12)
+            depth++;
+        if (n >= sum && n < sum + array_ladder[i]) {
+            block = inode->i_block[i];
+            break;
         }
-        block_buffer = get_block_buffer();
-        block_array = (uint32 *)block_buffer->buffer;
-        ext2_bdev_read(inode->i_block[n], block_array, super_block->block_size);
-        block = block_array[n];
+        sum += array_ladder[i];
+    }
+    // block number to large
+    if (i == NR_INODE_BLOCK)
+        return -1;
+
+    if (!(block_buffer = get_block_buffer()))
+        return -1;
+    block_array = (uint32 *)block_buffer->buffer;
+    reminder = n - 12;
+    while (depth-- && block) {
+        ext2_bdev_read(block * super_block->block_size, block_array, super_block->block_size);
+        index = reminder / array_ladder[12 + depth - 1];
+        reminder = reminder % array_ladder[12 + depth - 1];
+        block = block_array[index];
+    }
+    if (!block) {
         put_block_buffer(block_buffer);
-    } else {
-        debug("ext2 getblock not support\n");
-        goto failed;
+        return 0;
     }
 
     ext2_bdev_read(block * super_block->block_size, data, super_block->block_size);
-    return 0;
-
-failed:
-    return -1;
+    put_block_buffer(block_buffer);
+    return 1;
 }
 
 static int ext2_lookup(const char *filename, ino_t pino, struct dentry *dentry)
@@ -144,7 +162,7 @@ static int ext2_lookup(const char *filename, ino_t pino, struct dentry *dentry)
     pinode = getinode(pino);
     block = 0;
     ino = 0;
-    while (getblock(block, pinode, buffer) == 0) {
+    while (getblock(block, pinode, buffer) > 0) {
         dir = (struct linked_directory *)buffer;
         int offset = 0, reclen;
         while (offset != super_block->block_size) {
@@ -188,9 +206,7 @@ static ssize_t ext2_read(ino_t ino, void *buf, off_t pos, size_t size)
     readsz = 0;
     block = pos / super_block->block_size;
     offset = pos % super_block->block_size;
-    while (size > 0) {
-        if (getblock(block, inode, buffer) < 0)
-            break;
+    while (size > 0 && getblock(block, inode, buffer) > 0) {
         copysz = super_block->block_size - offset;
         if (copysz > size)
             copysz = size;
@@ -243,7 +259,7 @@ static ssize_t ext2_getdents(ino_t ino, struct dirent *dirp, off_t pos, size_t n
     offset = pos % super_block->block_size;
     count = dirpcount = 0;
     // 注意reclen在linked_directory和dirent中含义不同
-    while (getblock(block, inode, buffer->buffer) == 0) {
+    while (getblock(block, inode, buffer->buffer) > 0) {
         dir = (struct linked_directory *)(buffer->buffer + offset);
         while (offset != super_block->block_size) {
             d_reclen = offsetof(struct dirent, d_name) + dir->name_len + 1;
@@ -285,6 +301,6 @@ static struct fs_ops ext2_ops = {
 
 int main(int argc, char *argv[])
 {
-    run_fs("ext2", "/", &ext2_ops);
+    run_fs(GPT_ROOT_TYPE_GUID, "/", &ext2_ops);
     return 0;
 }

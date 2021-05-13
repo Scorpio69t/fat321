@@ -127,8 +127,8 @@ typedef struct {
 } msg_bdev_transfer;
 
 typedef struct {
-    const char *fsname;
-    unsigned int systemid;
+    const char *type_guid;
+    const char *guid;
 } msg_bdev_part;
 
 typedef struct {
