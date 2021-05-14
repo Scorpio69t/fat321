@@ -10,6 +10,7 @@
 #include <boot/system.h>
 #include <kernel/bugs.h>
 #include <kernel/elf.h>
+#include <kernel/exec.h>
 #include <kernel/gfp.h>
 #include <kernel/ipc.h>
 #include <kernel/kernel.h>
@@ -17,6 +18,7 @@
 #include <kernel/mm.h>
 #include <kernel/sched.h>
 #include <kernel/slab.h>
+#include <kernel/stdlib.h>
 #include <kernel/string.h>
 
 union proc_union init_proc_union __attribute__((__section__(".data.init_proc"))) = {
@@ -157,18 +159,8 @@ int sys_pause(void)
     return 0;
 }
 
-static int parse_cmdline(char *s)
+static proc_t *module_proc(uint64 module_start, char *const argv[], char *const envp[])
 {
-    int num = 0;
-    for (; *s != 0; s++) {
-        num = num * 10 + *s - '0';
-    }
-    return num;
-}
-
-static proc_t *module_proc(multiboot_tag_module_t *module)
-{
-    uint64 module_start = to_vir(module->mod_start);
     proc_t *proc;
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)module_start;
     Elf64_Phdr *phdr_table;
@@ -189,7 +181,6 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
     proc = (proc_t *)__get_free_pages(GFP_KERNEL, KERNEL_STACK_ORDER);
     memset(proc, 0x00, PAGE_SIZE * (1 << KERNEL_STACK_ORDER));
     proc->state = PROC_SENDING;
-    proc->pid = parse_cmdline(module->cmdline);
     proc->counter = 1;
     proc->alarm = 0;
     proc->signal = 0;
@@ -208,11 +199,14 @@ static proc_t *module_proc(multiboot_tag_module_t *module)
         map_page(proc, proc->mm.start_stack);
     }
 
+    switch_pgd(proc->mm.pgd);
+    end_stack = (unsigned long)setup_args(argv, envp, (void *)proc->mm.end_stack, PAGE_SIZE);
+    switch_pgd(current->mm.pgd);
+
     proc->mm.nr_seg = 0;
     proc->mm.start_brk = USER_BRK_START;
     proc->mm.brk = USER_BRK_START;
 
-    end_stack = proc->mm.end_stack - 32;
     setup_proc_context(proc, ehdr->e_entry, end_stack);
 
     phdr_table = (Elf64_Phdr *)(module_start + ehdr->e_phoff);
@@ -254,8 +248,51 @@ check_failed:
     return NULL;
 }
 
+static void init_srv_args(char ****ptr_argvs, char ****ptr_envps)
+{
+    int i;
+    char **argv /*, **envp */;
+    char ***srv_argvs, ***srv_envps;
+
+    srv_argvs = (char ***)kmalloc(16 * sizeof(char **), 0);
+    memset(srv_argvs, 0x00, 16 * sizeof(char **));
+    srv_envps = (char ***)kmalloc(16 * sizeof(char **), 0);
+    memset(srv_envps, 0x00, 16 * sizeof(char **));
+
+    argv = (char **)kmalloc(4 * sizeof(char *), 0);
+    assert(argv != NULL);
+    memset(argv, 0x00, 4 * sizeof(char *));
+    for (i = 0; i < 3; i++) {
+        argv[i] = (char *)kmalloc(64, 0);
+        assert(argv[i] != NULL);
+    }
+    sprintf(argv[0], "bootdev=%d", kinfo.bootdev);
+    sprintf(argv[1], "part=%d", kinfo.bootpart);
+    sprintf(argv[2], "subpart=%d", kinfo.subpart);
+    srv_argvs[IPC_VFS] = argv;
+
+    *ptr_argvs = srv_argvs;
+    *ptr_envps = srv_envps;
+}
+
+static void free_srv_argv(char ***srv_argvs, char ***srv_envps)
+{
+    int i;
+    char **argv /*, **envp */;
+
+    argv = srv_argvs[IPC_VFS];
+    for (i = 0; argv[i] != NULL; i++) kfree(argv[i]);
+    kfree(argv);
+    kfree(srv_argvs);
+    kfree(srv_envps);
+}
+
 void proc_init(void)
 {
+    char ***srv_argvs, ***srv_envps;
+    uint64 module_start;
+    pid_t pid;
+
     spin_init(&proc_head_lock);
     list_head_init(&proc_head);
     for (int i = 0; i < PROC_HASH_MAP_SIZE; i++) list_head_init(&__proc_hash_map[i]);
@@ -263,10 +300,15 @@ void proc_init(void)
     /* init_proc_union 中的一些属性缺失的，在这里进行补充 */
     init_proc_union.proc.mm.pgd = kinfo.global_pgd_start;
 
+    init_srv_args(&srv_argvs, &srv_envps);
     for (int i = 0; i < kinfo.module_size; i++) {
-        proc_t *proc = module_proc(&kinfo.module[i]);
+        pid = atoi(kinfo.module[i].cmdline);
+        module_start = to_vir(kinfo.module[i].mod_start);
+        proc_t *proc = module_proc(module_start, srv_argvs[pid], srv_envps[pid]);
         assert(proc != NULL);
+        proc->pid = pid;
         list_add_tail(&proc->proc, &proc_head);
         hash_proc(proc);
     }
+    free_srv_argv(srv_argvs, srv_envps);
 }

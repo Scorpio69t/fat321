@@ -1,9 +1,7 @@
-#ifndef _STDLIB_H_
-#define _STDLIB_H_
+#ifndef _KERNEL_STDLIB_H_
+#define _KERNEL_STDLIB_H_
 
-#include <ctype.h>
-
-void exit(int);
+#include <kernel/ctypes.h>
 
 static inline int atoi(const char *nptr)
 {
@@ -24,4 +22,5 @@ static inline int atoi(const char *nptr)
     }
     return minus * n;
 }
+
 #endif

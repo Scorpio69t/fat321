@@ -102,20 +102,4 @@ static inline int toupper(int c)
     return c;
 }
 
-static inline int atoi(char *s)
-{
-    int minus, count;
-
-    minus = count = 0;
-    while (*s != 0 && *s != '.') {
-        if (*s == '-') {
-            minus = 1;
-        } else {
-            count = count * 10 + *s - '0';
-        }
-        s++;
-    }
-    return count;
-}
-
 #endif

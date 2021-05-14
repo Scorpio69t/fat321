@@ -24,6 +24,10 @@ typedef struct kernel_info {
     uint64 global_pgd_start, global_pgd_end; /* global page table start and end */
     uint64 mem_map_start, mem_map_end;       /* mem_map array start address and end */
     uint64 mmio_start, mmio_end;
+    uint32 bootdev, bootpart, subpart; /* bootdev indicates which BIOS disk device the boot loaded the os image from,
+                                        * 0x00 for the first floppy and 0x80 for the first disk.
+                                        * bootpart and subpart is the disk partition and disk sub partition
+                                        * the os boot from. */
 } kinfo_t;
 
 extern kinfo_t kinfo;
@@ -44,5 +48,7 @@ int vsprintf(char *buf, const char *fmt, va_list args);
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
 int sprintf(char *buf, const char *fmt, ...);
 int printk(const char *fmt, ...);
+
+void scan_boot_info(uint64 addr);
 
 #endif

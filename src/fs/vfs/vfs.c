@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/dentry.h>
 #include <sys/list.h>
@@ -506,22 +507,23 @@ static int vfs_freefs(pid_t pid)
     return 0;
 }
 
-static int wait_root_mount(pid_t fs_pid)
+static int mount_root(pid_t fs_pid, int part)
 {
     struct vmount *root_mount;
-    message mess;
-    int status;
-
-    status = _recv(fs_pid, &mess);
-    if (status != 0 || strcmp("/", mess.m_fs_mnt.pmnt) != 0) {
-        panic("not valid m_fs_mnt message\n");
-        return -1;
-    }
+    message msg;
+    struct dentry *ptr;
 
     root_entry = (struct dentry *)malloc(sizeof(struct dentry));
     assert(root_entry != NULL);
-
-    *root_entry = *mess.m_fs_mnt.dentry;
+    ptr = root_entry;
+    if (_kmap((void **)&ptr, NULL, NULL) != 0)
+        return -1;
+    msg.type = MSG_FSMNT;
+    msg.m_fs_mnt.part = part;
+    msg.m_fs_mnt.dentry = ptr;
+    if (_sendrecv(fs_pid, &msg) != 0)
+        return -1;
+    /* write other field */
     root_entry->f_fs_pid = fs_pid;
     root_entry->f_flags = DE_NORMAL;
     root_entry->f_count = 1;
@@ -535,11 +537,6 @@ static int wait_root_mount(pid_t fs_pid)
     root_mount->m_entry = root_entry;
     root_mount->m_fs_pid = fs_pid;
     list_add_tail(&root_mount->list, &mount_head);
-
-    mess.type = MSG_FSMNT;
-    mess.retval = 0;
-    if ((status = _send(fs_pid, &mess)) != 0)
-        return -1;
 
     return 0;
 }
@@ -666,13 +663,21 @@ static void do_process(void)
 
 int main(int argc, char *argv[])
 {
-    int i;
+    int i, part;
 
+    for (i = 0; i < argc; i++) {
+        if (!strncmp(argv[i], "part", 4)) {
+            part = atoi(strstr(argv[i], "=") + 1);
+            break;
+        }
+    }
+
+    debug("==== part %d\n", part);
     /* init __file_map */
     for (i = 0; i < __FILE_MAP_SIZE; i++) list_head_init(&__file_map[i]);
     list_head_init(&mount_head);
 
-    if (wait_root_mount(IPC_EXT2) != 0)
+    if (mount_root(IPC_EXT2, part) != 0)
         goto failed;
     if (mount_dev() != 0)
         goto failed;

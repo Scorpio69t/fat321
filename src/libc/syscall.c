@@ -269,3 +269,19 @@ int bdev_write(unsigned long pos, void *buf, size_t size)
         return -1;
     return m.retval;
 }
+
+long bdev_part_read(int part, unsigned long pos, void *buf, size_t size)
+{
+    message m;
+
+    if (_kmap(&buf, NULL, NULL) != 0)
+        return -1;
+    m.type = MSG_BDEV_PART;
+    m.m_bdev_part.part = part;
+    m.m_bdev_part.pos = pos;
+    m.m_bdev_part.buffer = buf;
+    m.m_bdev_part.size = size;
+    if (_sendrecv(IPC_DISK, &m) != 0)
+        return -1;
+    return m.retval;
+}

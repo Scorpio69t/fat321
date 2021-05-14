@@ -12,9 +12,9 @@ struct fs_ops {
     ssize_t (*fs_write)(ino_t ino, void *buf, off_t pos, size_t size);
     int (*fs_stat)(ino_t ino, struct stat *buf);
     ssize_t (*fs_getdents)(ino_t ino, struct dirent *dirp, off_t pos, size_t nbytes);
-    int (*fs_init)(unsigned long, struct dentry *);
+    int (*fs_mount)(int, struct dentry *);
 };
 
-int run_fs(const char *type_guid, const char *pmnt, struct fs_ops *ops);
+int run_fs(struct fs_ops *fs_ops);
 
 #endif

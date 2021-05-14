@@ -28,6 +28,7 @@ int unregister_irq(int);
 
 int bdev_read(unsigned long pos, void *buf, size_t size);
 int bdev_write(unsigned long pos, void *buf, size_t size);
+long bdev_part_read(int part, unsigned long pos, void *buf, size_t size);
 
 #endif
 

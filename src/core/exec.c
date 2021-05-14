@@ -148,7 +148,7 @@ static int dup_args(char **ptr_argv[], char **ptr_envp[], char *buf, int bufsz)
  * Return:  - 成功 新的缓存区结束位置(新的栈底)，8字节对齐
  *          - 失败 返回NULL
  */
-static void *setup_args(char *const argv[], char *const envp[], void *bufend, int bufsize)
+void *setup_args(char *const argv[], char *const envp[], void *bufend, int bufsize)
 {
     int i, len, argc, envc;
     char **newargv, **newenvp;

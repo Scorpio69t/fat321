@@ -235,40 +235,32 @@ static int transfer(unsigned long pos, void *buf, size_t size, int write)
     return retval;
 }
 
-static long fs_part(const char *type_guid, const char *guid)
+static long disk_part(int part)
 {
-    // 当前暂时忽略函数参数, 等待GPT分区功能
     long start_lba;
+    unsigned long base, offset;
     struct gpt_header *header;
     struct gpt_part_entry *entry;
     void *buffer;
-    message msg;
 
     if (!(header = (struct gpt_header *)malloc(SECTOR_SIZE)))
-        return -1;
-    request.buffer = (void *)header;
-    request.position = SECTOR_SIZE * 1;
-    request.size = SECTOR_SIZE;
-    do_request(LBA48_READ_CMD, 1, 1, NULL);
-    _recv(IPC_INTR, &msg);
-    disk_read();
-
+        goto failed;
+    if (transfer(SECTOR_SIZE * 1, header, SECTOR_SIZE, 0) != DONE)
+        goto failed;
     if (strncmp(header->signature, GPT_SIGNATURE, 8)) {
         panic("gpt signature error\n");
-        return -1;
+        goto failed;
     }
 
-    if (!(buffer = malloc(SECTOR_SIZE)))
-        return -1;
-    // TODO: need refactor
-    request.buffer = buffer;
-    request.position = SECTOR_SIZE * header->pentry;
-    request.size = 512;
-    do_request(LBA48_READ_CMD, 1, header->pentry, NULL);
-    if (_recv(IPC_INTR, &msg) != 0)
+    if (!(buffer = malloc(SECTOR_SIZE * 2)))  // 分区条目可能跨两个扇区
         goto failed;
-    disk_read();
-    entry = (struct gpt_part_entry *)(buffer + header->pensz);  // 第2项，需要重构
+
+    base = (header->pentry + header->pensz * part / SECTOR_SIZE) * SECTOR_SIZE;
+    offset = header->pensz * part % SECTOR_SIZE;
+
+    if (transfer(base, buffer, SECTOR_SIZE * 2, 0) != DONE)
+        goto failed;
+    entry = (struct gpt_part_entry *)(buffer + offset);  // 第2项，需要重构
     start_lba = entry->first_lba;
 
     free(header);
@@ -282,6 +274,7 @@ failed:
 
 int main(int argc, char *argv[])
 {
+    unsigned long part_base;
     message mess;
 
     if (init_disk() == -1)
@@ -298,7 +291,12 @@ int main(int argc, char *argv[])
                                    mess.m_bdev_transfer.write);
             break;
         case MSG_BDEV_PART:
-            mess.retval = fs_part(mess.m_bdev_part.type_guid, mess.m_bdev_part.guid);
+            if ((part_base = disk_part(mess.m_bdev_part.part)) < 0 ||
+                transfer(part_base + mess.m_bdev_part.pos, mess.m_bdev_part.buffer, mess.m_bdev_part.size, 0) != DONE) {
+                mess.retval = -1;
+                break;
+            }
+            mess.retval = part_base;
             break;
         default:
             debug("disk: unknow msg, src %d type %x\n", mess.src, mess.type);

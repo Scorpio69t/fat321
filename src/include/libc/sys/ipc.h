@@ -127,8 +127,10 @@ typedef struct {
 } msg_bdev_transfer;
 
 typedef struct {
-    const char *type_guid;
-    const char *guid;
+    int part;
+    unsigned long pos;
+    void *buffer;
+    size_t size;
 } msg_bdev_part;
 
 typedef struct {
@@ -144,7 +146,7 @@ typedef struct {
 } msg_intr;
 
 typedef struct {
-    const char *pmnt;
+    int part;
     struct dentry *dentry;
 } msg_fs_mnt;
 

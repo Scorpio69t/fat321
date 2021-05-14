@@ -111,4 +111,17 @@ static inline int strncmp(const char *str1, const char *str2, size_t n)
     return retval;
 }
 
+static inline char *strstr(const char *str1, const char *str2)
+{
+    int len2;
+
+    if (!(len2 = strlen(str2)))
+        return (char *)str1;
+    for (; *str1 != 0; str1++) {
+        if (*str1 == *str2 && strncmp(str1, str2, len2) == 0)
+            return (char *)str1;
+    }
+    return NULL;
+}
+
 #endif
