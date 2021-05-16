@@ -54,9 +54,14 @@ for module in ${modules}; do
 done
 
 mkdir -p "${tmp_dir}/bin"
-mkdir -p "${tmp_dir}/usr/bin"
 cp -r shell/sh "${tmp_dir}/bin"
-cp -r app/hello/hello "${tmp_dir}/usr/bin"
+
+for file in ./bin/*; do
+    if [[ -x "$file" ]]; then
+        cp -r "${file}" "${tmp_dir}/bin"
+    fi
+done
+
 sudo cp -r "${tmp_dir}"/* "${mount_dir}" 
 
 echo "Install grub for device..."

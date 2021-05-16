@@ -1,6 +1,6 @@
 # top makefile
 
-SUBDIR := shell app
+SUBDIR := shell bin
 
 .PHONY: default all $(SUBDIR) config kernel
 

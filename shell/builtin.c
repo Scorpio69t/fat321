@@ -36,24 +36,6 @@ int pwd(int argc, char *argv[])
     return retval;
 }
 
-// TODO: more feature
-int ls(int argc, char *argv[])
-{
-    DIR *dp;
-    struct dirent *dirp;
-
-    if (!(dp = opendir(".")))
-        return -1;
-    while ((dirp = readdir(dp))) {
-        if (!strcmp(".", dirp->d_name) || !strcmp("..", dirp->d_name))
-            continue;
-        printf("%s ", dirp->d_name);
-    }
-    printf("\n");
-    closedir(dp);
-    return 0;
-}
-
 int cd(int argc, char *argv[])
 {
     struct stat sbuf;

@@ -14,7 +14,6 @@ static int cmdretval;
 static struct cmdptr cmdtab[] = {
     { .name = "cls", .ptr = cls, },
     { .name = "pwd", .ptr = pwd, },
-    { .name = "ls",  .ptr = ls, },
     { .name = "cd",  .ptr = cd, },
     { .name = NULL,  .ptr = NULL, },
 };
