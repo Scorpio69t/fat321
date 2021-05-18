@@ -72,6 +72,7 @@ long do_wait(int *statloc)
         schedule();
     }
 
+    current->signal = 0;
     child = 0;
     list_for_each_entry(pos, &current->children, child_list)
     {
