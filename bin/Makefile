@@ -6,7 +6,7 @@ LDFLAGS := -T ../scripts/proc.lds
 HEADER:=../include
 LIBS := ../libc/libc.a
 
-targets := hello ls
+targets := hello ls cat
 SOURCE := $(wildcard *.c)
 
 ifdef DEBUG

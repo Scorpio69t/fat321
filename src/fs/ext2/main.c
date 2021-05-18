@@ -219,6 +219,8 @@ static ssize_t ext2_read(ino_t ino, void *buf, off_t pos, size_t size)
         return -1;
     if (pos < 0 || pos >= inode->i_size)
         return 0;
+    if (pos + size >= inode->i_size)
+        size = inode->i_size - pos;
 
     block_buffer = get_block_buffer();
     buffer = block_buffer->buffer;
