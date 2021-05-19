@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,8 @@ static int getline(char *buf)
         if (read(0, &c, 1) != 1)
             break;
         switch (c) {
+        case '\t':
+            break;
         case '\b':
             if (len > 0) {
                 len--;
@@ -44,24 +47,24 @@ static int getline(char *buf)
     return len;
 }
 
-static int do_exec(int argc, char *argv[])
+static int do_exec(char *path, int argc, char *argv[])
 {
     int pid, status;
     struct stat buf;
 
-    if (stat(argv[0], &buf) != 0 || (buf.st_mode & 0x40) == 0) {  // user execute
+    if (stat(path, &buf) != 0 || (buf.st_mode & S_IXUSR) == 0) { 
         printf("exec: not an executable file\n");
         return 1;
     }
-    if (buf.st_mode & 0x4000) {  // dir
-        return chdir(argv[0]);
+    if (buf.st_mode & S_IFDIR) {
+        return chdir(path);
     }
 
     if ((pid = fork()) == 0) {
-        execve(argv[0], argv, NULL);
+        execve(path, argv, NULL);
     }
     if (pid < 0) {
-        printf("segment failed\n");
+        printf("fork failed\n");
         return 1;
     }
     while (wait(&status) != pid) continue;
@@ -101,21 +104,70 @@ static int (*match_builtin(char *cmd))(int, char **)
     return 0;
 }
 
+static char *envpath[16];
+
+static int setup_envpath(char *envp[])
+{
+    int i;
+    char *path;
+
+    memset(envpath, 0x00, sizeof(char *) * 16);
+    for (i = 0, path = NULL; envp[i]; i++) {
+        if (!strncmp("PATH=", envp[i], 5)) {
+            path = envp[i];
+            break;
+        }
+    }
+    if (!path)
+        return -1;
+    path = path + 5;
+    i = 0;
+    while (*path != NULL) {
+        envpath[i++] = path;
+        while (*path && *path != ':') path++;
+        if (*path)
+            *path++ = 0;
+    }
+    return 0;
+}
+
+static char pathbuf[512];
+
+static char *find_command(char *cmd)
+{
+    int i;
+    struct stat sbuf;
+
+    if (!strncmp(".", cmd, 1) || !strncmp("/", cmd, 1)) {
+        strcpy(pathbuf, cmd);
+        return pathbuf;
+    }
+    for (i = 0; envpath[i]; i++) {
+        strcpy(pathbuf, envpath[i]);
+        strcat(pathbuf, "/");
+        strcat(pathbuf, cmd);
+        if (stat(pathbuf, &sbuf) == 0 && sbuf.st_mode & S_IXUSR) {
+            return pathbuf;
+        }
+    }
+    return NULL;
+}
+
 static void echo_prompt()
 {
-    printf("$ ");
+    printf("# ");
 }
 
 int main(int argc, char *argv[], char *envp[])
 {
     int len, cargc;
     int (*func)(int, char **);
-    char *cargv[32];
+    char *cargv[32], *path;
 
-    printf("sh argc %d\n", argc);
-    for (int i = 0; argv[i] != 0; i++) printf("%s\n", argv[i]);
-    printf("====\n");
-    for (int i = 0; envp[i] != 0; i++) printf("%s\n", envp[i]);
+    if (setup_envpath(envp) < 0) {
+        panic("sh: setup_envpath failed\n");
+        return -1;
+    }
 
     // cls(0, NULL);
     while (1) {
@@ -125,13 +177,14 @@ int main(int argc, char *argv[], char *envp[])
         if (!(cargc = parse_cmd(buffer, len, cargv))) {
             continue;
         }
-        func = match_builtin(cargv[0]);
-        if (func) {
+
+        if ((func = match_builtin(cargv[0]))) {
             cmdretval = func(cargc, cargv);
             continue;
         }
-        if (!strncmp(".", cargv[0], 1) || !strncmp("/", cargv[0], 1)) {
-            cmdretval = do_exec(cargc, cargv);
+
+        if ((path = find_command(cargv[0]))) {
+            cmdretval = do_exec(path, cargc, cargv);
             continue;
         }
         printf("command not found\n");

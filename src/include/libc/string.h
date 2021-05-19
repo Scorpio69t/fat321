@@ -124,4 +124,12 @@ static inline char *strstr(const char *str1, const char *str2)
     return NULL;
 }
 
+static inline char *strcat(char *dest, const char *str)
+{
+    while (*dest) dest++;
+    while (*str) *dest++ = *str++;
+    *dest = 0;
+    return dest;
+}
+
 #endif
