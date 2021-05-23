@@ -43,7 +43,7 @@
 #define MSG_FSREAD        261
 #define MSG_FSWRITE       262
 #define MSG_FSLOOKUP      263
-#define MSG_COPYFS        264
+#define MSG_FORKFS        264
 #define MSG_FREEFS        265 /* no message struct */
 #define MSG_EXECFS        266 /* no message struct */
 #define MSG_KMAP          267
@@ -188,7 +188,7 @@ typedef struct {
 
 typedef struct {
     pid_t pid; /* child pid */
-} msg_copyfs;
+} msg_forkfs;
 
 typedef struct {
     void *addr1;
@@ -230,7 +230,7 @@ typedef struct {
         msg_fs_stat      m_fs_stat;
         msg_fs_getdents  m_fs_getdents;
 
-        msg_copyfs m_copyfs;
+        msg_forkfs m_forkfs;
         msg_kmap m_kmap;
     };
 } message;

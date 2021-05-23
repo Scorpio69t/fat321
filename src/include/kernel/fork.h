@@ -20,7 +20,6 @@ long do_fork(frame_t *);
 
 extern void ret_from_fork(void);
 extern void exec_ret(void);
-extern pid_t kernel_proc(int (*fn)(void), void *args, unsigned long flags);
 
 #endif /* __ASSEMBLY__ */
 

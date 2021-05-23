@@ -78,9 +78,9 @@ static int copy_fs(frame_t *regs, proc_t *proc)
 
     assert(proc->pid != 0);
 
-    mess.type = MSG_COPYFS;
+    mess.type = MSG_FORKFS;
     mess.src = current->pid;
-    mess.m_copyfs.pid = proc->pid;
+    mess.m_forkfs.pid = proc->pid;
     if (do_sendrecv(regs, IPC_VFS, &mess) != 0 || mess.retval != 0)
         return -1;
     return 0;

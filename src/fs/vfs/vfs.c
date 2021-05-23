@@ -426,7 +426,7 @@ static ssize_t vfs_getdents(pid_t pid, int fd, struct dirent *dirp, size_t nbyte
     return msg.retval;
 }
 
-static int vfs_copyfs(pid_t ppid, pid_t pid)
+static int vfs_forkfs(pid_t ppid, pid_t pid)
 {
     int fd;
 
@@ -640,8 +640,8 @@ static void do_process(void)
         case MSG_GETDENTS:
             retval = vfs_getdents(m.src, m.m_getdents.fd, m.m_getdents.dirp, m.m_getdents.count);
             break;
-        case MSG_COPYFS:
-            retval = vfs_copyfs(m.src, m.m_copyfs.pid);
+        case MSG_FORKFS:
+            retval = vfs_forkfs(m.src, m.m_forkfs.pid);
             break;
         case MSG_EXECFS:
             retval = vfs_execfs(m.src);
@@ -672,7 +672,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    debug("==== part %d\n", part);
     /* init __file_map */
     for (i = 0; i < __FILE_MAP_SIZE; i++) list_head_init(&__file_map[i]);
     list_head_init(&mount_head);
@@ -684,7 +683,7 @@ int main(int argc, char *argv[])
     do_process();
 
 failed:
-    debug("vfs init faild\n");
+    panic("vfs init faild\n");
     while (1) nop();
     return 0;
 }

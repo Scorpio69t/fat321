@@ -63,18 +63,7 @@ static off_t lseek_exec(int fd, off_t offset, int whence)
     return mess.retval;
 }
 
-static int reallocfs_exec(void)
-{
-    message mess;
-
-    mess.type = MSG_EXECFS;
-    mess.src = current->pid;
-    if (do_sendrecv(NULL, IPC_VFS, &mess) != 0)
-        return -1;
-    return 0;
-}
-
-static int check_ehdr(Elf64_Ehdr *ehdr)
+static int verify_ehdr(Elf64_Ehdr *ehdr)
 {
     /* check header magic */
     if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || ehdr->e_ident[EI_MAG1] != ELFMAG1 || ehdr->e_ident[EI_MAG2] != ELFMAG2 ||
@@ -219,7 +208,7 @@ int do_execve(const char *pathname, char *const argv[], char *const envp[])
     ehdr = (Elf64_Ehdr *)kmalloc(sizeof(Elf64_Ehdr), 0);
     if ((n = read_exec(fd, ehdr, sizeof(Elf64_Ehdr))) != sizeof(Elf64_Ehdr))
         goto failed;
-    if (!check_ehdr(ehdr))
+    if (!verify_ehdr(ehdr))
         goto failed;
 
     entry = ehdr->e_entry;
@@ -281,7 +270,6 @@ int do_execve(const char *pathname, char *const argv[], char *const envp[])
             }
         }
     }
-    reallocfs_exec();
     kfree(ehdr);
     kfree(phdr_table);
     free_page((unsigned long)argsbuf);

@@ -59,8 +59,6 @@ int do_smp_boot(int apicid)
     while (apic_read(APIC_ICRLO) & APIC_ICR_DELIVS) nop();
     while (smp_booting) nop();
 
-    printk("xxxxx\n");
-
     return 0;
 }
 

@@ -285,46 +285,6 @@ system_call:
 3:	addq    $8, %rsp
     	iretq
 
-kernel_process_child:
-	movq	%rdi, %rax	/* kernle process function address */
-	movq	%rsi, %rdi	/* function arguments */
-	call	*%rax
-	xorq	%rdi, %rdi	/* exit code 0 */
-	call	do_exit
-
-/*
- * C interface pid_t kernel_proc(int (*fn)(void), void *args, unsigned long flags)
- * fn in rdi, args in rsi and flags in rdx
- */
-.global kernel_proc
-kernel_proc:
-	/* make fake frame for do_fork */
-	xorq	%rax, %rax
-	pushq	%rax			/* ss */
-	pushq	%rax			/* rsp, will be set in do_fork */
-	movq	$(1<<9), %rax
-	pushq	%rax			/* eflags, enable interrupt */
-	movq	$KERNEL_CODE_DESC, %rax
-	pushq	%rax			/* cs */
-	leaq	kernel_process_child(%rip), %rax
-	pushq	%rax			/* rip */
-	xorq	%rax, %rax
-	pushq	%rax			/* orgi_rax */
-
-	SAVE_ALL
-
-	/* prepare for do_fork */
-	movq	%rdx, %rdi 		/* clone_flags */
-	movq	$-1, %rsi		/* start_stack */
-	movq	%rsp, %rdx		/* regs */
-	xorq	%rcx, %rcx		/* stack_size */
-	call	do_fork
-
-	movq	%rax, 0x50(%rsp)	/* save return value */
-	RESTOR_ALL
-	addq	$8*6, %rsp		/* skip fake frame */
-	ret
-
 .global syscall_table
 syscall_table:
 	.quad  sys_send
