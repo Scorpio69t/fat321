@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
             printf("cat: open file %s failed\n", argv[i]);
         }
         while ((n = read(fd, buf, 512)) > 0) {
-            printf("==== %d\n", n);
             write(1, buf, n);
         }
         close(fd);

@@ -198,7 +198,7 @@ static struct dentry *vfs_lookup(struct dentry *cwd, const char *path)
         next = NULL;
         list_for_each_entry(pos, &current->f_children, f_list)
         {
-            if (!strncmp(pos->f_name, filename, len)) {
+            if (!strcmp(pos->f_name, filename)) {
                 next = pos;
                 break;
             }
