@@ -26,6 +26,13 @@ static int ext2_bdev_read(struct super_block *sb, unsigned long pos, void *buf, 
     return 0;
 }
 
+static int ext2_bdev_write(struct super_block *sb, unsigned long pos, void *buf, size_t size)
+{
+    if (bdev_write(sb->partition_offset + pos, buf, size) != 0)
+        return -1;
+    return 0;
+}
+
 static struct super_block *get_super_block()
 {
     return __super_block;
@@ -62,6 +69,36 @@ static struct inode *getinode(struct super_block *sb, uint32 ino)
     put_inode_map(ino, inode);
     put_block_buffer(block_buffer);
     return inode;
+}
+
+// 将修改后的inode值写回磁盘
+static int putinode(struct super_block *sb, uint32 ino)
+{
+    int group, index;
+    int inode_per_block;
+    int itable, itable_index;
+    void *buffer;
+    struct group_desc *gd;
+    struct inode *inode;
+    block_buffer_t *block_buffer;
+
+    if (!(inode = get_inode_map(ino)))
+        return -1;
+
+    group = (ino - 1) / sb->s_inodes_per_group;
+    index = (ino - 1) % sb->s_inodes_per_group;
+    inode_per_block = sb->block_size / sb->s_inode_size;
+    itable = index / inode_per_block;
+    itable_index = index % inode_per_block;
+    gd = &sb->group_desc_table[group];
+
+    block_buffer = get_block_buffer();
+    buffer = block_buffer->buffer;
+    ext2_bdev_read(sb, (gd->bg_inode_table + itable) * sb->block_size, buffer, sb->block_size);
+    *(struct inode *)(buffer + sb->s_inode_size * itable_index) = *inode;
+    ext2_bdev_write(sb, (gd->bg_inode_table + itable) * sb->block_size, buffer, sb->block_size);
+    put_block_buffer(block_buffer);
+    return 0;
 }
 
 static int ext2_mount(int part, struct dentry *dentry)
@@ -113,16 +150,11 @@ static int ext2_mount(int part, struct dentry *dentry)
             len *= base;
         array_ladder[i] = len;
     }
-    debug("mount\n");
     return 0;
 }
 
-/**
- * 获取一个文件第n个block内的数据，data的大小最好等于block_size, 不可小于
- * Return: - 成功返回1, 读取结束返回0
- *         - 失败为-1
- */
-static int getblock(struct super_block *sb, unsigned int n, struct inode *inode, void *data)
+// 获取inode中第n个block的block号，成功返回block号，结束返回0, 失败返回-1
+static long get_block_no(struct super_block *sb, struct inode *inode, unsigned int n)
 {
     int i;
     unsigned int block, depth, sum, index, reminder;
@@ -138,7 +170,6 @@ static int getblock(struct super_block *sb, unsigned int n, struct inode *inode,
         }
         sum += array_ladder[i];
     }
-    // block number to large
     if (i == NR_INODE_BLOCK)
         return -1;
 
@@ -152,14 +183,111 @@ static int getblock(struct super_block *sb, unsigned int n, struct inode *inode,
         reminder = reminder % array_ladder[12 + depth - 1];
         block = block_array[index];
     }
-    if (!block) {
-        put_block_buffer(block_buffer);
-        return 0;
+    put_block_buffer(block_buffer);
+    return block;
+}
+
+/**
+ * 获取一个文件第n个block内的数据，data的大小最好等于block_size, 不可小于
+ * Return: - 成功返回1, 读取结束返回0
+ *         - 失败为-1
+ */
+static int getblock(struct super_block *sb, unsigned int n, struct inode *inode, void *data)
+{
+    unsigned long block;
+
+    if ((block = get_block_no(sb, inode, n)) <= 0)
+        return block;
+    ext2_bdev_read(sb, block * sb->block_size, data, sb->block_size);
+    return 1;
+}
+
+// 将inode的i_block数组中下标为n的项的值设置为no
+// 目前仅支持前12项
+static int setblock(struct super_block *sb, unsigned int ino, unsigned int n, unsigned int no)
+{
+    struct inode *inode;
+
+    if (n >= 12)
+        return -1;
+    if (!(inode = getinode(sb, ino)) || inode->i_block[n])
+        return -1;
+    inode->i_block[n] = no;
+    inode->i_blocks += sb->block_size / 512;
+    return 0;
+}
+
+static long alloc_block(struct super_block *sb)
+{
+    int i, j, k;
+    long block;
+    unsigned long pos;
+    uint8 *bitmap, val;
+    block_buffer_t *buffer;
+
+    if (!(buffer = get_block_buffer()))
+        return -1;
+    for (i = 0; i < sb->nr_group; i++) {
+        pos = sb->group_desc_table[i].bg_block_bitmap * sb->block_size;
+        ext2_bdev_read(sb, pos, buffer->buffer, sb->block_size);
+        bitmap = (uint8 *)buffer->buffer;
+        for (j = 0; j < sb->block_size; j++) {
+            val = bitmap[j];
+            for (k = 0; k < 8; k++) {
+                if (!(val & (1 << k))) {
+                    block = i * sb->block_size + j * 8 + k;
+                    goto found;
+                }
+            }
+        }
     }
 
-    ext2_bdev_read(sb, block * sb->block_size, data, sb->block_size);
-    put_block_buffer(block_buffer);
-    return 1;
+found:
+    bitmap[j] |= (1 << k);
+    if (ext2_bdev_write(sb, pos, bitmap, sb->block_size) < 0)
+        goto failed;
+    put_block_buffer(buffer);
+    return block;
+failed:
+    put_block_buffer(buffer);
+    return -1;
+}
+
+// 分配一个inode, 成功返回inode号, 失败返回-1
+static long alloc_inode(struct super_block *sb)
+{
+    int i, j, k;
+    unsigned int ino;
+    unsigned long pos;
+    uint8 *bitmap, val;
+    block_buffer_t *buffer;
+
+    if (!(buffer = get_block_buffer()))
+        return -1;
+    for (i = 0; i < sb->nr_group; i++) {
+        pos = sb->group_desc_table[i].bg_inode_bitmap * sb->block_size;
+        if (ext2_bdev_read(sb, pos, buffer->buffer, sb->block_size) < 0)
+            goto failed;
+        bitmap = (uint8 *)buffer->buffer;
+        for (j = 0; j < sb->block_size; j++) {
+            val = bitmap[j];
+            for (k = 0; k < 8; k++) {
+                if (!(val & (1 << k))) {
+                    ino = i * sb->block_size + j * 8 + k + 1;  // notice that inode number start from 1
+                    goto founded;
+                }
+            }
+        }
+    }
+founded:
+    bitmap[j] |= (1 << k);
+    if (ext2_bdev_write(sb, pos, bitmap, sb->block_size) < 0)
+        goto failed;
+    put_block_buffer(buffer);
+    return ino;
+failed:
+    put_block_buffer(buffer);
+    return -1;
 }
 
 static int ext2_lookup(const char *filename, ino_t pino, struct dentry *dentry)
@@ -245,6 +373,166 @@ static ssize_t ext2_read(ino_t ino, void *buf, off_t pos, size_t size)
 
 static ssize_t ext2_write(ino_t ino, void *buf, off_t pos, size_t size)
 {
+    struct inode *inode;
+    struct super_block *sb;
+    unsigned long offset, copysz, count;
+    int sblock, block, n;
+    block_buffer_t *buffer;
+
+    if (!(sb = get_super_block()))
+        return -1;
+    if (!(inode = getinode(sb, ino)))
+        return -1;
+    if (pos < 0 || pos > inode->i_size)
+        return -1;
+    sblock = upper_div(pos + size, 512);
+    n = inode->i_blocks / (sb->block_size / 512);
+    while (inode->i_blocks < sblock) {
+        if ((block = alloc_block(sb)) < 0)
+            return -1;
+        if (setblock(sb, ino, n, block) < 0)
+            return -1;
+    }
+
+    if (!(buffer = get_block_buffer()))
+        return -1;
+    n = pos / sb->block_size;
+    offset = pos % sb->block_size;
+    count = 0;
+    while (size > 0) {
+        if (getblock(sb, n, inode, buffer->buffer) <= 0)
+            return -1;
+        copysz = sb->block_size - offset < size ? sb->block_size - offset : size;
+        memcpy(buffer->buffer + offset, buf, copysz);
+        if ((block = get_block_no(sb, inode, n)) <= 0)
+            return -1;
+        if (ext2_bdev_write(sb, block * sb->block_size, buffer->buffer, sb->block_size) < 0)
+            return -1;
+        n++;
+        offset = 0;
+        count += copysz;
+        size -= copysz;
+        inode->i_size += copysz;
+    }
+    putinode(sb, ino);
+    return count;
+}
+
+static int ext2_create(ino_t pino, char *name, mode_t mode)
+{
+    return -1;
+}
+
+static long init_newdir(struct super_block *sb, ino_t pino, mode_t mode)
+{
+    long ino;
+    struct inode *inode, *pinode;
+    unsigned int block, offset;
+    struct linked_directory *dir;
+    block_buffer_t *buffer;
+
+    if ((ino = alloc_inode(sb)) < 0)
+        return -1;
+    if (!(inode = getinode(sb, ino)))
+        return -1;
+    if (!(pinode = getinode(sb, pino)))
+        return -1;
+    memset(inode, 0x00, sizeof(struct inode));
+    inode->i_mode = mode;
+    // TODO:
+    inode->i_gid = pinode->i_gid;
+    inode->i_uid = pinode->i_uid;
+
+    if ((block = alloc_block(sb)) < 0)
+        return -1;
+    if (setblock(sb, ino, 0, block) != 0)
+        return -1;
+
+    inode->i_size = sb->block_size;
+    inode->i_links_count = 1;
+
+    if (!(buffer = get_block_buffer()))
+        return -1;
+    memset(buffer->buffer, 0x00, sb->block_size);
+    /* create default dir */
+    dir = (struct linked_directory *)buffer->buffer;
+    dir->file_type = EXT2_FT_DIR;
+    dir->inode = ino;
+    strncpy(dir->name, ".", 1);
+    dir->name_len = 1;
+    dir->rec_len = (sizeof(struct linked_directory) + dir->name_len + 0x3) & -(uint16)0x4;  // align 4
+
+    offset = dir->rec_len;
+    dir = (struct linked_directory *)(buffer->buffer + offset);
+    dir->file_type = EXT2_FT_DIR;
+    dir->inode = pino;
+    strncpy(dir->name, "..", 2);
+    dir->name_len = 2;
+    dir->rec_len = sb->block_size - offset;
+
+    ext2_bdev_write(sb, block * sb->block_size, buffer->buffer, sb->block_size);
+    putinode(sb, ino);
+    return ino;
+}
+
+static int ext2_mkdir(ino_t pino, char *name, mode_t mode)
+{
+    struct super_block *sb;
+    struct inode *pinode;
+    block_buffer_t *buffer;
+    struct linked_directory *dir, *newdir;
+    unsigned int n, block, status, namelen, freelen, dirsz;
+    unsigned int ino;
+
+    if (!(sb = get_super_block()))
+        return -1;
+    if (!(pinode = getinode(sb, pino)))
+        return -1;
+    if (!(buffer = get_block_buffer()))
+        return -1;
+    n = 0;
+    newdir = NULL;
+    namelen = strlen(name);
+    while ((status = getblock(sb, n, pinode, buffer->buffer)) > 0) {
+        dir = (struct linked_directory *)buffer->buffer;
+        int offset = 0, reclen;
+        while (offset != sb->block_size) {
+            if (dir->name_len == namelen && !strncmp(name, dir->name, namelen))  // 名称重复
+                goto failed;
+            reclen = dir->rec_len;
+            dirsz = (sizeof(struct linked_directory) + dir->name_len + 0x3) & -(unsigned int)0x4;  // 4字节对齐
+            freelen = reclen - dirsz;
+            if (freelen >= sizeof(struct linked_directory) + namelen) {
+                newdir = (struct linked_directory *)(buffer->buffer + offset + dirsz);
+                newdir->rec_len = dir->rec_len - dirsz;
+                dir->rec_len = dirsz;
+                block = get_block_no(sb, pinode, n);
+            }
+            offset += reclen;
+            dir = (struct linked_directory *)(buffer->buffer + offset);
+        }
+        n++;
+    }
+    if (!newdir) {
+        if ((block = alloc_block(sb)) < 0)
+            goto failed;
+        if (setblock(sb, pino, n, block) < 0)
+            goto failed;
+        putinode(sb, pino);
+        newdir = (struct linked_directory *)buffer->buffer;
+        newdir->rec_len = sb->block_size;
+    }
+    newdir->file_type = EXT2_FT_DIR;
+    strncpy(newdir->name, name, namelen);
+    newdir->name_len = namelen;
+    if ((ino = init_newdir(sb, pino, mode)) < 0)
+        goto failed;
+    newdir->inode = ino;
+    ext2_bdev_write(sb, block * sb->block_size, buffer->buffer, sb->block_size);
+    put_block_buffer(buffer);
+    return 0;
+failed:
+    put_block_buffer(buffer);
     return -1;
 }
 
@@ -323,6 +611,8 @@ static struct fs_ops ext2_ops = {
     .fs_stat = ext2_stat,
     .fs_getdents = ext2_getdents,
     .fs_mount = ext2_mount,
+    .fs_mkdir = ext2_mkdir,
+    .fs_create = ext2_create,
 };
 
 int main(int argc, char *argv[])

@@ -36,5 +36,6 @@ struct stat {
 #define S_IXOTH 0x0001 /* others execute*/
 
 int stat(const char *pathname, struct stat *buf);
+int mkdir(const char *name, mode_t mode);
 
 #endif

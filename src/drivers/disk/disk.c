@@ -141,16 +141,18 @@ static int disk_write(void)
         return ERROR;
     }
 
+    if (request.size > SECTOR_SIZE) {
+        request.size -= SECTOR_SIZE;
+        request.buffer += SECTOR_SIZE;
+    } else {
+        return DONE;
+    }
+
     copysz = request.size > SECTOR_SIZE ? SECTOR_SIZE : request.size;
     memcpy(buffer, request.buffer, copysz);
 
     while (!(inb(PORT_DISK0_STATUS_CMD) & DISK_STATUS_REQ)) nop();
     outnw(PORT_DISK0_DATA, buffer, SECTOR_SIZE / 2);
-    request.size -= copysz;
-    request.buffer += copysz;
-
-    if (request.size == 0)
-        return DONE;
     return UNDONE;
 }
 

@@ -216,6 +216,17 @@ int getdents(int fd, struct dirent *dirp, size_t nbytes)
     return _syscall(IPC_VFS, MSG_GETDENTS, &m);
 }
 
+int mkdir(const char *name, mode_t mode)
+{
+    message m;
+
+    if (_kmap((void **)&name, NULL, NULL) != 0)
+        return -1;
+    m.m_mkdir.name = (char *)name;
+    m.m_mkdir.mode = mode;
+    return _syscall(IPC_VFS, MSG_MKDIR, &m);
+}
+
 int register_irq(int no_intr)
 {
     message m;

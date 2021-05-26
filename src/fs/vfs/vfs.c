@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -146,7 +147,6 @@ static struct dentry *vfs_lookup_in_fs(struct dentry *parent, const char *filena
         goto failed;
     }
     if (mess.retval != 0) {
-        debug("vfs_lookup_in_fs unfound %s in %s\n", filename, parent->f_name);
         goto failed;
     }
 
@@ -287,6 +287,8 @@ static int vfs_open(pid_t pid, const char *path, int oflag, mode_t mode)
     }
 
     filp = make_filp(entry->f_mode, entry);
+    if (oflag & O_APPEND)
+        filp->f_pos = entry->f_size;
     for (fd = 0; fd < NR_FILES; fd++) {
         if (proc_file->filp[fd] == NULL) {
             proc_file->filp[fd] = filp;
@@ -423,6 +425,22 @@ static ssize_t vfs_getdents(pid_t pid, int fd, struct dirent *dirp, size_t nbyte
     if (_sendrecv(filp->f_dentry->f_fs_pid, &msg) != 0 || msg.retval < 0)
         return -1;
     filp->f_pos += msg.retval;
+    return msg.retval;
+}
+
+static int vfs_mkdir(pid_t pid, char *name, mode_t mode)
+{
+    message msg;
+    struct proc_file *proc_file;
+
+    if (!(proc_file = map_proc_file(pid)))
+        return -1;
+    msg.type = MSG_MKDIR;
+    msg.m_fs_mkdir.ino = proc_file->cwd->f_ino;
+    msg.m_fs_mkdir.name = name;
+    msg.m_fs_mkdir.mode = mode;
+    if (_sendrecv(proc_file->cwd->f_fs_pid, &msg) != 0)
+        return -1;
     return msg.retval;
 }
 
@@ -639,6 +657,9 @@ static void do_process(void)
             break;
         case MSG_GETDENTS:
             retval = vfs_getdents(m.src, m.m_getdents.fd, m.m_getdents.dirp, m.m_getdents.count);
+            break;
+        case MSG_MKDIR:
+            retval = vfs_mkdir(m.src, m.m_mkdir.name, m.m_mkdir.mode);
             break;
         case MSG_FORKFS:
             retval = vfs_forkfs(m.src, m.m_forkfs.pid);

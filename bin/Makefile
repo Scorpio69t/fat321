@@ -6,7 +6,7 @@ LDFLAGS := -T ../scripts/proc.lds
 HEADER:=../include
 LIBS := ../libc/libc.a
 
-targets := hello ls cat
+targets := hello ls cat a mkdir
 SOURCE := $(wildcard *.c)
 
 ifdef DEBUG
@@ -17,14 +17,17 @@ endif
 
 default: $(targets)
 
-%:%.c
-	$(CC) -I$(HEADER) $(CFLAGS) -o $@.o $<
-	$(LD) $(LDFLAGS) -o $@ $@.o $(LIBS)
-
 -include Makefile.dep
+
+%.o:%.c
+	$(CC) -I$(HEADER) $(CFLAGS) -o $@ $<
+
+%:%.o
+	$(LD) $(LDFLAGS) -o $@ $< $(LIBS)
 
 Makefile.dep: $(SOURCE)
 	$(CC) -I$(HEADER) -MM $^ > Makefile.dep
 
 clean:
 	rm -f $(targets)
+	rm -f *.o

@@ -33,6 +33,7 @@
 #define MSG_CHDIR    13
 #define MSG_STAT     14
 #define MSG_GETDENTS 15
+#define MSG_MKDIR    16
 
 /* the aborve are syscall type */
 #define MSG_CFM           256
@@ -50,6 +51,7 @@
 #define MSG_FSSTAT        268
 #define MSG_BDEV_PART     269
 #define MSG_FSGETDENTS    230
+#define MSG_FSMKDIR       231
 
 typedef struct {
     int fd;
@@ -116,6 +118,11 @@ typedef struct {
     void *dirp; /* struct dirent * */
     unsigned long count;
 } msg_getdents;
+
+typedef struct {
+    char *name;
+    mode_t mode;
+} msg_mkdir;
 
 /* the aborve are syscall message */
 
@@ -187,6 +194,12 @@ typedef struct {
 } msg_fs_getdents;
 
 typedef struct {
+    ino_t ino;
+    char *name;
+    mode_t mode;
+} msg_fs_mkdir;
+
+typedef struct {
     pid_t pid; /* child pid */
 } msg_forkfs;
 
@@ -217,6 +230,7 @@ typedef struct {
         msg_chdir m_chdir;
         msg_stat m_stat;
         msg_getdents m_getdents;
+        msg_mkdir m_mkdir;
 
         msg_bdev_transfer m_bdev_transfer;
         msg_bdev_part m_bdev_part;
@@ -229,6 +243,7 @@ typedef struct {
         msg_fs_lookup    m_fs_lookup;
         msg_fs_stat      m_fs_stat;
         msg_fs_getdents  m_fs_getdents;
+        msg_fs_mkdir     m_fs_mkdir;
 
         msg_forkfs m_forkfs;
         msg_kmap m_kmap;

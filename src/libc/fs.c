@@ -22,6 +22,9 @@ int run_fs(struct fs_ops *fs_ops)
         case MSG_FSWRITE:
             retval = fs_ops->fs_write(m.m_fs_write.inode, m.m_fs_write.buf, m.m_fs_write.offset, m.m_fs_write.size);
             break;
+        case MSG_MKDIR:
+            retval = fs_ops->fs_mkdir(m.m_fs_mkdir.ino, m.m_fs_mkdir.name, m.m_fs_mkdir.mode);
+            break;
         case MSG_FSLOOKUP:
             retval = fs_ops->fs_lookup(m.m_fs_lookup.filename, m.m_fs_lookup.pino, m.m_fs_lookup.dentry);
             break;
