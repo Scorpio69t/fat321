@@ -1,10 +1,11 @@
+
 HEADER:=../../include/libc
 SOURCE := $(wildcard *.c)
-OBJS := vga.o
+OBJS := main.o cache.o
 LIBS := ../../libc/libc.a
 LDFLAGS := -T ../../../scripts/proc.lds
 
-video.mod: $(OBJS) $(LIBS)
+ext2.srv: $(OBJS) $(LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 -include Makefile.dep

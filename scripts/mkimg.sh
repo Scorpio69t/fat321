@@ -2,7 +2,7 @@
 
 mount_dir=/mnt
 tmp_dir=img.tmp
-modules=$(find src -name "*.mod")
+modules=$(find src -name "*.srv")
 loop_device=$(losetup -f)
 image_file=feng.img
 root_partition_type_guid=B02F4C03-F4A9-4297-9F98-D6E20949450C

@@ -1,6 +1,6 @@
 
 
-subdir := vfs ext2
+subdir := 
 
 .PHONY: default $(subdir)
 

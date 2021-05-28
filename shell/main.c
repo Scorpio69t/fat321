@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -52,7 +53,7 @@ static int do_exec(char *path, int argc, char *argv[])
     int pid, status;
     struct stat buf;
 
-    if (stat(path, &buf) != 0 || (buf.st_mode & S_IXUSR) == 0) { 
+    if (stat(path, &buf) != 0 || (buf.st_mode & S_IXUSR) == 0) {
         printf("exec: not an executable file\n");
         return 1;
     }
@@ -153,6 +154,19 @@ static char *find_command(char *cmd)
     return NULL;
 }
 
+static void welcome()
+{
+    int fd, n;
+    char buffer[512];
+
+    cls(0, NULL); 
+    if ((fd = open("/etc/welcome", O_RDONLY)) < 0)
+        return;
+    while ((n = read(fd, buffer, 512)) != 0)
+        write(1, buffer, n);
+    close(fd);
+}
+
 static void echo_prompt()
 {
     printf("# ");
@@ -169,7 +183,7 @@ int main(int argc, char *argv[], char *envp[])
         return -1;
     }
 
-    // cls(0, NULL);
+    welcome();
     while (1) {
         echo_prompt();
         len = getline(buffer);

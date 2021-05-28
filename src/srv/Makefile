@@ -1,6 +1,6 @@
 
 
-subdir := disk keyboard video
+subdir := init disk keyboard video ext2 vfs
 
 .PHONY: default $(subdir)
 

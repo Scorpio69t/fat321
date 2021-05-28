@@ -17,20 +17,16 @@ export CC LD CFLAGS KCFLAGS ARFLAGS
 
 kendir := boot core mm
 libdir := libc
-moddir := init drivers fs
+srvdir := srv
 HEADER := ./include
 
-ifdef DEBUG
-	moddir += test
-endif
-
-.PHONY: all iso clean qemu debug $(kendir) $(libdir) $(moddir)
+.PHONY: all iso clean qemu debug $(kendir) $(libdir) $(srvdir)
 
 _all: all
 
 -include Makefile.dep
 
-all: $(libdir) $(TARGET) $(moddir)
+all: $(libdir) $(TARGET) $(srvdir)
 
 $(TARGET): $(kendir)
 	$(LD) $(LDFLAGS) -o $@ $(shell find $(kendir) -name "*.o")
@@ -41,8 +37,8 @@ $(kendir):
 $(libdir):
 	@$(MAKE) -C $@
 
-$(moddir):
-	@echo "\nstart make $@"
+$(srvdir):
+	@echo "start make $@"
 	@$(MAKE) -C $@
 
 %.o: %.c
@@ -52,5 +48,5 @@ clean:
 	find . -name "*.o" | xargs -r rm
 	find . -name "*.dep" | xargs -r rm
 	find . -name "*.a" | xargs -r rm
-	find . -name "*.mod" | xargs -r rm
+	find . -name "*.srv" | xargs -r rm
 	rm -f $(TARGET)

@@ -1,11 +1,11 @@
 
 HEADER:=../../include/libc
 SOURCE := $(wildcard *.c)
-OBJS := keyboard.o
+OBJS := vfs.o
 LIBS := ../../libc/libc.a
 LDFLAGS := -T ../../../scripts/proc.lds
 
-keyboard.mod: $(OBJS) $(LIBS)
+vfs.srv: $(OBJS) $(LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 -include Makefile.dep

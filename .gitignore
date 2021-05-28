@@ -6,6 +6,7 @@
 !docs/*.txt
 *.log
 *.bin
+*.srv
 *.img
 *.vhd
 *.lock
