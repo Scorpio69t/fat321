@@ -3,7 +3,7 @@
 mount_dir=/mnt
 tmp_dir=img.tmp
 modules=$(find src -name "*.srv")
-loop_device=$(losetup -f)
+loop_device=$(sudo losetup -f)
 image_file=feng.img
 root_partition_type_guid=B02F4C03-F4A9-4297-9F98-D6E20949450C
 
@@ -34,6 +34,7 @@ if [[ ! -e "${image_file}" ]]; then
     sudo mkfs.ext2 "${loop_device}p2"
     sudo sgdisk -t 2:"${root_partition_type_guid}" "${loop_device}"
     sudo losetup -d "${loop_device}" 
+    sleep 1
 fi
 
 if [[ ! -e src/kernel.bin ]]; then
@@ -55,6 +56,9 @@ done
 
 mkdir -p "${tmp_dir}/bin"
 cp -r shell/sh "${tmp_dir}/bin"
+
+mkdir -p "${tmp_dir}/etc"
+cp -r scripts/welcome "${tmp_dir}/etc"
 
 for file in ./bin/*; do
     if [[ -x "$file" ]]; then
